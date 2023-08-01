@@ -1,0 +1,84 @@
+Method: 'FMM'
+
+Sky:
+    CMB:
+        cmb: False
+        r: [0, 'f', 'r']
+        Alens: [1, 'f', 'A_{lens}']
+
+    Foregrounds:
+        # Thermal Dust emission
+        Dust: False
+        nu0_d: 353
+        Ad: [4, 'f', 'A_d']
+        alphad: [-0.6, 'f', '\alpha_d']
+        deltad: [1, 'nf', '\Delta_d']
+
+        # Synchrotron emission
+        Synchrotron: False
+        nu0_s: 23
+        As: [0, 'nf', 'A_s']
+        alphas: [-0.4, 'nf', '\alpha_s']
+        deltas: [1, 'nf', '\Delta_s']
+        DustSync: False
+        eps: [0, 'nf', '\varepsilon']
+
+    nside: 256
+
+QUBIC:
+    npointings: 800
+    nsub: 4
+    nrec: 1
+    
+    seed: 1
+    iteration: 1
+    ndet: 1
+    npho150: 1
+    npho220: 1
+    synthbeam_kmax: 0
+    detector_nep: 4.7e-17
+    nhwp_angles: 3
+    type: 'wide'
+    covcut: 0.1
+    kappa: 0
+    convolution: False
+    bandpass_correction: True
+    RA_center: 0
+    DEC_center: -57
+    dust_model: 'd0'
+    sync_model: 's0'
+
+Spectrum:
+    dl: 35
+    lmin: 40
+    aposize: 10
+        
+PCG:
+    maxiter: 30
+    tol: 1.0e-10
+
+Sampler:
+    nsteps: 300
+    nwalkers: 12
+    ndim: 4
+    discard: 50
+    markers: True
+    sig_initial_guess: 0.1
+    title_limit: 1
+
+
+
+Data:
+
+    datafilename: 'data.pkl'
+    planck: 
+        30GHz: False
+        44GHz: False
+        70GHz: False
+        100GHz: False
+        143GHz: True
+        217GHz: True
+        353GHz: True
+    level_planck_noise: 1
+    use_external_data: True
+
