@@ -23,6 +23,10 @@ class Sampler:
     def mcmc(self, mu, likelihood):
 
         with Pool() as pool:
+        #with MPIPool() as pool:
+        #    if not pool.is_master():
+        #        pool.wait()
+        #        sys.exit(0)
             sampler = emcee.EnsembleSampler(self.params['Sampler']['nwalkers'], self.params['Sampler']['ndim'], likelihood, pool=pool)
             sampler.run_mcmc(self.initial_guess(mu), self.params['Sampler']['nsteps'], progress=True)
 

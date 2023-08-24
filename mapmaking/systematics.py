@@ -15,8 +15,8 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 import pysm3.units as u
-from importlib import reload
 from pysm3 import utils
+from importlib import reload
 from qubic.data import PATH
 
 from mapmaking.frequency_acquisition import compute_fwhm_to_convolve, arcmin2rad, give_cl_cmb, create_array, get_preconditioner, QubicPolyAcquisition, QubicAcquisition

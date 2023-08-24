@@ -2,7 +2,7 @@ import numpy as np
 import qubic
 import sys
 import os
-print(os.getcwd())
+
 sys.path.append(os.getcwd())
 CMB_FILE = os.getcwd() + '/data/'
 #from qubic.data import PATH

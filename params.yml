@@ -2,44 +2,48 @@ Method: 'FMM'
 
 Sky:
     CMB:
-        cmb: False
-        r: [0, 'f', 'r']
-        Alens: [1, 'f', 'A_{lens}']
+
+        cmb: True
+        r: [0, 'f', 'r', 0.036]
+        Alens: [1, 'nf', 'A_{lens}', 1]
 
     Foregrounds:
+
         # Thermal Dust emission
         Dust: False
         nu0_d: 353
-        Ad: [4, 'f', 'A_d']
-        alphad: [-0.6, 'f', '\alpha_d']
+        Ad: [4, 'nf', 'A_d']
+        betad: [1.54, 'nf', '\beta_d']
+        alphad: [-0.4, 'nf', '\alpha_d']
         deltad: [1, 'nf', '\Delta_d']
 
         # Synchrotron emission
         Synchrotron: False
         nu0_s: 23
         As: [0, 'nf', 'A_s']
+        betas: [-3, 'nf', '\beta_s']
         alphas: [-0.4, 'nf', '\alpha_s']
         deltas: [1, 'nf', '\Delta_s']
         DustSync: False
         eps: [0, 'nf', '\varepsilon']
 
-    nside: 256
+    nside: 128
 
 QUBIC:
-    npointings: 800
+    npointings: 1000
     nsub: 4
-    nrec: 1
-    
-    seed: 1
+    nrec: 2
+    seed: 0
     iteration: 1
     ndet: 1
     npho150: 1
     npho220: 1
-    synthbeam_kmax: 0
+    synthbeam_kmax: 1
     detector_nep: 4.7e-17
     nhwp_angles: 3
-    type: 'wide'
-    covcut: 0.1
+    dtheta: 15
+    type: 'two'
+    covcut: 0.2
     kappa: 0
     convolution: False
     bandpass_correction: True
@@ -49,36 +53,41 @@ QUBIC:
     sync_model: 's0'
 
 Spectrum:
-    dl: 35
+    do_spectrum: True
+    method: 'namaster'
+    dl: 30
     lmin: 40
     aposize: 10
-        
+    beam_correction: False
+    pixwin_correction: False
+    noise_correction: True
+    nbins: 5
+
 PCG:
-    maxiter: 30
-    tol: 1.0e-10
+    maxiter: 200
+    tol: 1.0e-20
+    gif: True
 
 Sampler:
-    nsteps: 300
-    nwalkers: 12
-    ndim: 4
-    discard: 50
-    markers: True
-    sig_initial_guess: 0.1
+    do_sampler: True
+    nsteps: 200
+    nwalkers: 10
+    ndim: 1
+    discard: 100
+    markers: False
+    sig_initial_guess: 0.01
     title_limit: 1
 
-
-
 Data:
-
-    datafilename: 'data.pkl'
+    datafilename: 'ggg'
     planck: 
         30GHz: False
         44GHz: False
         70GHz: False
         100GHz: False
-        143GHz: True
-        217GHz: True
-        353GHz: True
-    level_planck_noise: 1
+        143GHz: False
+        217GHz: False
+        353GHz: False
+    level_planck_noise: 0
     use_external_data: True
 
