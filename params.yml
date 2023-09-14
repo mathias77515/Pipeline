@@ -4,18 +4,18 @@ Sky:
     CMB:
 
         cmb: True
-        r: [0, 'f', 'r', 0.036]
-        Alens: [1, 'nf', 'A_{lens}', 1]
+        r: [0, 'f', 'r', 0.001]
+        Alens: [1, 'f', 'A_{lens}', 1]
 
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: False
+        Dust: True
         nu0_d: 353
-        Ad: [4, 'nf', 'A_d']
-        betad: [1.54, 'nf', '\beta_d']
-        alphad: [-0.4, 'nf', '\alpha_d']
-        deltad: [1, 'nf', '\Delta_d']
+        Ad: [4, 'f', 'A_d', 4]
+        betad: [1.54, 'f', '\beta_d', 1.54]
+        alphad: [-0.4, 'f', '\alpha_d', -0.4]
+        deltad: [1, 'f', '\Delta_d', 1]
 
         # Synchrotron emission
         Synchrotron: False
@@ -27,9 +27,11 @@ Sky:
         DustSync: False
         eps: [0, 'nf', '\varepsilon']
 
-    nside: 128
+    nside: 256
 
 QUBIC:
+    method: 'spec'                                 # 'MM' for QUBIC map-making, 'fake' for fake map-making, 'spec' for spectrum based
+    randomreal: True
     npointings: 1000
     nsub: 4
     nrec: 2
@@ -51,9 +53,10 @@ QUBIC:
     DEC_center: -57
     dust_model: 'd0'
     sync_model: 's0'
+    fsky: 0.035
 
 Spectrum:
-    do_spectrum: True
+    do_spectrum: False
     method: 'namaster'
     dl: 30
     lmin: 40
@@ -61,19 +64,19 @@ Spectrum:
     beam_correction: False
     pixwin_correction: False
     noise_correction: True
-    nbins: 5
+    nbins: 10
 
 PCG:
-    maxiter: 200
+    maxiter: 100
     tol: 1.0e-20
     gif: True
 
 Sampler:
     do_sampler: True
-    nsteps: 200
-    nwalkers: 10
-    ndim: 1
-    discard: 100
+    nsteps: 300
+    N: 5
+    ndim: 6
+    discard: 200
     markers: False
     sig_initial_guess: 0.01
     title_limit: 1
@@ -87,7 +90,7 @@ Data:
         100GHz: False
         143GHz: False
         217GHz: False
-        353GHz: False
+        353GHz: True
     level_planck_noise: 0
     use_external_data: True
 

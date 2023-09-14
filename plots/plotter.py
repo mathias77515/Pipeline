@@ -22,7 +22,7 @@ class Plots:
         pass
 
     def _make_samples(self, chain, names, labels):
-        self.sample = MCSamples(samples=chain, names=names, labels=labels, ranges={'r':(0, None)})
+        self.sample = MCSamples(samples=chain, names=names, labels=labels)
 
     def make_list_free_parameter(self):
 

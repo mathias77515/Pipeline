@@ -14,6 +14,7 @@ from model.externaldata import *
 from tools.foldertools import *
 import qubic
 import os
+from fgb.component_model import *
 from qubic import NamasterLib as nam
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pyoperators import MPI
@@ -90,7 +91,7 @@ class Spectrum:
                 d = noise['Planck']['depth_p'][index]
                 res.append(d)
             else:
-                res.append(None)  # Fréquence non trouvée, ajout d'une valeur None
+                res.append(None)
     
         return res
     def _get_Dl(self, map1, map2):
@@ -288,6 +289,8 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
         
 
         self.file = file
+        self.externaldata = PipelineExternalData(file)
+        
         with open('params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
 
@@ -393,10 +396,215 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
             self.maps[:, ~self.seenpix, :] = 0
             
             self.save_data(self.file, {'maps':self.maps, 'nus':self.nus_eff, 'coverage':self.coverage, 'center':self.center})
+            self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
             self.plots.plot_FMM(self.m_nu_in, self.maps, self.center, self.seenpix, self.nus_eff, istk=0, nsig=3)
             self.plots.plot_FMM(self.m_nu_in, self.maps, self.center, self.seenpix, self.nus_eff, istk=1, nsig=3)
             self.plots.plot_FMM(self.m_nu_in, self.maps, self.center, self.seenpix, self.nus_eff, istk=2, nsig=3) 
 
+class NoiseFromDl:
+    
+    def __init__(self, ell, Dl, nus, depth, dl=30, fsky=0.03):
+        
+        self.ell = ell
+        self.f = self.ell * (self.ell + 1) / (2 * np.pi)
+        self.nbins = len(self.ell)
+        
+        self.nus = nus
+        self.nspec = len(self.nus)**2
+        
+        self.depth = depth
+        self.dl = dl
+        self.fsky = fsky
+        self.clnoise = self._get_clnoise()
+        self.Dl = Dl
+        print(self.clnoise)
+        
+    def _get_clnoise(self):
+        return np.radians(self.depth/60)**2
+    
+    def errorbar_theo(self):
+    
+        errors_auto = np.zeros((len(self.nus), self.nbins))
+        errors = np.zeros((self.nspec, self.nbins))
+        
+        var = np.sqrt(2/((2 * self.ell + 1) * self.dl * self.fsky))
+        cl2dl = self.ell * (self.ell + 1) / (2 * np.pi)
+        
+        for i in range(len(self.nus)):
+            errors_auto[i] = cl2dl * self.clnoise[i]
+            
+        k = 0
+        for i in range(len(self.nus)):
+            for j in range(len(self.nus)):
+                if i == j:
+                    errors[k] = errors_auto[i]**2
+                else:
+                    errors[k] = errors_auto[i] * errors_auto[j] * 0.5
+                
+                k += 1
+        
+        return var * np.sqrt(self.Dl**2 + errors**2)
+
+class MapMakingFromSpec(NoiseFromDl, ExternalData2Timeline):
+    
+    def __init__(self, ell, file, randomreal=True):
+        
+        with open('params.yml', "r") as stream:
+            self.params = yaml.safe_load(stream)
+        
+        with open('noise.yml', "r") as stream:
+            self.noise = yaml.safe_load(stream)
+        
+        self.file = file
+        self.externaldata = PipelineExternalData(file)
+        self.skyconfig = self._get_sky_config()
+        _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=1, relative_bandwidth=0.25)
+        _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=1, relative_bandwidth=0.25)
+
+        self.nus = np.array(list(allnus150) + list(allnus220))
+        ExternalData2Timeline.__init__(self, self.skyconfig, self.nus, self.params['QUBIC']['nrec'], self.params['Sky']['nside'], self.params['QUBIC']['bandpass_correction'])
+        self.nus_eff = self.average_nus()
+        self.save_data(self.file, {'nus':self.nus_eff})
+        self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
+        
+        self.allnus = self._read_data()
+
+        self.nspec = len(self.allnus)**2
+        self.ell = ell
+        self.randomreal = randomreal
+        self.sky = Sky(self.params, self.allnus, self.ell)
+        
+        self.depth = depths = np.array(list(np.array(self.noise['QUBIC']['depth_p'])) + list(self._get_depth(self.externaldata.external_nus)))
+    
+    def _read_data(self):
+
+        '''
+
+        Method that read `data.pkl` file.
+
+        '''
+
+        with open(self.file, 'rb') as f:
+            data = pickle.load(f)
+        return np.concatenate((data['nus'], data['nus_ext']), axis=0)
+    def save_data(self, name, d):
+
+        with open(name, 'wb') as handle:
+            pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    def average_nus(self):
+        
+        nus_eff = []
+        f = int(self.nsub / self.nrec)
+        for i in range(self.nrec):
+            #print(f'Doing average between {np.min(self.nus[i*f:(i+1)*f])} and {np.max(self.nus[i*f:(i+1)*f])} GHz')
+            nus_eff += [np.mean(self.nus[i*f : (i+1)*f], axis=0)]
+        return np.array(nus_eff, dtype=float)
+    def _get_sky_config(self):
+        
+        sky = {}
+        for ii, i in enumerate(self.params['Sky'].keys()):
+            #print(ii, i)
+
+            if i == 'CMB':
+                if self.params['Sky']['CMB']['cmb']:
+                    if self.params['QUBIC']['seed'] == 0:
+                        seed = np.random.randint(10000000)
+                        
+                    else:
+                        seed = self.params['QUBIC']['seed']
+                    #stop
+                    sky['cmb'] = seed
+                
+            else:
+                for jj, j in enumerate(self.params['Sky']['Foregrounds']):
+                    #print(j, self.params['Foregrounds'][j])
+                    if j == 'Dust':
+                        if self.params['Sky']['Foregrounds'][j]:
+                            sky['dust'] = self.params['QUBIC']['dust_model']
+                    elif j == 'Synchrotron':
+                        if self.params['Sky']['Foregrounds'][j]:
+                            sky['synchrotron'] = self.params['QUBIC']['sync_model']
+
+        return sky   
+    def _get_depth(self, nus):
+        
+        '''
+
+        Method to get depth sensitivity from `noise.yml` file according to a given frequency.
+
+        Arguments :
+        -----------
+
+            - nus : list constain frequency
+
+        '''
+
+        with open('noise.yml', "r") as stream:
+            noise = yaml.safe_load(stream)
+    
+        res = []
+    
+        for mynu in nus:
+            index = noise['Planck']['frequency'].index(mynu) if mynu in noise['Planck']['frequency'] else -1
+            if index != -1:
+                d = noise['Planck']['depth_p'][index]
+                res.append(d)
+            else:
+                res.append(None)
+    
+        return res
+    def foregrounds(self, fnu1, fnu2):
+    
+        return self.A * fnu1 * fnu2 * (self.ell/self.ell0)**self.alpha
+    def _read_pkl(self):
+
+        '''
+
+        Method that reads pickle file containing data.
+
+        '''
+
+        with open(self.file, 'rb') as f:
+            data = pickle.load(f)
+
+        return data
+    def _update_data(self, ell, Dl):
+        
+        '''
+
+        Method that update `data.pkl`.
+
+        Arguments :
+        -----------
+            - ell : array contains multipoles
+            - Dl : array contains spectrum
+
+        '''
+        
+        data = self._read_pkl()
+
+        data['ell'] = ell
+        data['Dl'] = Dl
+
+        with open(self.file, 'wb') as handle:
+            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    def run(self):
+        
+        Dl = self.sky.get_Dl()
+
+        noise = NoiseFromDl(self.ell, Dl, self.allnus, self.depth, dl=self.params['Spectrum']['dl'], fsky=self.params['QUBIC']['fsky'])
+        err = noise.errorbar_theo()
+
+        if self.randomreal:
+            np.random.seed(None)
+            for j in range(self.nspec):
+                for i in range(len(self.ell)):
+                    Dl[j, i] = np.random.normal(Dl[j, i], err[j, i]/2)
+        
+        #self.save_data(self.file, {'nus':self.allnus})
+        self._update_data(self.ell, Dl)
+        
 class PipelineFrequencyMapMaking:
 
     def __init__(self, comm, file):
@@ -405,6 +613,8 @@ class PipelineFrequencyMapMaking:
             self.params = yaml.safe_load(stream)
 
         self.file = file
+        self.externaldata = PipelineExternalData(file)
+        
         self.plots = PlotsMM(self.params)
 
         self.center = qubic.equ2gal(self.params['QUBIC']['RA_center'], self.params['QUBIC']['DEC_center'])
@@ -719,6 +929,7 @@ class PipelineFrequencyMapMaking:
         if self.rank == 0:
             
             self.save_data(self.file, {'maps':self.s_hat, 'nus':self.nus_Q, 'coverage':self.coverage, 'center':self.center})
+            self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, istk=0, nsig=3)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, istk=1, nsig=3)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, istk=2, nsig=3) 
@@ -769,7 +980,7 @@ class PipelineCrossSpectrum:
                 d = noise['Planck']['depth_p'][index]
                 res.append(d)
             else:
-                res.append(None)  # Fréquence non trouvée, ajout d'une valeur None
+                res.append(None)
     
         return res
     def _read_data(self):
@@ -828,7 +1039,7 @@ class PipelineCrossSpectrum:
         '''
         for iparam, param in enumerate(x):
             if self.name_free_params[iparam] == 'r':
-                if param < -0.1 or param > 1:
+                if param < -1 or param > 1:
                     return - np.inf
             elif self.name_free_params[iparam] == 'Alens':
                 if 0 > param or param > 2:
@@ -878,16 +1089,19 @@ class PipelineCrossSpectrum:
         print('\n=========== MCMC ===========\n')
 
         self.Dl, self.nus, self.ell, self.nus_ext = self._read_data()
-
-        #self.Dl_err = abs(np.random.normal(0, 0.1, self.Dl.shape)) * 0 + 0.005
+        
         depths = np.array(list(np.array(self.noise['QUBIC']['depth_p'])) + list(self._get_depth(self.nus_ext)))
         
-        self.Dl_err = Noise(self.ell, depths)._get_errors()
+        noise = NoiseFromDl(self.ell, self.Dl, self.nus, depths, dl=self.params['Spectrum']['dl'], fsky=self.params['QUBIC']['fsky'])
+        self.Dl_err = noise.errorbar_theo() / 2
+        #self.Dl_err = Noise(self.ell, depths)._get_errors()
         
         self.sky = Sky(self.params, self.nus, self.ell)
 
-        self.plots.get_Dl_plot(self.ell[:self.params['Spectrum']['nbins']], self.Dl[:, :self.params['Spectrum']['nbins']], self.Dl_err[:, :self.params['Spectrum']['nbins']], self.nus)#, model=self.sky.get_Dl())
-
+        self.plots.get_Dl_plot(self.ell[:self.params['Spectrum']['nbins']], self.Dl[:, :self.params['Spectrum']['nbins']], 
+                               self.Dl_err[:, :self.params['Spectrum']['nbins']], self.nus, model=self.sky.get_Dl()[:, :self.params['Spectrum']['nbins']])
+        
+        #stop
         ### Free values, name free parameters, latex name free parameters
         self.value_free_params, self.name_free_params, self.name_latex_free_params = self.sky.make_list_free_parameter()
         print(self.value_free_params, self.name_free_params)
@@ -927,11 +1141,20 @@ class PipelineEnd2End:
         file = self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
 
         ### Initialization
-        #self.mapmaking = PipelineFrequencyMapMaking(self.comm, file)
-        self.mapmaking = FakeFrequencyMapMaking(self.comm, file, fsky=0.035)
-        self.externaldata = PipelineExternalData(self.mapmaking.skyconfig, file)
-        self.spectrum = Spectrum(file, self.mapmaking.seenpix)
-        self.cross = PipelineCrossSpectrum(file, fsky=self.mapmaking.fsky)
+        print(self.params['QUBIC']['method'])
+        if self.params['QUBIC']['method'] == 'true':
+            self.mapmaking = PipelineFrequencyMapMaking(self.comm, file)
+            self.spectrum = Spectrum(file, self.mapmaking.seenpix)
+            
+        elif self.params['QUBIC']['method'] == 'fake':
+            self.mapmaking = FakeFrequencyMapMaking(self.comm, file, fsky=self.params['QUBIC']['fsky'])
+            self.spectrum = Spectrum(file, self.mapmaking.seenpix)
+            
+        elif self.params['QUBIC']['method'] == 'spec':
+            self.spectrum = Spectrum(file, None)
+            self.mapmaking = MapMakingFromSpec(self.spectrum.ell, file, randomreal=self.params['QUBIC']['randomreal'])
+        
+        self.cross = PipelineCrossSpectrum(file, fsky=self.params['QUBIC']['fsky'])
         
     
     def main(self):
@@ -942,9 +1165,6 @@ class PipelineEnd2End:
         ### Execute MCMC sampler
         if self.params['Spectrum']['do_spectrum']:
             if self.comm.Get_rank() == 0:
-                
-                ### Run -> compute frequency maps
-                self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
 
                 ### Run -> compute Dl-cross
                 self.spectrum.run()
