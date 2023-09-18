@@ -1048,10 +1048,13 @@ class PipelineCrossSpectrum:
                 if 0 > param or param > 1e9:
                     return - np.inf
             elif self.name_free_params[iparam] == 'As':
-                if param <-1 or param > 1e9:
+                if param < -1 or param > 1e9:
                     return - np.inf
             elif self.name_free_params[iparam] == 'betad':
                 if param < 1 or param > 2:
+                    return - np.inf
+            elif self.name_free_params[iparam] == 'betas':
+                if param < -4 or param > -2:
                     return - np.inf
             elif self.name_free_params[iparam] == 'alphad':
                 if param > 0 or param < -1:
@@ -1141,7 +1144,7 @@ class PipelineEnd2End:
         file = self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
 
         ### Initialization
-        print(self.params['QUBIC']['method'])
+        
         if self.params['QUBIC']['method'] == 'true':
             self.mapmaking = PipelineFrequencyMapMaking(self.comm, file)
             self.spectrum = Spectrum(file, self.mapmaking.seenpix)
