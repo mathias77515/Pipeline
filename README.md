@@ -12,7 +12,13 @@ First step is compute frequency observations based on 3 way to do it :
 
 # Run 
 
-The code can be run locally but more efficient in Computing Cluster using SLURM system. To send jobs on computing clusters with SLURM system, use the command :
+To use the code, you must clone the repository with :
+
+```
+https://github.com/mathias77515/Pipeline
+```
+
+Be careful that every qubicsoft dependencies are correctly installed. The code can be run locally but more efficient in Computing Cluster using SLURM system. To send jobs on computing clusters with SLURM system, use the command :
 
 ```
 sbatch main.sh
