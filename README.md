@@ -30,5 +30,9 @@ To modify memory requirements, please modify `main.sh` file, especially lines :
 * `#SBATCH --nodes=number_of_nodes` to split data on different nodes.
 * `#SBATCH --ntasks-per-node=Number_of_taks` to run several MPI tasks.
 * `#SBATCH --cpus-per-task=number_of_CPU` to ask for several CPU for OpenMP system.
+<<<<<<< HEAD
 * `#SBATCH --mem=number_of_Giga` to ask for memory (in GB, let the letter G at the end i.e 5G)
+=======
+* `#SBATCH --mem=number_of_Giga` to ask for memory (in GB, let the letter G at the end i.e 6G)
+>>>>>>> 4cfd11beecd7f6dee357f8d9cf20584e42173bb6
 * `#SBATCH --time=day-hours:minutes:seconds` to ask for more execution time.
