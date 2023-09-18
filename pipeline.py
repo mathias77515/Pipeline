@@ -607,6 +607,17 @@ class MapMakingFromSpec(NoiseFromDl, ExternalData2Timeline):
         
 class PipelineFrequencyMapMaking:
 
+    """
+    
+    Instance to reconstruct frequency maps using QUBIC abilities.
+    
+    Parameters :
+    ------------
+        - comm : MPI communicator
+        - file : str to create folder for data saving
+    
+    """
+    
     def __init__(self, comm, file):
 
         with open('params.yml', "r") as stream:
@@ -615,15 +626,19 @@ class PipelineFrequencyMapMaking:
         self.file = file
         self.externaldata = PipelineExternalData(file)
         
+        ### Initialize plot instance
         self.plots = PlotsMM(self.params)
 
+        
         self.center = qubic.equ2gal(self.params['QUBIC']['RA_center'], self.params['QUBIC']['DEC_center'])
         self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
 
+        ### MPI common arguments
         self.comm = comm
         self.size = self.comm.Get_size()
         self.rank = self.comm.Get_rank()
 
+        ### Sky
         self.dict, self.dict_mono = self.get_dict()
         self.skyconfig = self._get_sky_config()
         
@@ -642,9 +657,6 @@ class PipelineFrequencyMapMaking:
         self.seenpix = covnorm > self.params['QUBIC']['covcut']
         self.fsky = self.seenpix.astype(float).sum() / self.seenpix.size
 
-        #print(np.sum(self.seenpix) / np.sum(np.ones(12*self.params['Sky']['nside']**2)))
-
-        #stop
         self.seenpix_for_plot = covnorm > 0
         self.mask = np.ones(12*self.params['Sky']['nside']**2)
         self.mask[self.seenpix] = self.params['QUBIC']['kappa']
@@ -682,10 +694,23 @@ class PipelineFrequencyMapMaking:
 
     def _get_H(self):
         
+        """
+        
+        Method to compute QUBIC operators.
+        
+        """
+        
         self.H = self.joint.get_operator(fwhm=self.targets)
         self.Htod = self.joint_tod.get_operator(fwhm=self.allfwhm)
         self.Hqtod = self.joint_tod.qubic.get_operator(fwhm=self.allfwhm)  
     def _get_averaged_nus(self):
+        
+        """
+        
+        Method to average QUBIC frequencies.
+
+        """
+        
         nus_eff = []
 
         for i in range(self.params['QUBIC']['nrec']):
@@ -694,6 +719,15 @@ class PipelineFrequencyMapMaking:
         return np.array(nus_eff)
     def _get_sky_config(self):
         
+        """
+        
+        Method that read `params.yml` file and create dictionary containing sky emission such as :
+        
+                    d = {'cmb':seed, 'dust':'d0', 'synchrotron':'s0'}
+        
+        Note that the key denote the emission and the value denote the sky model using PySM convention. For CMB, seed denote the realization.
+        
+        """
         sky = {}
         for ii, i in enumerate(self.params['Sky'].keys()):
             #print(ii, i)
@@ -724,7 +758,13 @@ class PipelineFrequencyMapMaking:
 
         return sky
     def get_ultrawideband_config(self):
-    
+        
+        """
+        
+        Method that pre-compute UWB configuration.
+
+        """
+        
         nu_up = 247.5
         nu_down = 131.25
         nu_ave = np.mean(np.array([nu_up, nu_down]))
@@ -733,9 +773,11 @@ class PipelineFrequencyMapMaking:
         return nu_ave, 2*delta/nu_ave
     def get_dict(self):
     
-        '''
-        Function for modify the qubic dictionary.
-        '''
+        """
+        
+        Method to modify the qubic dictionary.
+        
+        """
 
         nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
 
@@ -783,6 +825,12 @@ class PipelineFrequencyMapMaking:
         return d, dmono
     def _get_convolution(self):
 
+        """
+        
+        Method to define expected QUBIC angular resolutions (radians) as function of frequencies.
+
+        """
+        
         ### Define FWHMs
         if self.params['QUBIC']['convolution']:
             allfwhm = self.joint.qubic.allfwhm
@@ -797,6 +845,12 @@ class PipelineFrequencyMapMaking:
         return targets, allfwhm
     def _get_tod(self):
 
+        """
+        
+        Method that compute observed TODs with TOD = H . s + n with H the QUBIC operator, s the sky signal and n the instrumental noise.
+
+        """
+        
         if self.params['QUBIC']['type'] == 'wide':
             if self.params['QUBIC']['nrec'] != 1:
                 TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
@@ -865,11 +919,23 @@ class PipelineFrequencyMapMaking:
         return TOD
     def _barrier(self):
 
+        """
+        
+        Method to introduce comm.Barrier() function if MPI communicator is detected.
+        
+        """
         if self.comm is None:
             pass
         else:
             self.comm.Barrier()
     def print_message(self, message):
+        
+        """
+        
+        Method to print message only on rank 0 if MPI communicator is detected. It display simple message if not.
+        
+        """
+        
         if self.comm is None:
             print(message)
         else:
@@ -910,11 +976,23 @@ class PipelineFrequencyMapMaking:
         return solution_qubic_planck['x']['x']
     def save_data(self, name, d):
 
+        """
+        
+        Method to save data using pickle convention.
+        
+        """
+        
         with open(name, 'wb') as handle:
             pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     def run(self):
 
-        print('\n=========== Map-Making ===========\n')
+        """
+        
+        Method to run the whole pipeline from TOD generation from sky reconstruction by reading `params.yml` file.
+        
+        """
+        
+        self.print_message('\n=========== Map-Making ===========\n')
 
         ### Get simulated data
         self.TOD = self._get_tod()
@@ -1145,7 +1223,7 @@ class PipelineEnd2End:
 
         ### Initialization
         
-        if self.params['QUBIC']['method'] == 'true':
+        if self.params['QUBIC']['method'] == 'MM':
             self.mapmaking = PipelineFrequencyMapMaking(self.comm, file)
             self.spectrum = Spectrum(file, self.mapmaking.seenpix)
             

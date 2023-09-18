@@ -162,9 +162,24 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
-
         if self.gif:
-            if self.comm.Get_rank() == 0:
+            if self.comm is not None:
+                if self.comm.Get_rank() == 0:
+                    plt.figure(figsize=self.figsize)
+
+                    k=1
+                    for i in range(self.x.shape[0]):
+                        for j in range(self.x.shape[2]):
+                            mymap = self.x[i, :, j].copy()
+                            mymap[~self.seenpix] = hp.UNSEEN
+                            hp.gnomview(mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0], self.x.shape[2], k), title='', notext=True,
+                                min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
+                
+                            k+=1
+                    plt.suptitle(f'Iteration : {self.niterations}')
+                    plt.savefig(f'gif_convergence/maps_{self.niterations}.png')
+                    plt.close()
+            else:
                 plt.figure(figsize=self.figsize)
 
                 k=1
@@ -179,6 +194,7 @@ class PCGAlgorithm(IterativeAlgorithm):
                 plt.suptitle(f'Iteration : {self.niterations}')
                 plt.savefig(f'gif_convergence/maps_{self.niterations}.png')
                 plt.close()
+            
 
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
