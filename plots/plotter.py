@@ -73,7 +73,7 @@ class Plots:
             dict = None
         return dict
     
-    def get_convergence(self, chain):
+    def get_convergence(self, chain, job_id):
 
         '''
         
@@ -96,10 +96,10 @@ class Plots:
             plt.ylabel(self.names[i], fontsize=12)
 
         plt.xlabel('Iterations', fontsize=12)
-        plt.savefig('allplots/Convergence_chain.png')
+        plt.savefig(f'allplots_{job_id}/Convergence_chain.png')
         plt.close()
 
-    def get_triangle(self, chain, names, labels):
+    def get_triangle(self, chain, names, labels, job_id):
         
         '''
         
@@ -120,10 +120,10 @@ class Plots:
         g = plots.get_subplot_plotter()
         g.triangle_plot([self.sample], filled=True, markers=self.marker, title_limit=self.params['Sampler']['title_limit'])
                 #title_limit=1)
-        plt.savefig('allplots/triangle_plot.png')
+        plt.savefig(f'allplots_{job_id}/triangle_plot.png')
         plt.close()
 
-    def get_Dl_plot(self, ell, Dl, Dl_err, nus, figsize=(10, 10), model=None):
+    def get_Dl_plot(self, ell, Dl, Dl_err, nus, job_id, figsize=(10, 10), model=None):
 
         plt.figure(figsize=figsize)
 
@@ -139,7 +139,7 @@ class Plots:
                 k+=1
 
         plt.tight_layout()
-        plt.savefig('allplots/Dl_plot.png')
+        plt.savefig(f'allplots_{job_id}/Dl_plot.png')
         plt.close()
 class PlotsMM:
 
@@ -148,7 +148,7 @@ class PlotsMM:
         self.params = params
         self.stk = ['I', 'Q', 'U']
 
-    def plot_FMM(self, m_in, m_out, center, seenpix, nus, figsize=(10, 8), istk=1, nsig=3, fwhm=0):
+    def plot_FMM(self, m_in, m_out, center, seenpix, nus, job_id, figsize=(10, 8), istk=1, nsig=3, fwhm=0):
         
         m_in[:, ~seenpix, :] = hp.UNSEEN
         m_out[:, ~seenpix, :] = hp.UNSEEN
@@ -167,10 +167,10 @@ class PlotsMM:
             hp.gnomview(res, rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2))
 
             k+=3
-        plt.savefig(f'allplots/frequency_maps_{self.stk[istk]}.png')
+        plt.savefig(f'allplots_{job_id}/frequency_maps_{self.stk[istk]}.png')
         plt.close()
 
-    def plot_FMM_mollview(self, m_in, m_out, nus, figsize=(10, 8), istk=1, nsig=3, fwhm=0):
+    def plot_FMM_mollview(self, m_in, m_out, nus, job_id, figsize=(10, 8), istk=1, nsig=3, fwhm=0):
 
         C = HealpixConvolutionGaussianOperator(fwhm=fwhm)
         plt.figure(figsize=figsize)
@@ -192,5 +192,5 @@ class PlotsMM:
             max = nsig * np.std(m_out[0, :, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2))
 
             k+=3
-        plt.savefig(f'allplots/frequency_maps_{self.stk[istk]}_moll.png')
+        plt.savefig(f'allplots_{job_id}/frequency_maps_{self.stk[istk]}_moll.png')
         plt.close()
