@@ -255,8 +255,7 @@ class Spectrum:
         nus = np.concatenate((nus, nus_ext), axis=0)
 
         self.Dl = np.zeros((m.shape[0]**2, self.nbins))
-        #print(self.Dl.shape)
-        #print(self.noise_correction.shape)
+        
         k=0
         for i in range(m.shape[0]):
             for j in range(m.shape[0]):
@@ -278,6 +277,7 @@ class Spectrum:
             self.Dl -= self.noise_correction
         ### Update data.pkl -> Add spectrum
         self._update_data(self.ell, self.Dl)
+        print('\n=========== Spectrum - done ===========\n')
 
 class FakeFrequencyMapMaking(ExternalData2Timeline):
     
@@ -290,6 +290,7 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
 
         self.file = file
         self.externaldata = PipelineExternalData(file)
+        self.job_id = os.environ.get('SLURM_JOB_ID')
         
         with open('params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
@@ -455,6 +456,7 @@ class MapMakingFromSpec(NoiseFromDl, ExternalData2Timeline):
         with open('noise.yml', "r") as stream:
             self.noise = yaml.safe_load(stream)
         
+        self.job_id = os.environ.get('SLURM_JOB_ID')
         self.file = file
         self.externaldata = PipelineExternalData(file)
         self.skyconfig = self._get_sky_config()
@@ -625,6 +627,7 @@ class PipelineFrequencyMapMaking:
 
         self.file = file
         self.externaldata = PipelineExternalData(file)
+        self.job_id = os.environ.get('SLURM_JOB_ID')
         
         ### Initialize plot instance
         self.plots = PlotsMM(self.params)
@@ -960,12 +963,23 @@ class PipelineFrequencyMapMaking:
 
         ### PCG
         start = time.time()
-        solution_qubic_planck = pcg(A, b, x0=None, M=M, tol=self.params['PCG']['tol'], disp=True, maxiter=self.params['PCG']['maxiter'], create_gif=self.params['PCG']['gif'], center=self.center, reso=self.params['QUBIC']['dtheta'], seenpix=self.seenpix)
+        solution_qubic_planck = pcg(A, 
+                                    b, 
+                                    x0=self.m_nu_in, 
+                                    M=M, 
+                                    tol=self.params['PCG']['tol'], 
+                                    disp=True, 
+                                    maxiter=self.params['PCG']['maxiter'], 
+                                    create_gif=self.params['PCG']['gif'], 
+                                    center=self.center, 
+                                    reso=self.params['QUBIC']['dtheta'], 
+                                    seenpix=self.seenpix,
+                                    jobid=self.job_id)
 
         self._barrier()
 
         if self.params['PCG']['gif']:
-            do_gif('gif_convergence', self.params['PCG']['maxiter'])
+            do_gif(f'gif_convergence_{self.job_id}', self.params['PCG']['maxiter'], self.job_id)
 
         if self.params['QUBIC']['nrec'] == 1:
             solution_qubic_planck['x']['x'] = np.array([solution_qubic_planck['x']['x']])
@@ -1006,11 +1020,11 @@ class PipelineFrequencyMapMaking:
         ### Plots and saving
         if self.rank == 0:
             
-            self.save_data(self.file, {'maps':self.s_hat, 'nus':self.nus_Q, 'coverage':self.coverage, 'center':self.center})
+            self.save_data(self.file, {'maps':self.s_hat, 'nus':self.nus_Q, 'coverage':self.coverage, 'center':self.center, 'maps_in':self.m_nu_in})
             self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
-            self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, istk=0, nsig=3)
-            self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, istk=1, nsig=3)
-            self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, istk=2, nsig=3) 
+            self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, fwhm=0.0048)
+            self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=1, nsig=3, fwhm=0.0048)
+            self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=2, nsig=3, fwhm=0.0048) 
 
         self._barrier()   
 
@@ -1215,8 +1229,9 @@ class PipelineEnd2End:
             self.params = yaml.safe_load(stream)
 
         self.comm = comm
-
-        create_folder_if_not_exists(self.comm, 'allplots')
+        self.job_id = os.environ.get('SLURM_JOB_ID')
+        
+        create_folder_if_not_exists(self.comm, f'allplots_{self.job_id}')
 
         self.job_id = os.environ.get('SLURM_JOB_ID')
         file = self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
