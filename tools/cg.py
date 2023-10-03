@@ -36,6 +36,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         reso=15,
         figsize=(10, 8),
         seenpix=None,
+        jobid=None,
     ):
         """
         Parameters
@@ -84,6 +85,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.reso = reso
         self.figsize = figsize
         self.seenpix = seenpix
+        self.jobid = jobid
 
         dtype = A.dtype or np.dtype(float)
         if dtype.kind == 'c':
@@ -128,7 +130,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.dot = lambda x, y: _dot(x, y, self.comm)
 
         if self.gif:
-            create_folder_if_not_exists(self.comm, 'gif_convergence')
+            create_folder_if_not_exists(self.comm, f'gif_convergence_{self.jobid}')
         if M is None:
             M = IdentityOperator()
         self.M = asoperator(M)
@@ -177,7 +179,7 @@ class PCGAlgorithm(IterativeAlgorithm):
                 
                             k+=1
                     plt.suptitle(f'Iteration : {self.niterations}')
-                    plt.savefig(f'gif_convergence/maps_{self.niterations}.png')
+                    plt.savefig(f'gif_convergence_{self.jobid}/maps_{self.niterations}.png')
                     plt.close()
             else:
                 plt.figure(figsize=self.figsize)
@@ -192,7 +194,7 @@ class PCGAlgorithm(IterativeAlgorithm):
                 
                         k+=1
                 plt.suptitle(f'Iteration : {self.niterations}')
-                plt.savefig(f'gif_convergence/maps_{self.niterations}.png')
+                plt.savefig(f'gif_convergence_{self.jobid}/maps_{self.niterations}.png')
                 plt.close()
             
 
@@ -229,6 +231,7 @@ def pcg(
     center=None,
     reso=15,
     seenpix=None,
+    jobid=None,
 ):
     """
     output = pcg(A, b, [x0, tol, maxiter, M, disp, callback,
@@ -291,6 +294,7 @@ def pcg(
         center=center,
         reso=reso,
         seenpix=seenpix,
+        jobid=jobid,
     )
     try:
         output = algo.run()

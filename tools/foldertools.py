@@ -32,7 +32,7 @@ def create_folder_if_not_exists(comm, folder_name):
 
 
 
-def do_gif(input_folder, N):
+def do_gif(input_folder, N, jobid):
 
     nmaps = np.arange(1, N+1, 1)
     image_list = []
@@ -42,6 +42,6 @@ def do_gif(input_folder, N):
         image = Image.open(image_path)
         image_list.append(image)
 
-    output_gif_path = "gif_convergence/animation.gif"
+    output_gif_path = f"gif_convergence_{jobid}/animation.gif"
 
     image_list[0].save(output_gif_path, save_all=True, append_images=image_list[1:], duration=100, loop=0)
