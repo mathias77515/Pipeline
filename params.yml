@@ -10,7 +10,7 @@ Sky:
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: False
+        Dust: True
         nu0_d: 353
         Ad: [4, 'nf', 'A_d', 4]
         betad: [1.54, 'nf', '\beta_d', 1.54]
