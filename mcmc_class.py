@@ -67,7 +67,7 @@ class Data:
 
         # Store the datas into arrays
         ps_data = []
-        for realisation in range(self.param['data']['n_real']):
+        for realisation in range(0, self.param['data']['n_real']):
             data = pickle.load(open(path_data + '/' + data_names[realisation], 'rb'))
             ps_data.append(data['Dl'])
         ps_data = np.reshape(ps_data, [self.param['data']['n_real'],self.param['simu']['nrec'], self.param['simu']['nrec'], np.shape(data['Dl'][0])[0]])
@@ -104,7 +104,7 @@ class Data:
         return mean_data, np.ones((np.shape(mean_data)))
 
 
-class namaster_ell:
+class NamasterEll:
     '''
     Class to compute the l using NamasterLib
     '''
@@ -231,7 +231,7 @@ class Dust:
         return models
 
 
-class mcmc:
+class MCMC:
     '''
     Class to perform MCMC on the chosen sky parameters
     '''
@@ -240,14 +240,12 @@ class mcmc:
 
         with open('mcmc_config.yml', "r") as stream:
             self.param = yaml.safe_load(stream)
-        self.ell = namaster_ell().ell()
+        self.ell = NamasterEll().ell()
         data = Data().find_data()
         self.nus = data['nus']
         self.sky_parameters = self.param['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_names = self.ndim_and_parameters_names()
         self.mean_data, self.error_noise = Data().data()
-
-
 
     def ndim_and_parameters_names(self):
         '''
@@ -390,7 +388,7 @@ class mcmc:
         if self.param['simu']['name'] == 'Sky':
             return self.prior(tab) - 0.5 * np.sum(((self.mean_data - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_noise))**2)
 
-    def mcmc(self):
+    def __call__(self):
         '''
         Funtion to perform the MCMC and save the results
         '''
@@ -432,7 +430,7 @@ class mcmc:
         path_plot_triangle = f'{config}_Nrec={nrec}_plots'
         plt.savefig(self.param['data']['path'] + path_plot + f'/triangle_plot_Nreal={n_real}')
 
-mcmc().mcmc()
+MCMC()()
 
 
 
