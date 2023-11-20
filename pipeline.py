@@ -24,7 +24,7 @@ def save_pkl(name, d):
     with open(name, 'wb') as handle:
         pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
+ 
 __all__ = ['Spectrum', 
            'FakeFrequencyMapMaking', 
            'PipelineFrequencyMapMaking', 
@@ -307,7 +307,9 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
         self.fsky = fsky
         self.center = qubic.equ2gal(self.params['QUBIC']['RA_center'], self.params['QUBIC']['DEC_center'])
         self.coverage = self.get_coverage([self.params['QUBIC']['RA_center'], self.params['QUBIC']['DEC_center']])
-        self.seenpix = self.coverage > 0
+        self.seenpix = self.coverage/self.coverage.max() > self.params['QUBIC']['covcut']
+        self.coverage_cut = self.coverage.copy()
+        self.coverage_cut[~self.seenpix] = 1
         #self.seenpix = seenpix
         self.nfreq, self.npix, self.nstk = self.maps.shape
         self.nus_eff = self.average_nus()
@@ -846,6 +848,13 @@ class PipelineFrequencyMapMaking:
             allfwhm = None
 
         return targets, allfwhm
+    def get_input_map(self):
+        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+
+        for i in range(self.params['QUBIC']['nrec']):
+            m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.fsub:(i+1)*self.fsub], axis=0)
+        
+        return m_nu_in    
     def _get_tod(self):
 
         """
@@ -914,12 +923,10 @@ class PipelineFrequencyMapMaking:
         
                 TOD = np.r_[TOD, C(self.external_timeline.maps[irec] + self.noise217).ravel()]
 
-        self.m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
-
-        for i in range(self.params['QUBIC']['nrec']):
-            self.m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.fsub:(i+1)*self.fsub], axis=0)
+        self.m_nu_in = self.get_input_map()
 
         return TOD
+
     def _barrier(self):
 
         """
@@ -944,6 +951,15 @@ class PipelineFrequencyMapMaking:
         else:
             if self.rank == 0:
                 print(message)
+    def _get_preconditionner(self):
+        
+        conditionner = np.ones((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+            
+        for i in range(conditionner.shape[0]):
+            for j in range(conditionner.shape[2]):
+                conditionner[i, :, j] = 1/self.params['QUBIC']['covcut']
+                
+        return acq.get_preconditioner(conditionner) 
     def _pcg(self, d):
 
         '''
@@ -957,14 +973,16 @@ class PipelineFrequencyMapMaking:
 
         A = self.H.T * self.invN * self.H
         b = self.H.T * self.invN * d
-
+        print(self.params)
         ### Preconditionning
         M = acq.get_preconditioner(np.ones(12*self.params['Sky']['nside']**2))
+        #M = self._get_preconditionner()
 
         ### PCG
         start = time.time()
-        solution_qubic_planck = pcg(A, 
-                                    b, 
+        solution_qubic_planck = pcg(A=A, 
+                                    b=b, 
+                                    comm=self.comm,
                                     x0=self.m_nu_in, 
                                     M=M, 
                                     tol=self.params['PCG']['tol'], 
@@ -979,7 +997,7 @@ class PipelineFrequencyMapMaking:
         self._barrier()
 
         if self.params['PCG']['gif']:
-            do_gif(f'gif_convergence_{self.job_id}', self.params['PCG']['maxiter'], self.job_id)
+            do_gif(f'gif_convergence_{self.job_id}', solution_qubic_planck['nit'], self.job_id)
 
         if self.params['QUBIC']['nrec'] == 1:
             solution_qubic_planck['x']['x'] = np.array([solution_qubic_planck['x']['x']])
@@ -1020,7 +1038,7 @@ class PipelineFrequencyMapMaking:
         ### Plots and saving
         if self.rank == 0:
             
-            self.save_data(self.file, {'maps':self.s_hat, 'nus':self.nus_Q, 'coverage':self.coverage, 'center':self.center, 'maps_in':self.m_nu_in})
+            self.save_data(self.file, {'maps':self.s_hat, 'nus':self.nus_Q, 'coverage':self.coverage, 'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params})
             self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, fwhm=0.0048)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=1, nsig=3, fwhm=0.0048)
@@ -1269,11 +1287,7 @@ class PipelineEnd2End:
         
         if self.params['Sampler']['do_sampler']:
             ### Run
-            self.cross.run()
-
-        
-
-        
+            self.cross.run()       
 
         
 
