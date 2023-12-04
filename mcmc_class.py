@@ -22,11 +22,14 @@ from pysimulators import FitsArray
 from qubic import fibtools as ft
 from qubic import camb_interface as qc
 from qubic import SpectroImLib as si
+import mapmaking.systematics as acq
 from qubic import mcmc
 from qubic import AnalysisMC as amc
 import fgb.component_model as c
 import fgb.mixing_matrix as mm
-
+from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
+from pipeline import *
+from pyoperators import *
 
 class Data:
     """
@@ -41,6 +44,12 @@ class Data:
         self.path = self.param['data']['path']
         self.name = self.param['simu']['name']
         self.nrec = self.param['simu']['nrec']
+        self.data = self.find_data()
+        self.nsub = self.data['parameters']['QUBIC']['nsub']
+        self.nside = self.data['parameters']['Sky']['nside']
+        self.fsub = int(self.nsub / self.nrec)
+        self.comm = MPI.COMM_WORLD
+        self.size = self.comm.Get_size()
 
     def find_data(self):
         '''
@@ -67,16 +76,20 @@ class Data:
 
         # Store the datas into arrays
         ps_data = []
+        map_data = []
         for realisation in range(0, self.param['data']['n_real']):
             data = pickle.load(open(path_data + '/' + data_names[realisation], 'rb'))
             ps_data.append(data['Dl'])
+            map_data.append(data['maps'])
         ps_data = np.reshape(ps_data, [self.param['data']['n_real'],self.param['simu']['nrec'], self.param['simu']['nrec'], np.shape(data['Dl'][0])[0]])
         
+        self.nus = data['nus']
+
         # Compute Mean & Error on each realisations of Noise & Sky's PSs 
         mean_data = np.mean(ps_data, axis = 0)
         error_data = np.std(ps_data, axis = 0)
 
-        return (mean_data, error_data)
+        return (mean_data, error_data, map_data)
 
     def auto_spectra_noise_reduction(self, mean_data, mean_noise):
         '''
@@ -88,20 +101,113 @@ class Data:
 
         return mean_data
 
-    def data(self):
+    def get_ultrawideband_config(self):
+        """
+        Method that pre-compute UWB configuration.
+        """
+
+        nu_up = 247.5
+        nu_down = 131.25
+        nu_ave = np.mean(np.array([nu_up, nu_down]))
+        delta = nu_up - nu_ave
+
+        return nu_ave, 2*delta/nu_ave
+    
+    def get_dict(self):
+        """
+        Method to modify the qubic dictionary.
+        """
+
+        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
+        params = self.data['parameters']
+
+        args = {'npointings':params['QUBIC']['npointings'], 
+                'nf_recon':params['QUBIC']['nrec'], 
+                'nf_sub':params['QUBIC']['nsub'], 
+                'nside':params['Sky']['nside'], 
+                'MultiBand':True, 
+                'period':1, 
+                'RA_center':params['QUBIC']['RA_center'], 
+                'DEC_center':params['QUBIC']['DEC_center'],
+                'filter_nu':nu_ave*1e9, 
+                'noiseless':False, 
+                'comm':self.comm, 
+                'dtheta':params['QUBIC']['dtheta'],
+                'nprocs_sampling':1, 
+                'nprocs_instrument':self.size,
+                'photon_noise':True, 
+                'nhwp_angles':params['QUBIC']['nhwp_angles'], 
+                'effective_duration':3, 
+                'filter_relative_bandwidth':delta_nu_over_nu, 
+                'type_instrument':'wide', 
+                'TemperatureAtmosphere150':None, 
+                'TemperatureAtmosphere220':None,
+                'EmissivityAtmosphere150':None, 
+                'EmissivityAtmosphere220':None, 
+                'detector_nep':float(params['QUBIC']['detector_nep']), 
+                'synthbeam_kmax':params['QUBIC']['synthbeam_kmax']}
+
+        args_mono = args.copy()
+        args_mono['nf_recon'] = 1
+        args_mono['nf_sub'] = 1
+
+        ### Get the default dictionary
+        dictfilename = 'dicts/pipeline_demo.dict'
+        d = qubic.qubicdict.qubicDict()
+        d.read_from_file(dictfilename)
+        dmono = d.copy()
+        for i in args.keys():
+
+            d[str(i)] = args[i]
+            dmono[str(i)] = args_mono[i]
+
+
+        return d, dmono
+
+    def cross_sectra_convo(self, mean_sky, map_data):
+        '''
+        FUnction that will compute the cross-spectra between each reconsructed sub-bands taking into accounts the different convolutions between each maps
+        '''
+
+        my_dict, _ = self.get_dict()
+        joint = acq.JointAcquisitionFrequencyMapMaking(my_dict, self.data['parameters']['QUBIC']['type'], self.data['parameters']['QUBIC']['nrec'], self.data['parameters']['QUBIC']['nsub'])
+        allfwhm = joint.qubic.allfwhm
+        _, namaster = NamasterEll().ell()
+
+        for i in range(self.nrec):
+            for j in range(self.nrec):
+                if i != j:
+                    for real in range(self.param['data']['n_real']):
+                        cross_spect = []
+                        if allfwhm[i*self.fsub]<allfwhm[j*self.fsub] :
+                            C = HealpixConvolutionGaussianOperator(fwhm=allfwhm[j*self.fsub])
+                            convoluted_map = C*map_data[real][i]
+                            cross_spect.append(namaster.get_spectra(map=convoluted_map.T, map2=map_data[real][j].T)[1][:, 2])
+                        else:
+                            C = HealpixConvolutionGaussianOperator(fwhm=allfwhm[i*self.fsub])
+                            convoluted_map = C*map_data[real][j]
+                            cross_spect.append(namaster.get_spectra(map=map_data[real][i].T, map2=convoluted_map.T)[1][:, 2])
+                    mean_sky[i, j, :] = np.mean(cross_spect, axis=0)
+        
+        return mean_sky
+
+    def get_data(self):
         '''
         Function to compute the mean of your spectra and the std of the noise realisations, taking into account the noise reduction
         '''
 
-        mean_data, error_data = self.compute_data(self.name)
+        mean_data, error_data, map_data = self.compute_data(self.name)
+
+        if self.data['parameters']['QUBIC']['convolution']:
+            mean_data = self.cross_sectra_convo(mean_data, map_data)
 
         if self.param['simu']['noise']:
-            mean_noise, error_noise = self.compute_data('Noise')
+            mean_noise, error_noise, _ = self.compute_data('Noise')
             mean_data = self.auto_spectra_noise_reduction(mean_data, mean_noise)
 
-            return (mean_data, error_noise)
+            return (mean_data, error_noise, error_data)
         
-        return mean_data, np.ones((np.shape(mean_data)))
+        return mean_data, np.ones((np.shape(mean_data))), error_data
 
 
 class NamasterEll:
@@ -130,7 +236,7 @@ class NamasterEll:
 
         ell = namaster.get_binning(nside)[0]
         
-        return ell
+        return ell, namaster
 
 
 class CMB:
@@ -240,12 +346,12 @@ class MCMC:
 
         with open('mcmc_config.yml', "r") as stream:
             self.param = yaml.safe_load(stream)
-        self.ell = NamasterEll().ell()
+        self.ell, _ = NamasterEll().ell()
         data = Data().find_data()
         self.nus = data['nus']
         self.sky_parameters = self.param['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_names = self.ndim_and_parameters_names()
-        self.mean_data, self.error_noise = Data().data()
+        self.mean_data, self.error_noise, self.error_data = Data().get_data()
 
     def ndim_and_parameters_names(self):
         '''
@@ -398,6 +504,7 @@ class MCMC:
         mcmc_steps = self.param['MCMC']['mcmc_steps']
         p0 = self.initial_conditions()
         ell = self.ell
+        print(Data().find_data()['parameters'])
         
         with Pool() as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob_fn = self.chi2, pool = pool, moves = [(emcee.moves.StretchMove(), self.param['MCMC']['stretch_move_factor']), (emcee.moves.DESnookerMove(gammas=self.param['MCMC']['snooker_move_gamma']), 1 - self.param['MCMC']['stretch_move_factor'])])
@@ -429,6 +536,27 @@ class MCMC:
 
         path_plot_triangle = f'{config}_Nrec={nrec}_plots'
         plt.savefig(self.param['data']['path'] + path_plot + f'/triangle_plot_Nreal={n_real}')
+
+        # Data vs Fit plot
+        plt.figure()
+        mcmc_values = np.mean(samples_flat, axis=0)
+        parameters_values = []
+        cpt=0
+        for parameter in self.sky_parameters:
+            if self.sky_parameters[parameter][0] is True:
+                parameters_values.append(mcmc_values[cpt])
+                cpt+=1
+            else:
+                parameters_values.append(self.sky_parameters[parameter][0])
+        Dl_mcmc = CMB(self.ell).model_cmb(parameters_values[0], parameters_values[1]) + Dust(self.ell).model_dust(parameters_values[3], parameters_values[4], parameters_values[5], parameters_values[6], parameters_values[2])
+        plt.plot(self.ell[:5], Dl_mcmc[0][0][:5], label = 'MCMC')
+        plt.errorbar(self.ell[:5], self.mean_data[0][0][:5], self.error_data[0][0][:5], label = 'Data')
+        plt.legend()
+        plt.xlabel('l')
+        plt.ylabel('Dl')
+        plt.title('CMB + Dust spectrum')          
+        plt.savefig(self.param['data']['path'] + path_plot + f'/Comparison_plot_Nreal={n_real}')
+
 
 MCMC()()
 
