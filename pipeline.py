@@ -911,7 +911,7 @@ class PipelineFrequencyMapMaking:
             TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
             for irec in range(int(self.params['QUBIC']['nrec']/2)):
                 if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*f:(irec+1)*f]))
+                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.fsub:(irec+1)*self.fsub]))
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         
@@ -920,7 +920,7 @@ class PipelineFrequencyMapMaking:
             TOD = np.r_[TOD, TOD_QUBIC220.copy()]
             for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
                 if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*f:(irec+1)*f]))
+                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.fsub:(irec+1)*self.fsub]))
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         
