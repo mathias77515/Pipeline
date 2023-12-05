@@ -8,6 +8,7 @@ from model.models import *
 from likelihood.likelihood import *
 from plots.plotter import *
 import mapmaking.systematics as acq
+from mapmaking.frequency_acquisition import get_preconditioner
 from mapmaking.planck_timeline import *
 from mapmaking.noise_timeline import *
 from model.externaldata import *
@@ -661,6 +662,8 @@ class PipelineFrequencyMapMaking:
         covnorm = self.coverage / self.coverage.max()
         self.seenpix = covnorm > self.params['QUBIC']['covcut']
         self.fsky = self.seenpix.astype(float).sum() / self.seenpix.size
+        self.coverage_cut = self.coverage.copy()
+        self.coverage_cut[~self.seenpix] = 1
 
         self.seenpix_for_plot = covnorm > 0
         self.mask = np.ones(12*self.params['Sky']['nside']**2)
@@ -908,7 +911,7 @@ class PipelineFrequencyMapMaking:
             TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
             for irec in range(int(self.params['QUBIC']['nrec']/2)):
                 if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(allfwhm[irec*f:(irec+1)*f]))
+                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*f:(irec+1)*f]))
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         
@@ -957,9 +960,9 @@ class PipelineFrequencyMapMaking:
             
         for i in range(conditionner.shape[0]):
             for j in range(conditionner.shape[2]):
-                conditionner[i, :, j] = 1/self.params['QUBIC']['covcut']
+                conditionner[i, :, j] = 1/self.coverage_cut
                 
-        return acq.get_preconditioner(conditionner) 
+        return get_preconditioner(conditionner)
     def _pcg(self, d):
 
         '''
@@ -977,6 +980,7 @@ class PipelineFrequencyMapMaking:
         ### Preconditionning
         M = acq.get_preconditioner(np.ones(12*self.params['Sky']['nside']**2))
         #M = self._get_preconditionner()
+        #print("PRECONDITIONNER")
 
         ### PCG
         start = time.time()
