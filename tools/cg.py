@@ -10,7 +10,13 @@ from pyoperators.iterative.stopconditions import MaxIterationStopCondition
 from tools.foldertools import *
 import matplotlib.pyplot as plt
 import healpy as hp
+import yaml
+import qubic
+import mapmaking.systematics as acq
+from mapmaking.planck_timeline import *
+from mapmaking.noise_timeline import *
 
+ 
 __all__ = ['pcg']
 
 
@@ -24,6 +30,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self,
         A,
         b,
+        comm,
         x0=None,
         tol=1.0e-5,
         maxiter=300,
@@ -80,6 +87,9 @@ class PCGAlgorithm(IterativeAlgorithm):
 
         """
 
+        with open('params.yml', "r") as stream:
+            self.params = yaml.safe_load(stream)
+
         self.gif = create_gif
         self.center = center
         self.reso = reso
@@ -125,7 +135,9 @@ class PCGAlgorithm(IterativeAlgorithm):
             )
         self.A = A
         self.b = b
-        self.comm = A.commin
+        self.comm = comm
+        self.size = self.comm.Get_size()
+        self.rank = self.comm.Get_rank()
         self.norm = lambda x: _norm2(x, self.comm)
         self.dot = lambda x, y: _dot(x, y, self.comm)
 
@@ -141,6 +153,133 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.q = empty(b.shape, dtype)
         self.r = empty(b.shape, dtype)
         self.s = empty(b.shape, dtype)
+
+        self.dict, self.dict_mono = self.get_dict()
+        self.skyconfig = self._get_sky_config()
+        self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
+        self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
+
+        self.external_timeline = ExternalData2Timeline(self.skyconfig, 
+                                                       self.joint.qubic.allnus, 
+                                                       self.params['QUBIC']['nrec'], 
+                                                       nside=self.params['Sky']['nside'], 
+                                                       corrected_bandpass=self.params['QUBIC']['bandpass_correction'])     
+
+        self.input_map = self.get_input_map()  
+
+    def get_input_map(self):
+        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+
+        for i in range(self.params['QUBIC']['nrec']):
+            m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.fsub:(i+1)*self.fsub], axis=0)
+        
+        return m_nu_in
+    def get_ultrawideband_config(self):
+        
+        """
+        
+        Method that pre-compute UWB configuration.
+
+        """
+        
+        nu_up = 247.5
+        nu_down = 131.25
+        nu_ave = np.mean(np.array([nu_up, nu_down]))
+        delta = nu_up - nu_ave
+    
+        return nu_ave, 2*delta/nu_ave
+    def get_dict(self):
+    
+        """
+        
+        Method to modify the qubic dictionary.
+        
+        """
+
+        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
+
+        args = {'npointings':self.params['QUBIC']['npointings'], 
+                'nf_recon':self.params['QUBIC']['nrec'], 
+                'nf_sub':self.params['QUBIC']['nsub'], 
+                'nside':self.params['Sky']['nside'], 
+                'MultiBand':True, 
+                'period':1, 
+                'RA_center':self.params['QUBIC']['RA_center'], 
+                'DEC_center':self.params['QUBIC']['DEC_center'],
+                'filter_nu':nu_ave*1e9, 
+                'noiseless':False, 
+                'comm':self.comm, 
+                'dtheta':self.params['QUBIC']['dtheta'],
+                'nprocs_sampling':1, 
+                'nprocs_instrument':self.size,
+                'photon_noise':True, 
+                'nhwp_angles':self.params['QUBIC']['nhwp_angles'], 
+                'effective_duration':3, 
+                'filter_relative_bandwidth':delta_nu_over_nu, 
+                'type_instrument':'wide', 
+                'TemperatureAtmosphere150':None, 
+                'TemperatureAtmosphere220':None,
+                'EmissivityAtmosphere150':None, 
+                'EmissivityAtmosphere220':None, 
+                'detector_nep':float(self.params['QUBIC']['detector_nep']), 
+                'synthbeam_kmax':self.params['QUBIC']['synthbeam_kmax']}
+        
+        args_mono = args.copy()
+        args_mono['nf_recon'] = 1
+        args_mono['nf_sub'] = 1
+
+        ### Get the default dictionary
+        dictfilename = 'dicts/pipeline_demo.dict'
+        d = qubic.qubicdict.qubicDict()
+        d.read_from_file(dictfilename)
+        dmono = d.copy()
+        for i in args.keys():
+        
+            d[str(i)] = args[i]
+            dmono[str(i)] = args_mono[i]
+
+    
+        return d, dmono
+    def _get_sky_config(self):
+        
+        """
+        
+        Method that read `params.yml` file and create dictionary containing sky emission such as :
+        
+                    d = {'cmb':seed, 'dust':'d0', 'synchrotron':'s0'}
+        
+        Note that the key denote the emission and the value denote the sky model using PySM convention. For CMB, seed denote the realization.
+        
+        """
+        sky = {}
+        for ii, i in enumerate(self.params['Sky'].keys()):
+            #print(ii, i)
+
+            if i == 'CMB':
+                if self.params['Sky']['CMB']['cmb']:
+                    if self.params['QUBIC']['seed'] == 0:
+                        if self.rank == 0:
+                            seed = np.random.randint(10000000)
+                        else:
+                            seed = None
+                        seed = self.comm.bcast(seed, root=0)
+                    else:
+                        seed = self.params['QUBIC']['seed']
+                    print(f'Seed of the CMB is {seed} for rank {self.rank}')
+                    #stop
+                    sky['cmb'] = seed
+                
+            else:
+                for jj, j in enumerate(self.params['Sky']['Foregrounds']):
+                    #print(j, self.params['Foregrounds'][j])
+                    if j == 'Dust':
+                        if self.params['Sky']['Foregrounds'][j]:
+                            sky['dust'] = self.params['QUBIC']['dust_model']
+                    elif j == 'Synchrotron':
+                        if self.params['Sky']['Foregrounds'][j]:
+                            sky['synchrotron'] = self.params['QUBIC']['sync_model']
+
+        return sky
 
     def initialize(self):
         IterativeAlgorithm.initialize(self)
@@ -168,16 +307,17 @@ class PCGAlgorithm(IterativeAlgorithm):
             if self.comm is not None:
                 if self.comm.Get_rank() == 0:
                     plt.figure(figsize=self.figsize)
-
+                    print(self.x.shape)
                     k=1
                     for i in range(self.x.shape[0]):
                         for j in range(self.x.shape[2]):
                             mymap = self.x[i, :, j].copy()
                             mymap[~self.seenpix] = hp.UNSEEN
-                            hp.gnomview(mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0], self.x.shape[2], k), title='', notext=True,
+                            hp.gnomview(mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0]*2, self.x.shape[2]*2, k), title='Map', notext=True,
                                 min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
-                
-                            k+=1
+                            hp.gnomview(self.input_map[i, :, j] - mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0]*2, self.x.shape[2]*2, k+1), title='Residual', notext=True,
+                                min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
+                            k+=2
                     plt.suptitle(f'Iteration : {self.niterations}')
                     plt.savefig(f'gif_convergence_{self.jobid}/maps_{self.niterations}.png')
                     plt.close()
@@ -197,13 +337,12 @@ class PCGAlgorithm(IterativeAlgorithm):
                 plt.savefig(f'gif_convergence_{self.jobid}/maps_{self.niterations}.png')
                 plt.close()
             
-
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
         self.convergence = np.append(self.convergence, self.error)
         if self.error < self.tol:
+            print('STOP')
             raise StopIteration('Solver reached maximum tolerance.')
-
         self.M(self.r, self.s)
         delta_old = self.delta
         self.delta = self.dot(self.r, self.s)
@@ -220,6 +359,7 @@ class PCGAlgorithm(IterativeAlgorithm):
 def pcg(
     A,
     b,
+    comm,
     x0=None,
     tol=1.0e-5,
     maxiter=300,
@@ -283,6 +423,7 @@ def pcg(
     algo = PCGAlgorithm(
         A,
         b,
+        comm,
         x0=x0,
         tol=tol,
         maxiter=maxiter,
