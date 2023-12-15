@@ -1,7 +1,7 @@
 data:
   path : '/sps/qubic/Users/TomLaclavere/Pipeline/'
-  path_noise : '/pbs/home/t/tlaclave/sps/Pipeline/data_without_convolution/UWB_Nrec=2_Noise_'
-  path_sky : '/pbs/home/t/tlaclave/sps/Pipeline/data_without_convolution/UWB_Nrec=2_Sky_'
+  path_noise : '/pbs/home/t/tlaclave/sps/Pipeline/data_without_convolution/UWB_Nrec=2_Noise_test'
+  path_sky : '/pbs/home/t/tlaclave/sps/Pipeline/data_without_convolution/UWB_Nrec=2_Sky_test'
   pipeline : 'FMM'
 
 simu: 

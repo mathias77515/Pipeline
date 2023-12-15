@@ -12,6 +12,8 @@ import yaml
 from multiprocessing import Pool
 import time
 
+sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
+
 #### QUBIC packages
 import qubic
 from qubic import NamasterLib as nam
@@ -24,12 +26,13 @@ from qubic import SpectroImLib as si
 import mapmaking.systematics as acq
 from qubic import mcmc
 from qubic import AnalysisMC as amc
+from qubic.beams import BeamGaussian
 import fgb.component_model as c
 import fgb.mixing_matrix as mm
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 #from pipeline import *
 from pyoperators import *
-from preset.preset import *
+#from preset.preset import *
 
 class Spectra:
     '''
@@ -39,7 +42,7 @@ class Spectra:
     def __init__(self, iter):
 
         self.iter = iter
-        with open('sampling_config.yml', "r") as stream:
+        with open('spectrum_config.yml', "r") as stream:
             self.param_sampling = yaml.safe_load(stream)
         self.pipeline = self.param_sampling['data']['pipeline']
         self.path_sky = self.param_sampling['data']['path_sky']
@@ -68,7 +71,6 @@ class Spectra:
         _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=self.nsub-1, relative_bandwidth=0.25)
         _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=self.nsub-1, relative_bandwidth=0.25)
         self.allnus = np.array(list(allnus150) + list(allnus220))
-        print(self.allnus)
         self.allfwhm = self.allfwhm()
 
     def find_data(self, path):
@@ -215,8 +217,7 @@ class Spectra:
         elif self.pipeline == 'CMM':
             idx_lenght = self.ncomp
         power_spectra_array = np.zeros((idx_lenght, idx_lenght, len(self.ell)))
-        print(np.shape(power_spectra_array))
-        print(np.shape(maps))
+
         for i in range(idx_lenght):
             for j in range(0, i + 1):
                 if i==j :
@@ -229,7 +230,6 @@ class Spectra:
         return power_spectra_array
 
     def compute_power_spectra(self):
-        print('Start computing the sky power spectra')
         sky_power_spectra = self.compute_array_power_spectra(self.sky_maps)
         noise_power_spectra = self.compute_array_power_spectra(self.noise_maps)
         return sky_power_spectra, noise_power_spectra
@@ -244,7 +244,7 @@ class NamasterEll:
 
     def __init__(self, iter):
 
-        with open('sampling_config.yml', "r") as stream:
+        with open('spectrum_config.yml', "r") as stream:
             self.param_sampling = yaml.safe_load(stream)
         self.path_sky = self.param_sampling['data']['path_sky']
         self.iter = iter
@@ -278,23 +278,21 @@ class NamasterEll:
         
         return ell, namaster
 
-def save(iter):
+def save(iteration):
 
     with open('spectrum_config.yml', "r") as stream:
         param = yaml.safe_load(stream)
     config = param['simu']['qubic_config']
-    nrec = param['simu']['qubic_config']
-    path = param['data']['path']
-    print('The program starts')
+    nrec = param['simu']['nrec']
+    path = param['data']['path'] + 'spectra/'
+    sky_power_spectra, noise_power_spectra = Spectra(iteration).compute_power_spectra()
     print('nrec', nrec)
-    sky_power_spectra, noise_power_spectra = Spectra(iter).compute_power_spectra()
-
     pkl_path = path + f'{config}_' + f'Nrec={nrec}_spectra/'
 
     if not os.path.isdir(pkl_path):
             os.makedirs(pkl_path)
 
-    with open(pkl_path + f'{iter}.pkl', 'wb') as handle:
+    with open(pkl_path + f'{iteration}.pkl', 'wb') as handle:
         pickle.dump({'sky_ps':sky_power_spectra, 'noise_ps':noise_power_spectra}, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 iter = int(sys.argv[1])

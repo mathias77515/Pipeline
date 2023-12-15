@@ -14,5 +14,4 @@
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
-#mpirun -np $SLURM_NTASKS python main.py
 python loop_spectrum.py

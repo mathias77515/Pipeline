@@ -12,5 +12,5 @@
 #SBATCH --time=0-10:00:00
 #SBATCH --output=spectrum_jobs_%j.log
 
-mpirun -np $SLURM_NTASKS python main.py
-#python spectrum.py $1
+module load mpich
+mpirun -np $SLURM_NTASKS python spectrum.py $1
