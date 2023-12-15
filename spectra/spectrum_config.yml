@@ -1,0 +1,10 @@
+data:
+  path : '/sps/qubic/Users/TomLaclavere/Pipeline/'
+  path_noise : '/pbs/home/t/tlaclave/sps/Pipeline/data_without_convolution/UWB_Nrec=2_Noise_'
+  path_sky : '/pbs/home/t/tlaclave/sps/Pipeline/data_without_convolution/UWB_Nrec=2_Sky_'
+  pipeline : 'FMM'
+
+simu: 
+  nrec : 2
+  qubic_config : UWB
+  noise : True
