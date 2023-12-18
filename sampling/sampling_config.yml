@@ -1,18 +1,16 @@
 data:
-  path : '/sps/qubic/Users/TomLaclavere/Pipeline/'
-  path_sky : '/sps/qubic/Users/TomLaclavere/Pipeline/data_without_convolution/UWB_Nrec=2_Sky_'
-  path_noise : '/sps/qubic/Users/TomLaclavere/Pipeline/data_without_convolution/UWB_Nrec=2_Noise_'
-  n_real : 10
+  path : '/pbs/home/t/tlaclave/sps/Pipeline/spectra/with_convolution_DB_Nrec=2_spectra'
+  n_real : 200
   pipeline : 'FMM'
 
 simu: 
   nrec : 2
   qubic_config : UWB
-  name : 'Sky'
   noise : True
+  name : 'Sky'
 
 MCMC:
-  nwalkers : 10
+  nwalkers : 20
   mcmc_steps : 200
   discard : 100
   stretch_move_factor : 0.7
@@ -20,8 +18,8 @@ MCMC:
   thin : 15
 
 NS:
-  DynamicNS : True
-  nlive : 500
+  DynamicNS : False
+  nlive : 100
   prior_transform : 'uniform'
   bound : 'multi'
   queue_size : 16

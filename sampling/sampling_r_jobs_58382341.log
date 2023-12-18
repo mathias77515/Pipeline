@@ -1,0 +1,32 @@
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+* Date:                 Mon Dec 18 11:15:42 CET 2023
+* Job name:             sampling
+* Job id:               58382341
+* User:                 tlaclave
+* Account:              qubic
+* Submit host:          cca001
+* Partition:            hpc
+* Quality of service:   normal
+* Nodelist:             ccwpslurm0001
+****************************************************************
+Chosen method = Nested Sampling
+Traceback (most recent call last):
+  File "sampling.py", line 868, in <module>
+    NestedSampling()()
+  File "sampling.py", line 795, in __call__
+    print(DataFMM().find_data()['parameters'])
+NameError: name 'DataFMM' is not defined
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Mon Dec 18 11:15:48 CET 2023
+Job informations can be found using these commands:
+Accounting:
+sacct -j 58382341
+Efficiency:
+seff 58382341
+****************************************************************
