@@ -13,7 +13,7 @@ from multiprocessing import Pool
 import time
 
 sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
-
+ 
 #### QUBIC packages
 import qubic
 from qubic import NamasterLib as nam
@@ -164,6 +164,7 @@ class Spectra:
         synthbeam_peak150_fwhm = np.radians(self.my_dict['synthbeam_peak150_fwhm'])
         synthbeam = self.synthbeam(synthbeam_peak150_fwhm, dtype=np.float32)
         allfwhm = synthbeam.peak150.fwhm * (150 / self.allnus)
+        print(allfwhm)
         return allfwhm
 
     def compute_auto_spectrum(self, map):
@@ -178,20 +179,6 @@ class Spectra:
         
         return DlBB
 
-    def auto_spectra_noise_reduction(self, mean_data, mean_noise):
-        '''
-        Function to remove the mean of the noise realisations to the auto-spectra
-
-        Arguments :
-            - mean_data(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the sky realisations
-            - mean_noise(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the noise realisation
-        '''
-
-        for i in range(np.shape(mean_data)[0]):
-            mean_data[i, i, :] -= mean_noise[i, i, :]
-
-        return mean_data
-
     def compute_cross_spectrum(self, map1, fwhm1, map2, fwhm2):
         '''
         Function to compute cross-spectrum
@@ -199,11 +186,17 @@ class Spectra:
 
         # Put the map with the highest resolution at the worst one before doing the cross spectrum
         if fwhm1<fwhm2 :
-            C = HealpixConvolutionGaussianOperator(fwhm=fwhm2)
+            if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
+                C = HealpixConvolutionGaussianOperator(fwhm=fwhm2)
+            else:
+                C = HealpixConvolutionGaussianOperator(fwhm=0)
             convoluted_map = C*map1
             return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T)[1][:, 2]
         else:
-            C = HealpixConvolutionGaussianOperator(fwhm=fwhm1)
+            if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
+                C = HealpixConvolutionGaussianOperator(fwhm=fwhm1)
+            else:
+                C = HealpixConvolutionGaussianOperator(fwhm=0)
             convoluted_map = C*map2
             return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T)[1][:, 2]
 
@@ -219,7 +212,7 @@ class Spectra:
         power_spectra_array = np.zeros((idx_lenght, idx_lenght, len(self.ell)))
 
         for i in range(idx_lenght):
-            for j in range(0, i + 1):
+            for j in range(idx_lenght):
                 if i==j :
                     # Compute the auto-spectrum
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i])
@@ -278,13 +271,27 @@ class NamasterEll:
         
         return ell, namaster
 
+def find_data(path, iter):
+        '''
+        Function to extract the pickle file of one realisation. Useful to have access to the realisations' parameters
+        '''
+
+        data_names = os.listdir(path)
+
+        one_realisation = pickle.load(open(path + '/' + data_names[iter], 'rb'))
+
+        return one_realisation
+
 def save(iteration):
 
     with open('spectrum_config.yml', "r") as stream:
         param = yaml.safe_load(stream)
     config = param['simu']['qubic_config']
     nrec = param['simu']['nrec']
-    path = param['data']['path'] + 'spectra/'
+    path = param['data']['path_out']
+    path_sky = param['data']['path_sky']
+    one_realisation = find_data(path_sky, iteration)
+    simu_parameters = Spectra(iteration).find_data(path_sky)['parameters']
     sky_power_spectra, noise_power_spectra = Spectra(iteration).compute_power_spectra()
     print('nrec', nrec)
     pkl_path = path + f'{config}_' + f'Nrec={nrec}_spectra/'
@@ -293,7 +300,7 @@ def save(iteration):
             os.makedirs(pkl_path)
 
     with open(pkl_path + f'{iteration}.pkl', 'wb') as handle:
-        pickle.dump({'sky_ps':sky_power_spectra, 'noise_ps':noise_power_spectra}, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump({'sky_ps':sky_power_spectra, 'noise_ps':noise_power_spectra, 'parameters':simu_parameters, 'coverage':one_realisation['coverage'], 'nus':one_realisation['nus']}, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 iter = int(sys.argv[1])
 save(iter)
