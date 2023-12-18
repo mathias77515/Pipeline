@@ -385,21 +385,39 @@ class data:
             self.param = yaml.safe_load(stream)
         self.path_spectra = self.param['data']['path']
         self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage, self.nus = self.import_power_spectra(self.path_spectra)
-        self.mean_ps_sky, self.error_ps_sky = self.compute_mean_std(self.power_spectra_sky)
+        mean_ps_sky, self.error_ps_sky = self.compute_mean_std(self.power_spectra_sky)
         self.mean_ps_noise, self.error_ps_noise = self.compute_mean_std(self.power_spectra_noise)
+        self.mean_ps_sky = self. auto_spectra_noise_reduction(mean_ps_sky, self.mean_ps_noise)
 
     def import_power_spectra(self, path):
 
         power_spectra_sky, power_spectra_noise = [], []
         names = os.listdir(path)
-        for i in range(len(names)):
+        for i in range(self.param['data']['n_real']):
             ps = pickle.load(open(path + '/' + names[i], 'rb'))
             power_spectra_sky.append(ps['sky_ps'])
             power_spectra_noise.append(ps['noise_ps'])
         return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus']
 
     def compute_mean_std(self, ps):
+        print('ps',np.shape(ps),ps)
+        print('mean', np.shape(np.mean(ps, axis=0)),np.mean(ps, axis=0))
+        print('std', np.shape(np.std(ps, axis=0)),np.std(ps, axis=0))
         return np.mean(ps, axis = 0), np.std(ps, axis = 0)
+
+    def auto_spectra_noise_reduction(self, mean_data, mean_noise):
+        '''
+        Function to remove the mean of the noise realisations to the auto-spectra
+
+        Arguments :
+            - mean_data(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the sky realisations
+            - mean_noise(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the noise realisation
+        '''
+
+        for i in range(np.shape(mean_data)[0]):
+            mean_data[i, i, :] -= mean_noise[i, i, :]
+
+        return mean_data
 
 class NamasterEll(data):
     '''
@@ -707,7 +725,9 @@ class MCMC(data):
             else:
                 parameters_values.append(self.sky_parameters[parameter][0])
         Dl_mcmc = CMB(self.ell).model_cmb(parameters_values[0], parameters_values[1]) + Dust(self.ell, self.nus).model_dust(parameters_values[3], parameters_values[4], parameters_values[5], parameters_values[6], parameters_values[2])
+        Dl_test = CMB(self.ell).model_cmb(0, 1) + Dust(self.ell, self.nus).model_dust(10, -0.15, parameters_values[5], parameters_values[6], parameters_values[2])        
         plt.plot(self.ell[:5], Dl_mcmc[0][0][:5], label = 'MCMC')
+        plt.plot(self.ell[:5], Dl_test[0][0][:5], label = 'Model test : r=0, Ad=10, alphad=-0.15')
         plt.errorbar(self.ell[:5], self.mean_ps_sky[0][0][:5], self.error_ps_sky[0][0][:5], label = 'Data')
         plt.legend()
         plt.xlabel('l')
