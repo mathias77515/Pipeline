@@ -42,345 +42,13 @@ from dynesty import NestedSampler
 from dynesty import DynamicNestedSampler
 from dynesty import utils as dyfunc
 
-# class DataFMM:
-#     """
-#     Class to manipulate data from your simulations
-#     """
-
-#     def __init__(self):
-
-#         with open('sampling_config.yml', "r") as stream:
-#             self.param_sampling = yaml.safe_load(stream)
-#         self.config = self.param_sampling['simu']['qubic_config']
-#         self.path = self.param_sampling['data']['path']
-#         self.path_sky = self.param_sampling['data']['path_sky']
-#         self.path_noise = self.param_sampling['data']['path_noise']
-#         self.observation_name = self.param_sampling['simu']['name']
-#         self.nrec = self.param_sampling['simu']['nrec']
-#         self.data = self.find_data()
-#         self.nsub = self.data['parameters']['QUBIC']['nsub']
-#         self.nside = self.data['parameters']['Sky']['nside']
-#         self.fsub = int(self.nsub / self.nrec)
-#         self.comm = MPI.COMM_WORLD
-#         self.size = self.comm.Get_size()
-
-#     def find_data(self):
-#         '''
-#         Function to extract the pickle file of one realisation. Useful to have access to the realisations' parameters
-#         '''
-
-#         data_names = os.listdir(self.path_sky)
-
-#         one_realisation = pickle.load(open(self.path_sky + '/' + data_names[0], 'rb'))
-
-#         return one_realisation
-
-#     def compute_data(self, path):
-#         '''
-#         Function to compute the mean and std on your spectra
-
-#         Argument : 
-#             - path(str): give the file's path where your realisations are stored
-#         '''
-
-#         data_names = os.listdir(path)
-#         # Store power spectra and maps, then return the power spectra's mean and std and the maps associated with the path given
-#         ps_data = []
-#         maps_data = []
-#         for realisation in range(0, self.param_sampling['data']['n_real']):
-#             data = pickle.load(open(path + '/' + data_names[realisation], 'rb'))
-#             ps_data.append(data['Dl'])
-#             maps_data.append(data['maps'])
-#         ps_data = np.reshape(ps_data, [self.param_sampling['data']['n_real'],self.param_sampling['simu']['nrec'], self.param_sampling['simu']['nrec'], np.shape(data['Dl'][0])[0]])
-        
-#         self.nus = data['nus']
-
-#         # Compute Mean & Error on each realisations of PSs 
-#         mean_ps_data = np.mean(ps_data, axis = 0)
-#         error_ps_data = np.std(ps_data, axis = 0)
-
-#         return (mean_ps_data, error_ps_data, maps_data)
-
-#     def get_ultrawideband_config(self):
-#         """
-#         Method that pre-compute UWB configuration.
-#         """
-
-#         nu_up = 247.5
-#         nu_down = 131.25
-#         nu_ave = np.mean(np.array([nu_up, nu_down]))
-#         delta = nu_up - nu_ave
-
-#         return nu_ave, 2*delta/nu_ave
-    
-#     def get_dict(self):
-#         """
-#         Method to modify the qubic dictionary.
-#         """
-
-#         nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
-#         params = self.data['parameters']
-
-#         args = {'npointings':params['QUBIC']['npointings'], 
-#                 'nf_recon':params['QUBIC']['nrec'], 
-#                 'nf_sub':params['QUBIC']['nsub'], 
-#                 'nside':params['Sky']['nside'], 
-#                 'MultiBand':True, 
-#                 'period':1, 
-#                 'RA_center':params['QUBIC']['RA_center'], 
-#                 'DEC_center':params['QUBIC']['DEC_center'],
-#                 'filter_nu':nu_ave*1e9, 
-#                 'noiseless':False, 
-#                 'comm':self.comm, 
-#                 'dtheta':params['QUBIC']['dtheta'],
-#                 'nprocs_sampling':1, 
-#                 'nprocs_instrument':self.size,
-#                 'photon_noise':True, 
-#                 'nhwp_angles':params['QUBIC']['nhwp_angles'], 
-#                 'effective_duration':3, 
-#                 'filter_relative_bandwidth':delta_nu_over_nu, 
-#                 'type_instrument':'wide', 
-#                 'TemperatureAtmosphere150':None, 
-#                 'TemperatureAtmosphere220':None,
-#                 'EmissivityAtmosphere150':None, 
-#                 'EmissivityAtmosphere220':None, 
-#                 'detector_nep':float(params['QUBIC']['detector_nep']), 
-#                 'synthbeam_kmax':params['QUBIC']['synthbeam_kmax']}
-
-#         args_mono = args.copy()
-#         args_mono['nf_recon'] = 1
-#         args_mono['nf_sub'] = 1
-
-#         ### Get the default dictionary
-#         dictfilename = 'dicts/pipeline_demo.dict'
-#         d = qubic.qubicdict.qubicDict()
-#         d.read_from_file(dictfilename)
-#         dmono = d.copy()
-#         for i in args.keys():
-
-#             d[str(i)] = args[i]
-#             dmono[str(i)] = args_mono[i]
-
-
-#         return d, dmono
-
-#     # def cross_sectra_convo(self, tab_power_spectra, maps_data):
-#     #     '''
-#     #     FUnction that will compute the cross-spectra between each reconsructed sub-bands taking into accounts the different convolutions between each maps
-#     #     '''
-
-#     #     my_dict, _ = self.get_dict()
-#     #     joint = acq.JointAcquisitionFrequencyMapMaking(my_dict, self.data['parameters']['QUBIC']['type'], self.data['parameters']['QUBIC']['nrec'], self.data['parameters']['QUBIC']['nsub'])
-#     #     allfwhm = joint.qubic.allfwhm
-#     #     _, namaster = NamasterEll().ell()
-
-#     #     for i in range(self.nrec):
-#     #         for j in range(self.nrec):
-#     #             if i != j:
-#     #                 for real in range(self.param_sampling['data']['n_real']):
-#     #                     cross_spect = []
-#     #                     # Put the map with the highest resolution at the worst one before doing the cross spectrum
-#     #                     if allfwhm[i*self.fsub]<allfwhm[j*self.fsub] :
-#     #                         C = HealpixConvolutionGaussianOperator(fwhm=allfwhm[j*self.fsub])
-#     #                         convoluted_map = C*maps_data[real][i]
-#     #                         cross_spect.append(namaster.get_spectra(map=convoluted_map.T, map2=maps_data[real][j].T)[1][:, 2])
-#     #                     else:
-#     #                         C = HealpixConvolutionGaussianOperator(fwhm=allfwhm[i*self.fsub])
-#     #                         convoluted_map = C*maps_data[real][j]
-#     #                         cross_spect.append(namaster.get_spectra(map=maps_data[real][i].T, map2=convoluted_map.T)[1][:, 2])
-#     #                 tab_power_spectra[i, j, :] = np.mean(cross_spect, axis=0)
-        
-#     #     return  tab_power_spectra
-
-#     def get_array_power_spectra(self):
-#         '''
-#         Function to compute the auto-spectra and cross-spectra for each realisation, for the sky and the noise and that will retrun their mean and std, using Spectra class
-#         '''
-
-#         # mean_ps_sky, error_ps_sky, maps_sky = self.compute_data(self.path_sky)
-
-#         # if self.data['parameters']['QUBIC']['convolution']:
-#         #     mean_ps_sky = self.cross_sectra_convo(mean_ps_sky, maps_sky)
-
-#         # if self.param_sampling['simu']['noise']:
-#         #     mean_ps_noise, error_ps_noise, _ = self.compute_data(self.path_noise)
-#         #     mean_ps_sky = self.auto_spectra_noise_reduction(mean_ps_sky, mean_ps_noise)
-
-#         #     return (mean_ps_sky, error_ps_noise, error_ps_sky)
-        
-#         # return mean_ps_sky, np.ones((np.shape(mean_ps_sky))), error_ps_sky
-
-#         _, _, maps_sky = self.compute_data(self.path_sky)
-#         _, _, maps_noise = self.compute_data(self.path_noise)
-#         mean_ps_sky, error_ps_sky = Spectra().compute_array_power_spectra(maps_sky)
-#         mean_ps_noise, error_ps_noise = Spectra().compute_array_power_spectra(maps_noise)
-
-#         mean_ps_sky = Spectra().auto_spectra_noise_reduction(mean_ps_sky, mean_ps_noise)
-
-#         return mean_ps_sky, error_ps_noise, error_ps_sky
-
-
-# class DataCMM:
-#     """
-#     Class to manipulate data from your simulations
-#     """
-
-#     def __init__(self):
-
-#         with open('sampling_config.yml', "r") as stream:
-#             self.param_sampling = yaml.safe_load(stream)
-#         self.config = self.param_sampling['simu']['qubic_config']
-#         self.path = self.param_sampling['data']['path']
-#         self.path_sky = self.param_sampling['data']['path_sky']
-#         self.path_noise = self.param_sampling['data']['path_noise']
-#         self.observation_name = self.param_sampling['simu']['name']
-#         self.nrec = self.param_sampling['simu']['nrec']
-#         self.data = self.find_data()
-#         self.nsub = self.data['parameters']['MapMaking']['qubic']['nsub']
-#         self.nside = self.data['parameters']['MapMaking']['qubic']['nside']
-#         self.comm = MPI.COMM_WORLD
-#         self.size = self.comm.Get_size()
-
-#     def find_data(self):
-#         '''
-#         Function to extract the pickle file of one realisation. Useful to have access to the realisations' parameters
-#         '''
-
-#         data_names = os.listdir(self.path_sky)
-
-#         data = pickle.load(open(self.path_sky + '/' + data_names[0], 'rb'))
-
-#         return data
-
-#     def compute_data(self, path):
-#         '''
-#         Function to compute the mean and std on your spectra
-
-#         Argument : 
-#             - path(str): give the file's path where your realisations are stored
-#         '''
-
-#         data_names = os.listdir(path)
-#         # Store the datas into arrays
-#         map_data = []
-#         for realisation in range(0, self.param_sampling['data']['n_real']):
-#             data = pickle.load(open(path + '/' + data_names[realisation], 'rb'))
-#             map_data.append(data['components'])
-
-#         return map_data
-
-#     def get_power_spectra(self):
-#         '''
-#         Function to compute the auto-spectra and cross-spectra for each realisation, for the sky and the noise and that will retrun their mean and std, using Spectra class
-#         '''
-
-#         _, _, maps_sky = self.compute_data(self.path_sky)
-#         _, _, maps_noise = self.compute_data(self.path_noise)
-#         mean_ps_sky, error_ps_sky = Spectra().compute_array_power_spectra(maps_sky)
-#         mean_ps_noise, error_ps_noise = Spectra().compute_array_power_spectra(maps_noise)
-
-#         mean_ps_sky = Spectra().auto_spectra_noise_reduction(mean_ps_sky, mean_ps_noise)
-
-#         return mean_ps_sky, error_ps_noise, error_ps_sky
-
-# class Spectra:
-#     '''
-#     Class to compute the different spectra for our realisations
-#     '''
-
-#     def __init__(self):
-
-#         with open('sampling_config.yml', "r") as stream:
-#             self.param_sampling = yaml.safe_load(stream)
-#         self.pipeline = self.param_sampling['data']['pipeline']
-#         self.n_real = self.param_sampling['data']['n_real']
-#         if self.pipeline == 'CMM':
-#             self.data_parameters = DataCMM().find_data()['parameters']
-#             self.components_maps = DataCMM().compute_data(self.param_sampling['data']['path_sky'])
-#             self.ncomp = np.shape(self.components_maps[0])[0]
-#             self.nsub = self.data_parameters['QUBIC']['nsub']
-#             self.allfwhm = self.sims.joint.qubic.allfwhm
-#         if self.pipeline == 'FMM':
-#             self.data = DataFMM().find_data()
-#             self.data_parameters = self.data['parameters']
-#             self.nrec = self.data_parameters['QUBIC']['nrec']
-#             self.nsub = self.data_parameters['QUBIC']['nsub']
-#             self.fsub = int(self.nsub / self.nrec)
-#             self.data_parameters = DataFMM().find_data()['parameters']
-#             self.mean_ps_sky, self.error_ps_sky, self.maps_sky = DataFMM().compute_data(self.param_sampling['data']['path_sky'])
-#             self.mean_ps_noise, self.error_ps_noise, _ = DataFMM().compute_data(self.param_sampling['data']['path_noise'])
-#             my_dict, _ = DataFMM().get_dict()
-#             joint = acq.JointAcquisitionFrequencyMapMaking(my_dict, self.data_parameters['QUBIC']['type'], self.nrec, self.nsub)
-#             self.allfwhm = joint.qubic.allfwhm
-#         _, self.namaster = NamasterEll().ell()
-
-#     def compute_auto_spectrum(self, map):
-#         '''
-#         Function to compute the auto-spectrum of a given map
-
-#         Argument : 
-#             - map(array) : (nrec/ncomp, npix, nstokes)
-#         '''
-
-#         DlBB = self.namaster.get_spectra(map=map.T, map2=None)[1][:, 2]
-        
-#         return DlBB
-
-#     def auto_spectra_noise_reduction(self, mean_data, mean_noise):
-#         '''
-#         Function to remove the mean of the noise realisations to the auto-spectra
-
-#         Arguments :
-#             - mean_data(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the sky realisations
-#             - mean_noise(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the noise realisation
-#         '''
-
-#         for i in range(np.shape(mean_data)[0]):
-#             mean_data[i, i, :] -= mean_noise[i, i, :]
-
-#         return mean_data
-
-#     def compute_cross_spectrum(self, map1, fwhm1, map2, fwhm2):
-#         '''
-#         Function to compute cross-spectrum
-#         '''
-
-#         # Put the map with the highest resolution at the worst one before doing the cross spectrum
-#         if fwhm1<fwhm2 :
-#             C = HealpixConvolutionGaussianOperator(fwhm=fwhm2)
-#             convoluted_map = C*map1
-#             return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T)[1][:, 2]
-#         else:
-#             C = HealpixConvolutionGaussianOperator(fwhm=fwhm1)
-#             convoluted_map = C*map2
-#             return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T)[1][:, 2]
-
-#     def compute_array_power_spectra(self, maps):
-#         '''
-#         Function to build an array fill with all the power spectra computed
-#         '''
-
-#         if self.pipeline == 'FMM':
-#             idx_lenght = self.nrec
-#         elif self.pipeline == 'CMM':
-#             idx_lenght = self.ncomp
-#         power_spectra_array = np.zeros((self.n_real, idx_lenght,idx_lenght))
-#             for i in range(idx_lenght):
-#                 for j in range(0, i + 1):
-#                     if i==j :
-#                         # Compute the auto-spectrum
-#                         for realisation in range(self.n_real):
-#                             power_spectra_array[realisation,i,j] = self.compute_auto_spectrum(maps[realisation][i])
-#                     else:
-#                         # Compute the cross-spectrum
-#                         for realisation in range(self.n_real):
-#                             power_spectra_array[realisation,i,j] = self.compute_cross_spectrum(maps[realisation][i], self.allfwhm[i*self.fsub],maps[realisation][j], self.allfwhm[j*self.fsub])
-
-#             return np.mean(power_spectra_array, axis=0), np.std(power_spectra_array, axis=0)
-
 class data:
+    '''
+    Class to extract of the power spectra computed with spectrum.py and to compute useful things
+    '''
 
     def __init__(self):
+
         with open('sampling_config.yml', "r") as stream:
             self.param = yaml.safe_load(stream)
         self.path_spectra = self.param['data']['path']
@@ -390,6 +58,19 @@ class data:
         self.mean_ps_sky = self. auto_spectra_noise_reduction(mean_ps_sky, self.mean_ps_noise)
 
     def import_power_spectra(self, path):
+        '''
+        Function to import all the power spectra computed with spectrum.py and store in pickle files
+
+        Argument :
+            - path (str) : path to indicate where the pkl files are
+
+        Return :
+            - sky power spectra (array) [nreal, nrec/ncomp, nrec/ncomp, len(ell)]
+            - noise power spectra (array) [nreal, nrec/ncomp, nrec/ncomp, len(ell)]
+            - simulations parameters (dict)
+            - simulations coverage (array)
+            - bands frequencies for FMM (list) [nrec]
+        '''
 
         power_spectra_sky, power_spectra_noise = [], []
         names = os.listdir(path)
@@ -400,9 +81,17 @@ class data:
         return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus']
 
     def compute_mean_std(self, ps):
-        print('ps',np.shape(ps),ps)
-        print('mean', np.shape(np.mean(ps, axis=0)),np.mean(ps, axis=0))
-        print('std', np.shape(np.std(ps, axis=0)),np.std(ps, axis=0))
+        '''
+        Function to compute the mean ans the std on our power spectra realisations
+
+        Argument : 
+            - power spectra array (array) [nreal, nrec/ncomp, nrec/ncomp, len(ell)]
+
+        Return :
+            - mean (array) [nrec/ncomp, nrec/ncomp, len(ell)]
+            - std (array) [nrec/ncomp, nrec/ncomp, len(ell)]
+        '''
+
         return np.mean(ps, axis = 0), np.std(ps, axis = 0)
 
     def auto_spectra_noise_reduction(self, mean_data, mean_noise):
@@ -410,14 +99,18 @@ class data:
         Function to remove the mean of the noise realisations to the auto-spectra
 
         Arguments :
-            - mean_data(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the sky realisations
-            - mean_noise(array) : (nrec/ncomp, nrec/ncomp, ell) array that will contain the mean of all the auto and cross spectra of the noise realisation
+            - mean sky power spectra (array) [nrec/ncomp, nrec/ncomp, len(ell)] : array that will contain the mean of all the auto and cross spectra of the sky realisations
+            - mean noise power spectra (array) [nrec/ncomp, nrec/ncomp, len(ell)] : array that will contain the mean of all the auto and cross spectra of the noise realisation
+        
+        Return :
+            - corrected mean sky power spectra (array) [nrec/ncomp, nrec/ncomp, len(ell)]
         '''
 
         for i in range(np.shape(mean_data)[0]):
             mean_data[i, i, :] -= mean_noise[i, i, :]
 
         return mean_data
+
 
 class NamasterEll(data):
     '''
@@ -442,6 +135,7 @@ class NamasterEll(data):
         ell = namaster.get_binning(nside)[0]
         
         return ell, namaster
+
 
 class CMB:
     '''
@@ -614,49 +308,6 @@ class MCMC(data):
                 tab_parameters[i] = tab[cpt]
                 cpt += 1
 
-        # for i, iname in enumerate(self.param_sampling['SKY_PARAMETERS']):
-        #     if iname == 'r':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             r = self.param_sampling['SKY_PARAMETERS'][iname][0]
-        #     elif iname == 'Alens':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             Alens = self.param_sampling['SKY_PARAMETERS'][iname][0]
-        #     elif iname == 'Ad':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             Ad = self.param_sampling['SKY_PARAMETERS'][iname][0]
-        #     elif iname == 'betad':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             betad = self.param_sampling['SKY_PARAMETERS'][iname][0]
-        #     elif iname == 'alphad':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             alphad = self.param_sampling['SKY_PARAMETERS'][iname][0]
-        #     elif iname == 'deltad':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             deltad = self.param_sampling['SKY_PARAMETERS'][iname][0]
-        #     elif iname == 'nu0_d':
-        #         if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
-        #             nu0_d = self.param_sampling['SKY_PARAMETERS'][iname][0]
-
-        # # Add the parameters you want to find
-        # sky_parameters_fitted_names = self.sky_parameters_fitted_names
-        # for isky_param, sky_param in enumerate(tab):
-        #     if sky_parameters_fitted_names[isky_param] == 'r':
-        #         r = sky_param
-        #     elif sky_parameters_fitted_names[isky_param] == 'Alens':
-        #         Alens = sky_param
-        #     elif sky_parameters_fitted_names[isky_param] == 'Ad':
-        #         Ad = sky_param
-        #     elif sky_parameters_fitted_names[isky_param] == 'betad':
-        #         betad = sky_param
-        #     elif sky_parameters_fitted_names[isky_param] == 'alphad':
-        #         alphad = sky_param
-        #     elif sky_parameters_fitted_names[isky_param] == 'deltad':
-        #         deltad = sky_param
-        #     elif sky_parameters_fitted_names[isky_param] == 'nu0_d':
-        #         nu0_d = sky_param
-                
-        # Return the loglikelihood function
-
         r, Alens, nu0_d, Ad, alphad, betad, deltad = tab_parameters
 
         if self.param_sampling['simu']['name'] == 'CMB':
@@ -735,6 +386,7 @@ class MCMC(data):
         plt.title('CMB + Dust spectrum')          
         plt.savefig(path_plot + f'/Comparison_plot_Nreal={n_real}')
 
+
 class NestedSampling(data):
     '''
     Class to perform Nested Sampling in our sky parameters
@@ -785,11 +437,11 @@ class NestedSampling(data):
 
         r, Alens, nu0_d, Ad, alphad, betad, deltad = tab_parameters
         if self.param_sampling['simu']['name'] == 'CMB':
-            return self.prior(tab) - 0.5 * np.sum(((self.mean_ps_sky - CMB(self.ell).model_cmb(r, Alens))/(self.error_ps_noise))**2)
+            return - 0.5 * np.sum(((self.mean_ps_sky - CMB(self.ell).model_cmb(r, Alens))/(self.error_ps_noise))**2)
         if self.param_sampling['simu']['name'] == 'Dust':
-            return self.prior(tab) - 0.5 * np.sum(((self.mean_ps_sky - Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))/(self.error_ps_noise))**2)
+            return - 0.5 * np.sum(((self.mean_ps_sky - Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))/(self.error_ps_noise))**2)
         if self.param_sampling['simu']['name'] == 'Sky':
-            return self.prior(tab) - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_ps_noise))**2)
+            return - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_ps_noise))**2)
 
     def ptform_uniform(self, u):
         '''
