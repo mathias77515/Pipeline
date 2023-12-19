@@ -47,6 +47,7 @@ class Spectra:
         self.pipeline = self.param_sampling['data']['pipeline']
         self.path_sky = self.param_sampling['data']['path_sky']
         self.path_noise = self.param_sampling['data']['path_noise']
+
         if self.pipeline == 'CMM':
             self.pkl_sky = self.find_data(path_sky)
             self.pkl_noise = self.find_data(path_noise)
@@ -55,6 +56,7 @@ class Spectra:
             self.ncomp = np.shape(self.components_ma)[0]
             self.nsub = self.data_parameters['QUBIC']['nsub']
             self.allfwhm = self.sims.joint.qubic.allfwhm
+
         if self.pipeline == 'FMM':
             self.pkl_sky = self.find_data(self.path_sky)
             self.pkl_noise = self.find_data(self.path_noise)
@@ -67,6 +69,7 @@ class Spectra:
             self.comm = MPI.COMM_WORLD
             self.size = self.comm.Get_size()
             self.my_dict, _ = self.get_dict()
+
         self.ell, self.namaster = NamasterEll(self.iter).ell()
         _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=self.nsub-1, relative_bandwidth=0.25)
         _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=self.nsub-1, relative_bandwidth=0.25)
@@ -75,11 +78,16 @@ class Spectra:
 
     def find_data(self, path):
         '''
-        Function to extract the pickle file of one realisation. Useful to have access to the realisations' parameters
+        Function to extract the pickle file of one realisation associated to the path and the iteration number given.
+
+        Argument :
+            - path (str) : path where the pkl files are located
+
+        Return :
+            - pkl file dictionary (dict)
         '''
 
         data_names = os.listdir(path)
-
         one_realisation = pickle.load(open(path + '/' + data_names[self.iter], 'rb'))
 
         return one_realisation
@@ -127,11 +135,10 @@ class Spectra:
         d = qubic.qubicdict.qubicDict()
         d.read_from_file(dictfilename)
         dmono = d.copy()
-        for i in args.keys():
 
+        for i in args.keys():
             d[str(i)] = args[i]
             dmono[str(i)] = args_mono[i]
-
 
         return d, dmono
 
@@ -152,19 +159,27 @@ class Spectra:
         sb.dtype = np.dtype(dtype)
         nripples = self.my_dict['nripples']
         synthbeam_peak150_fwhm = np.radians(self.my_dict['synthbeam_peak150_fwhm'])
+
         if not nripples:
             sb.peak150 = BeamGaussian(synthbeam_peak150_fwhm)
         else:
             sb.peak150 = BeamGaussianRippled(synthbeam_peak150_fwhm,
                                              nripples=nripples)
+
         return sb
     
     def allfwhm(self):
+        '''
+        Function to compute the fwhm for all sub bands.
+
+        Return :
+            - allfwhm (list [nrec * nsub])
+        '''
 
         synthbeam_peak150_fwhm = np.radians(self.my_dict['synthbeam_peak150_fwhm'])
         synthbeam = self.synthbeam(synthbeam_peak150_fwhm, dtype=np.float32)
         allfwhm = synthbeam.peak150.fwhm * (150 / self.allnus)
-        print(allfwhm)
+
         return allfwhm
 
     def compute_auto_spectrum(self, map):
@@ -172,7 +187,10 @@ class Spectra:
         Function to compute the auto-spectrum of a given map
 
         Argument : 
-            - map(array) : (nrec/ncomp, npix, nstokes)
+            - map(array) [nrec/ncomp, npix, nstokes] : map to compute the auto-spectrum
+        
+        Return : 
+            - (list) [len(ell)] : BB auto-spectrum
         '''
 
         DlBB = self.namaster.get_spectra(map=map.T, map2=None)[1][:, 2]
@@ -181,10 +199,18 @@ class Spectra:
 
     def compute_cross_spectrum(self, map1, fwhm1, map2, fwhm2):
         '''
-        Function to compute cross-spectrum
+        Function to compute cross-spectrum, taking into account the different resolution of each sub-bands
+
+        Arguments :
+            - map1 & map2 (array [nrec/ncomp, npix, nstokes]) : the two maps needed to compute the cross spectrum
+            - fwhm1 & fwhm2 (float) : the respective fwhm for map1 & map2 in radian
+
+        Return : 
+            - (list) [len(ell)] : BB cross-spectrum
         '''
 
         # Put the map with the highest resolution at the worst one before doing the cross spectrum
+        # Important because the two maps had to be at the same resolution and you can't increase the resolution
         if fwhm1<fwhm2 :
             if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
                 C = HealpixConvolutionGaussianOperator(fwhm=fwhm2)
@@ -202,7 +228,14 @@ class Spectra:
 
     def compute_array_power_spectra(self, maps):
         '''
-        Function to build an array fill with all the power spectra computed
+        Function to fill an array with all the power spectra computed
+
+        Argument :
+            - maps (array [nreal, nrec/ncomp, npix, nstokes]) : all your realisation maps
+
+        Return :
+            - power_spectra_array (array [nrec/ncomp, nrec/ncomp]) : element [i, i] is the auto-spectrum for the reconstructed sub-bands i 
+                                                                     element [i, j] is the cross-spectrum between the reconstructed sub-band i & j
         '''
 
         if self.pipeline == 'FMM':
@@ -218,11 +251,19 @@ class Spectra:
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i])
                 else:
                     # Compute the cross-spectrum
-                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i*self.fsub],maps[j], self.allfwhm[j*self.fsub])
+                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i*self.nsub],maps[j], self.allfwhm[j*self.nsub])
 
         return power_spectra_array
 
     def compute_power_spectra(self):
+        '''
+        Function to compute the power spectra array for the sky and for the noise realisations
+
+        Return :
+            - sky power spectra array (array [nrec/ncomp, nrec/ncomp])
+            - noise power spectra array (array [nrec/ncomp, nrec/ncomp])
+        '''
+
         sky_power_spectra = self.compute_array_power_spectra(self.sky_maps)
         noise_power_spectra = self.compute_array_power_spectra(self.noise_maps)
         return sky_power_spectra, noise_power_spectra
@@ -232,7 +273,7 @@ class SyntheticBeam(object):
 
 class NamasterEll:
     '''
-    Class to compute the ell list using NamasterLib
+    Class to compute the ell list using NamasterLib and to initialize NamasterLib
     '''
 
     def __init__(self, iter):
@@ -274,6 +315,9 @@ class NamasterEll:
 def find_data(path, iter):
         '''
         Function to extract the pickle file of one realisation. Useful to have access to the realisations' parameters
+
+        Return :
+            - pkl file dictionary (dict)
         '''
 
         data_names = os.listdir(path)
@@ -283,6 +327,9 @@ def find_data(path, iter):
         return one_realisation
 
 def save(iteration):
+    '''
+    Function to compute the power spectra and to save the results in a pickle file
+    '''
 
     with open('spectrum_config.yml', "r") as stream:
         param = yaml.safe_load(stream)
