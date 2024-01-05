@@ -71,8 +71,8 @@ class Spectra:
             self.my_dict, _ = self.get_dict()
 
         self.ell, self.namaster = NamasterEll(self.iter).ell()
-        _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=self.nsub-1, relative_bandwidth=0.25)
-        _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=self.nsub-1, relative_bandwidth=0.25)
+        _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
+        _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
         self.allnus = np.array(list(allnus150) + list(allnus220))
         self.allfwhm = self.allfwhm()
 
@@ -251,7 +251,7 @@ class Spectra:
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i])
                 else:
                     # Compute the cross-spectrum
-                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i*self.nsub],maps[j], self.allfwhm[j*self.nsub])
+                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i*self.fsub],maps[j], self.allfwhm[j*self.fsub])
 
         return power_spectra_array
 
@@ -268,8 +268,10 @@ class Spectra:
         noise_power_spectra = self.compute_array_power_spectra(self.noise_maps)
         return sky_power_spectra, noise_power_spectra
 
+
 class SyntheticBeam(object):
     pass
+
 
 class NamasterEll:
     '''
@@ -311,6 +313,7 @@ class NamasterEll:
         ell = namaster.get_binning(nside)[0]
         
         return ell, namaster
+
 
 def find_data(path, iter):
         '''
