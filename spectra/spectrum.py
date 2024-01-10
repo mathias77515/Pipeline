@@ -227,7 +227,7 @@ class Spectra:
             return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T)[1][:, 2]
 
     def compute_array_power_spectra(self, maps):
-        '''
+        ''' 
         Function to fill an array with all the power spectra computed
 
         Argument :
