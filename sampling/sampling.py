@@ -52,7 +52,14 @@ class data:
         with open('sampling_config.yml', "r") as stream:
             self.param = yaml.safe_load(stream)
         self.path_spectra = self.param['data']['path']
-        self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage, self.nus = self.import_power_spectra(self.path_spectra)
+        self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage, _ = self.import_power_spectra(self.path_spectra)
+        self.nsub = self.simu_parameters['QUBIC']['nsub']
+        self.nrec = self.simu_parameters['QUBIC']['nrec']
+        _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=self.nsub-1, relative_bandwidth=0.25)
+        _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=self.nsub-1, relative_bandwidth=0.25)
+        self.allnus = np.array(list(allnus150) + list(allnus220))
+        self.nus = self.average_nus()
+        print(self.allnus, self.nus)
         mean_ps_sky, self.error_ps_sky = self.compute_mean_std(self.power_spectra_sky)
         self.mean_ps_noise, self.error_ps_noise = self.compute_mean_std(self.power_spectra_noise)
         self.mean_ps_sky = self. auto_spectra_noise_reduction(mean_ps_sky, self.mean_ps_noise)
@@ -79,6 +86,14 @@ class data:
             power_spectra_sky.append(ps['sky_ps'])
             power_spectra_noise.append(ps['noise_ps'])
         return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus']
+    
+    def average_nus(self):
+        
+        nus_eff = []
+        f = int(self.nsub / self.nrec)
+        for i in range(self.nrec):
+            nus_eff += [np.mean(self.allnus[i*f : (i+1)*f], axis=0)]
+        return np.array(nus_eff)
 
     def compute_mean_std(self, ps):
         '''
@@ -371,6 +386,7 @@ class MCMC(data):
         path_plot = f'{config}_Nrec={nrec}_plots_MCMC'
         if not os.path.isdir(path_plot):
             os.makedirs(path_plot)
+        #plt.title(f'Walkers plot - Nreal={n_real} ' + path_plot) 
         plt.savefig(path_plot + f'/walkers_plot_Nreal={n_real}')
 
         # Triangle plot
@@ -382,6 +398,7 @@ class MCMC(data):
             ax.axvline(0, color='gray')
 
         path_plot_triangle = f'{config}_Nrec={nrec}_plots'
+        #fig.suptitle(f'Triangle plot - Nreal={n_real} ' + path_plot) 
         plt.savefig(path_plot + f'/triangle_plot_Nreal={n_real}')
 
         # Data vs Fit plot
@@ -402,8 +419,8 @@ class MCMC(data):
         plt.errorbar(self.ell[:5], self.mean_ps_sky[0][0][:5], self.error_ps_sky[0][0][:5], label = 'Data')
         plt.legend()
         plt.xlabel('l')
-        plt.ylabel('Dl')
-        plt.title('CMB + Dust spectrum')          
+        plt.ylabel('Dl')  
+        #plt.title(f'Power spectra comparison - Nreal={n_real} ' + path_plot)      
         plt.savefig(path_plot + f'/Comparison_plot_Nreal={n_real}')
 
 
@@ -508,8 +525,8 @@ class NestedSampling(data):
                 sampler_ns = DynamicNestedSampler(self.loglikelihood, self.ptform_uniform, self.ndim, pool = pool, nlive = nlive, queue_size=self.param_sampling['NS']['queue_size'], bound=self.param_sampling['NS']['bound'])
                 sampler_ns.run_nested()
         else:
+            print('Nested Sampling !')
             with Pool() as pool:
-                print('Nested Sampling !')
                 sampler_ns = NestedSampler(self.loglikelihood, self.ptform_uniform, self.ndim, pool = pool, nlive = nlive, queue_size=self.param_sampling['NS']['queue_size'], bound=self.param_sampling['NS']['bound'])
                 sampler_ns.run_nested()
 
@@ -529,10 +546,12 @@ class NestedSampling(data):
             path_plot = f'{config}_Nrec={nrec}_plots_NS'
         if not os.path.isdir(path_plot):
             os.makedirs(path_plot)
+        #plt.title(f'Traceplot - Nreal={n_real} ' + path_plot)
         plt.savefig(path_plot + f'/traceplot_Nreal={n_real}')
 
         # Runplots
         fig, axes = dyplot.runplot(results)
+        #plt.title(f'Runplot - Nreal={n_real} ' + path_plot)
         plt.savefig(path_plot + f'/runplot_Nreal={n_real}')
 
 
@@ -542,6 +561,7 @@ class NestedSampling(data):
         fg, ax = dyplot.cornerplot(results, color='blue', title_fmt = '.4f', show_titles=True, labels = self.sky_parameters_fitted_names,
                            max_n_ticks=3, quantiles=None,
                            fig=(fig, axes[:, :3]))
+        #fig.suptitle(f'Triangleplot - Nreal={n_real} ' + path_plot)
         plt.savefig(path_plot + f'/triangle_plot_Nreal={n_real}')
 
         # Data vs Fit plot
@@ -557,12 +577,14 @@ class NestedSampling(data):
             else:
                 parameters_values.append(self.sky_parameters[parameter][0])
         Dl_ns = CMB(self.ell).model_cmb(parameters_values[0], parameters_values[1]) + Dust(self.ell, self.nus).model_dust(parameters_values[3], parameters_values[4], parameters_values[5], parameters_values[6], parameters_values[2])
+        Dl_test = CMB(self.ell).model_cmb(0, 1) + Dust(self.ell, self.nus).model_dust(10, -0.15, parameters_values[5], parameters_values[6], parameters_values[2])        
+        plt.plot(self.ell[:5], Dl_test[0][0][:5], label = 'Model test : r=0, Ad=10, alphad=-0.15')
         plt.plot(self.ell[:5], Dl_ns[0][0][:5], label = 'NestedSampling')
         plt.errorbar(self.ell[:5], self.mean_ps_sky[0][0][:5], self.error_ps_sky[0][0][:5], label = 'Data')
         plt.legend()
         plt.xlabel('l')
         plt.ylabel('Dl')
-        plt.title('CMB + Dust spectrum')          
+        #plt.title(f'Power spectra comparison - Nreal={n_real} ' + path_plot)          
         plt.savefig(path_plot + f'/Comparison_plot_Nreal={n_real}')
 
 with open('sampling_config.yml', "r") as stream:
