@@ -681,7 +681,6 @@ class PipelineFrequencyMapMaking:
 
         ### Define reconstructed and TOD operator
         self._get_H()
-        
         ### Inverse noise covariance matrix
         self.invN = self.joint.get_invntt_operator(mask=self.mask)
 
@@ -720,7 +719,6 @@ class PipelineFrequencyMapMaking:
         """
         
         nus_eff = []
-
         for i in range(self.params['QUBIC']['nrec']):
             nus_eff += [np.mean(self.joint.qubic.allnus[i*self.fsub:(i+1)*self.fsub])]
         
@@ -1256,7 +1254,9 @@ class PipelineEnd2End:
         create_folder_if_not_exists(self.comm, f'allplots_{self.job_id}')
 
         self.job_id = os.environ.get('SLURM_JOB_ID')
-        file = self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
+        if not os.path.isdir(self.params['path_out']):
+            os.makedirs(self.params['path_out'])
+        file = self.params['path_out'] + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
 
         ### Initialization
         
@@ -1297,5 +1297,4 @@ class PipelineEnd2End:
 
         
         
-
 
