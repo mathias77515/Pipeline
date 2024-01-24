@@ -43,17 +43,17 @@ class Spectra:
 
         self.iter = iter
         with open('spectrum_config.yml', "r") as stream:
-            self.param_sampling = yaml.safe_load(stream)
-        self.pipeline = self.param_sampling['data']['pipeline']
-        self.path_sky = self.param_sampling['data']['path_sky']
-        self.path_noise = self.param_sampling['data']['path_noise']
+            self.param_spectrum = yaml.safe_load(stream)
+        self.pipeline = self.param_spectrum['data']['pipeline']
+        self.path_sky = self.param_spectrum['data']['path_sky']
+        self.path_noise = self.param_spectrum['data']['path_noise']
 
         if self.pipeline == 'CMM':
             self.pkl_sky = self.find_data(path_sky)
             self.pkl_noise = self.find_data(path_noise)
             self.components_map = self.pkl_sky['components']
             self.noise_map = self.pkl_noise['components']
-            self.ncomp = np.shape(self.components_ma)[0]
+            self.ncomp = np.shape(self.components_map)[0]
             self.nsub = self.data_parameters['QUBIC']['nsub']
             self.allfwhm = self.sims.joint.qubic.allfwhm
 
@@ -62,7 +62,7 @@ class Spectra:
             self.pkl_noise = self.find_data(self.path_noise)
             self.sky_maps = self.pkl_sky['maps']
             self.noise_maps = self.pkl_noise['maps']
-            self.nrec = self.param_sampling['simu']['nrec']
+            self.nrec = self.param_spectrum['simu']['nrec']
             self.nsub = self.pkl_sky['parameters']['QUBIC']['nsub']
             self.nside = self.pkl_sky['parameters']['Sky']['nside']
             self.fsub = int(self.nsub / self.nrec)
@@ -75,6 +75,8 @@ class Spectra:
         _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
         self.allnus = np.array(list(allnus150) + list(allnus220))
         self.allfwhm = self.allfwhm()
+        print('allnus', self.allnus)
+        print('allfwhm', self.allfwhm)
 
     def find_data(self, path):
         '''
@@ -151,7 +153,6 @@ class Spectra:
         nu_down = 131.25
         nu_ave = np.mean(np.array([nu_up, nu_down]))
         delta = nu_up - nu_ave
-
         return nu_ave, 2*delta/nu_ave
     
     def synthbeam(self, synthbeam_peak150_fwhm, dtype=np.float32):
@@ -159,13 +160,11 @@ class Spectra:
         sb.dtype = np.dtype(dtype)
         nripples = self.my_dict['nripples']
         synthbeam_peak150_fwhm = np.radians(self.my_dict['synthbeam_peak150_fwhm'])
-
         if not nripples:
             sb.peak150 = BeamGaussian(synthbeam_peak150_fwhm)
         else:
             sb.peak150 = BeamGaussianRippled(synthbeam_peak150_fwhm,
                                              nripples=nripples)
-
         return sb
     
     def allfwhm(self):
@@ -213,14 +212,16 @@ class Spectra:
         # Important because the two maps had to be at the same resolution and you can't increase the resolution
         if fwhm1<fwhm2 :
             if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
-                C = HealpixConvolutionGaussianOperator(fwhm=fwhm2)
+                print('convo', fwhm1, fwhm2)
+                C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm2**2 - fwhm1**2))
             else:
                 C = HealpixConvolutionGaussianOperator(fwhm=0)
             convoluted_map = C*map1
             return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T)[1][:, 2]
         else:
             if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
-                C = HealpixConvolutionGaussianOperator(fwhm=fwhm1)
+                print('convo_bis', fwhm1, fwhm2)
+                C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm1**2 - fwhm2**2))
             else:
                 C = HealpixConvolutionGaussianOperator(fwhm=0)
             convoluted_map = C*map2
@@ -251,8 +252,7 @@ class Spectra:
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i])
                 else:
                     # Compute the cross-spectrum
-                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i*self.fsub],maps[j], self.allfwhm[j*self.fsub])
-
+                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[(i+1)*self.fsub - 1],maps[j], self.allfwhm[(j+1)*self.fsub - 1])
         return power_spectra_array
 
     def compute_power_spectra(self):
@@ -281,8 +281,8 @@ class NamasterEll:
     def __init__(self, iter):
 
         with open('spectrum_config.yml', "r") as stream:
-            self.param_sampling = yaml.safe_load(stream)
-        self.path_sky = self.param_sampling['data']['path_sky']
+            self.param_spectrum = yaml.safe_load(stream)
+        self.path_sky = self.param_spectrum['data']['path_sky']
         self.iter = iter
 
     def find_data(self, path):
@@ -307,7 +307,7 @@ class NamasterEll:
         # Call the Namaster class & create the ell list 
         coverage = realisation['coverage']
         seenpix = coverage/np.max(coverage) < 0.2
-        lmin, lmax, delta_ell = simu_parameters['Spectrum']['lmin'], 2*nside-1, simu_parameters['Spectrum']['dl']
+        lmin, lmax, delta_ell = self.param_spectrum['Spectrum']['lmin'], 2*nside-1, self.param_spectrum['Spectrum']['dl']
         namaster = nam.Namaster(weight_mask = list(~np.array(seenpix)), lmin = lmin, lmax = lmax, delta_ell = delta_ell)
 
         ell = namaster.get_binning(nside)[0]
@@ -350,7 +350,7 @@ def save(iteration):
             os.makedirs(pkl_path)
 
     with open(pkl_path + f'{iteration}.pkl', 'wb') as handle:
-        pickle.dump({'sky_ps':sky_power_spectra, 'noise_ps':noise_power_spectra, 'parameters':simu_parameters, 'coverage':one_realisation['coverage'], 'nus':one_realisation['nus']}, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump({'sky_ps':sky_power_spectra, 'noise_ps':noise_power_spectra, 'parameters':simu_parameters, 'coverage':one_realisation['coverage']}, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 iter = int(sys.argv[1])
 save(iter)
