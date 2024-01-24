@@ -52,16 +52,17 @@ class data:
         with open('sampling_config.yml', "r") as stream:
             self.param = yaml.safe_load(stream)
         self.path_spectra = self.param['data']['path']
-        self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage, _ = self.import_power_spectra(self.path_spectra)
+        self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage = self.import_power_spectra(self.path_spectra)
         self.nsub = self.simu_parameters['QUBIC']['nsub']
         self.nrec = self.simu_parameters['QUBIC']['nrec']
+        self.nreal = self.param['data']['n_real']
         _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
         _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
         self.allnus = np.array(list(allnus150) + list(allnus220))
         self.nus = self.average_nus()
         mean_ps_sky, self.error_ps_sky = self.compute_mean_std(self.power_spectra_sky)
         self.mean_ps_noise, self.error_ps_noise = self.compute_mean_std(self.power_spectra_noise)
-        self.mean_ps_sky = self.auto_spectra_noise_reduction(mean_ps_sky, self.mean_ps_noise)
+        self.mean_ps_sky = self.spectra_noise_correction(mean_ps_sky, self.mean_ps_noise)
         
     def import_power_spectra(self, path):
         '''
@@ -84,7 +85,7 @@ class data:
             ps = pickle.load(open(path + '/' + names[i], 'rb'))
             power_spectra_sky.append(ps['sky_ps'])
             power_spectra_noise.append(ps['noise_ps'])
-        return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus']
+        return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage']
     
     def average_nus(self):
         
@@ -108,9 +109,9 @@ class data:
 
         return np.mean(ps, axis = 0), np.std(ps, axis = 0)
 
-    def auto_spectra_noise_reduction(self, mean_data, mean_noise):
+    def spectra_noise_correction(self, mean_data, mean_noise):
         '''
-        Function to remove the mean of the noise realisations to the auto-spectra
+        Function to remove the mean of the noise realisations to the spectra computed
 
         Arguments :
             - mean sky power spectra (array) [nrec/ncomp, nrec/ncomp, len(ell)] : array that will contain the mean of all the auto and cross spectra of the sky realisations
@@ -120,8 +121,8 @@ class data:
             - corrected mean sky power spectra (array) [nrec/ncomp, nrec/ncomp, len(ell)]
         '''
 
-        for i in range(self.nrec):
-            for j in range(self.nrec):
+        for i in range(np.shape(mean_data)[0]):
+            for j in range(np.shape(mean_data)[1]):
                 mean_data[i, j, :] -= mean_noise[i, j, :]
         return mean_data
 
@@ -261,6 +262,13 @@ class MCMC(data):
         self.ell, _ = NamasterEll().ell()
         self.sky_parameters = self.param_sampling['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_fitted_names, self.sky_parameters_all_names = self.ndim_and_parameters_names()
+        shape = np.shape(self.power_spectra_noise)
+        error_reshape = np.reshape(self.power_spectra_noise, (shape[1], shape[2], shape[3], shape[0]))
+        self.noise_inv_cov_matrix = np.zeros((self.nrec, self.nrec, len(self.ell), len(self.ell)))
+        for i in range(self.nrec):
+            for j in range(self.nrec):
+                noise_cov_matrix = np.cov(error_reshape[i][j])
+                self.noise_inv_cov_matrix[i,j] = np.linalg.inv(noise_cov_matrix)
 
     def ndim_and_parameters_names(self):
         '''
@@ -331,11 +339,8 @@ class MCMC(data):
         Return :
             - (float) : loglikelihood function
         '''
-
         tab_parameters = np.zeros(len(self.param_sampling['SKY_PARAMETERS']))
-        cpt = 0
-        #noise_cov_matrix = np.cov(self.error_ps_noise)
-        #inv_noise_cov_matrix = np.linalg.inv(noise_cov_matrix)
+        cpt = 0        
 
         for i, iname in enumerate(self.param_sampling['SKY_PARAMETERS']):
             if self.param_sampling['SKY_PARAMETERS'][iname][0] is not True:
@@ -345,15 +350,29 @@ class MCMC(data):
                 cpt += 1
 
         r, Alens, nu0_d, Ad, alphad, betad, deltad = tab_parameters
-
-        if self.param_sampling['simu']['name'] == 'CMB':
-            return self.prior(tab) - 0.5 * np.sum(((self.mean_ps_sky - CMB(self.ell).model_cmb(r, Alens))/(self.error_ps_noise))**2)
-        if self.param_sampling['simu']['name'] == 'Dust':
-            return self.prior(tab) - 0.5 * np.sum(((self.mean_ps_sky - Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))/(self.error_ps_noise))**2)
-        if self.param_sampling['simu']['name'] == 'Sky':
-            #loglike =  -0.5 * (self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))).T * inv_noise_cov_matrix * (self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))
-            loglike = - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_ps_noise))**2)
+        if self.param_sampling['simu']['noise'] == False:
+            loglike = self.prior(tab) 
+            for i in range(self.nrec):
+                for j in range(self.nrec):
+                    loglike += - 0.5 * (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j]).T @ (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j])
+                    #loglike = self.prior(tab) - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))**2)
             return loglike
+        else :
+            if self.param_sampling['simu']['name'] == 'CMB':
+                return - 0.5 * np.sum(((self.mean_ps_sky - CMB(self.ell).model_cmb(r, Alens))/(self.error_ps_noise))**2)
+            if self.param_sampling['simu']['name'] == 'Dust':
+                return - 0.5 * np.sum(((self.mean_ps_sky - Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))/(self.error_ps_noise))**2)
+            if self.param_sampling['simu']['name'] == 'Sky':
+                loglike = self.prior(tab) 
+                if self.param_sampling['Loglike'] is True:
+                    for i in range(self.nrec):
+                        for j in range(self.nrec):
+                            loglike += - 0.5 * (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j]).T @ self.noise_inv_cov_matrix[i][j] @ (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j])
+                    return loglike
+                else:
+                    loglike += - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_ps_noise))**2)
+                    return loglike
+
     def __call__(self):
         '''
         Funtion to perform the MCMC and save the results
@@ -385,10 +404,15 @@ class MCMC(data):
         config = self.param_sampling['simu']['qubic_config']
         nrec = self.param_sampling['simu']['nrec']
         n_real = self.param_sampling['data']['n_real']
-        path_plot = f'{config}_Nrec={nrec}_plots_MCMC'
+        convo = self.param_sampling['simu']['convo']
+        if self.param_sampling['Loglike'] is True:
+            loglike = 'inv_cov'
+        else :
+            loglike = 'inv_diag_cov'
+        path_plot = f'{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_MCMC'
         if not os.path.isdir(path_plot):
             os.makedirs(path_plot)
-        #plt.title(f'Walkers plot - Nreal={n_real} ' + path_plot) 
+        fig.suptitle(f'Walkers plot - Nreal={n_real} ' + path_plot) 
         plt.savefig(path_plot + f'/walkers_plot_Nreal={n_real}')
 
         # Triangle plot
@@ -427,6 +451,19 @@ class MCMC(data):
                 axes[x,y].set_title(f'{int(self.nus[x])} x {int(self.nus[y])}')
         fig.suptitle(f'Power spectra comparison - Nreal={n_real} ' + path_plot)      
         plt.savefig(path_plot + f'/Comparison_plot_Nreal={n_real}')
+        
+        fig, axes = plt.subplots(self.nrec, self.nrec, figsize = (10,8))
+        for x in range(self.nrec):
+            for y in range(self.nrec):
+                axes[x,y].plot(self.ell, Dl_test[x][y], label = 'Model test : r=0, Ad=10, alphad=-0.15')
+                axes[x,y].plot(self.ell, Dl_mcmc[x][y], label = 'MCMC')
+                axes[x,y].errorbar(self.ell, self.mean_ps_sky[x][y], self.error_ps_sky[x][y], label = 'Data')
+                axes[x,y].legend()
+                axes[x,y].set_xlabel('l')
+                axes[x,y].set_ylabel('Dl')
+                axes[x,y].set_title(f'{int(self.nus[x])} x {int(self.nus[y])}')
+        fig.suptitle(f'Power spectra comparison - Nreal={n_real} ' + path_plot)      
+        plt.savefig(path_plot + f'/Comparison_plot_extended_Nreal={n_real}')
 
 
 class NestedSampling(data):
@@ -442,6 +479,13 @@ class NestedSampling(data):
         self.ell, _ = NamasterEll().ell()
         self.sky_parameters = self.param_sampling['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_fitted_names, self.sky_parameters_all_names = self.ndim_and_parameters_names()
+        shape = np.shape(self.power_spectra_noise)
+        error_reshape = np.reshape(self.power_spectra_noise, (shape[1], shape[2], shape[3], shape[0]))
+        self.noise_inv_cov_matrix = np.zeros((self.nrec, self.nrec, len(self.ell), len(self.ell)))
+        for i in range(self.nrec):
+            for j in range(self.nrec):
+                noise_cov_matrix = np.cov(error_reshape[i][j])
+                self.noise_inv_cov_matrix[i,j] = np.linalg.inv(noise_cov_matrix)
 
     def ndim_and_parameters_names(self):
         '''
@@ -464,6 +508,25 @@ class NestedSampling(data):
                 sky_parameters_fitted_names.append(parameter)
 
         return ndim, sky_parameters_fitted_names, sky_parameters_all_names
+
+    def prior(self, x):
+        '''
+        Function to define priors to help the MCMC convergence
+
+        Argument :
+            - x (array) [ndim] : array that contains the numbers randomly generated by the mcmc
+
+        Return :
+            - (float) : inf if the prior is not respected, 0 otherwise
+        '''
+        
+        for isky_param, sky_param in enumerate(x):
+            name = self.sky_parameters_fitted_names[isky_param]
+
+            if sky_param < self.sky_parameters[name][3] or sky_param > self.sky_parameters[name][4]:
+                return - np.inf
+
+        return 0
 
     def loglikelihood(self, tab):
         '''
@@ -491,14 +554,28 @@ class NestedSampling(data):
         # Return the loglikelihood function
 
         r, Alens, nu0_d, Ad, alphad, betad, deltad = tab_parameters
-        if self.param_sampling['simu']['name'] == 'CMB':
-            return - 0.5 * np.sum(((self.mean_ps_sky - CMB(self.ell).model_cmb(r, Alens))/(self.error_ps_noise))**2)
-        if self.param_sampling['simu']['name'] == 'Dust':
-            return - 0.5 * np.sum(((self.mean_ps_sky - Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))/(self.error_ps_noise))**2)
-        if self.param_sampling['simu']['name'] == 'Sky':
-            #loglike =  -0.5 * (self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))).T * inv_noise_cov_matrix * (self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))
-            loglike = - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_ps_noise))**2)
+        if self.param_sampling['simu']['noise'] == False:
+            # loglike = self.prior(tab) 
+            # for i in range(self.nrec):
+            #     for j in range(self.nrec):
+            #         loglike += - 0.5 * (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j]).T @ (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j])
+            loglike = self.prior(tab) - 0.5 * np.sum((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))**2)
             return loglike
+        else :
+            if self.param_sampling['simu']['name'] == 'CMB':
+                return - 0.5 * np.sum(((self.mean_ps_sky - CMB(self.ell).model_cmb(r, Alens))/(self.error_ps_noise))**2)
+            if self.param_sampling['simu']['name'] == 'Dust':
+                return - 0.5 * np.sum(((self.mean_ps_sky - Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))/(self.error_ps_noise))**2)
+            if self.param_sampling['simu']['name'] == 'Sky':
+                loglike = self.prior(tab) 
+                if self.param_sampling['Loglike'] is True:
+                    for i in range(self.nrec):
+                        for j in range(self.nrec):
+                            loglike += - 0.5 * (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j]).T @ self.noise_inv_cov_matrix[i][j] @ (self.mean_ps_sky[i][j] - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d))[i][j])
+                    return loglike
+                else:
+                    loglike += - 0.5 * np.sum(((self.mean_ps_sky - (CMB(self.ell).model_cmb(r, Alens) + Dust(self.ell, self.nus).model_dust(Ad, alphad, betad, deltad, nu0_d)))/(self.error_ps_noise))**2)
+                    return loglike
 
     def ptform_uniform(self, u):
         '''
@@ -525,6 +602,7 @@ class NestedSampling(data):
         '''
 
         nlive = self.param_sampling['NS']['nlive']
+        maxiter = self.param_sampling['NS']['maxiter']
         ell = self.ell
         print(self.simu_parameters)
         
@@ -532,12 +610,12 @@ class NestedSampling(data):
             print('Dynamic Nested Sampling !!!')
             with Pool() as pool:
                 sampler_ns = DynamicNestedSampler(self.loglikelihood, self.ptform_uniform, self.ndim, pool = pool, nlive = nlive, queue_size=self.param_sampling['NS']['queue_size'], bound=self.param_sampling['NS']['bound'])
-                sampler_ns.run_nested(print_progress=True)
+                sampler_ns.run_nested(print_progress=True, maxiter = maxiter)
         else:
             print('Nested Sampling !')
             with Pool() as pool:
                 sampler_ns = NestedSampler(self.loglikelihood, self.ptform_uniform, self.ndim, pool = pool, nlive = nlive, queue_size=self.param_sampling['NS']['queue_size'], bound=self.param_sampling['NS']['bound'])
-                sampler_ns.run_nested()
+                sampler_ns.run_nested(maxiter = maxiter)
 
         results = sampler_ns.results
 
@@ -549,10 +627,15 @@ class NestedSampling(data):
         config = self.param_sampling['simu']['qubic_config']
         nrec = self.param_sampling['simu']['nrec']
         n_real = self.param_sampling['data']['n_real']
+        convo = self.param_sampling['simu']['convo']
+        if self.param_sampling['Loglike'] is True:
+            loglike = 'inv_cov'
+        else :
+            loglike = 'inv_diag_cov'
         if self.param_sampling['NS']['DynamicNS'] is True:
-            path_plot = f'{config}_Nrec={nrec}_plots_DynamicNS'
+            path_plot = f'{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_DynamicNS'
         else:
-            path_plot = f'{config}_Nrec={nrec}_plots_NS'
+            path_plot = f'{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_NS'
         if not os.path.isdir(path_plot):
             os.makedirs(path_plot)
         #plt.title(f'Traceplot - Nreal={n_real} ' + path_plot)
@@ -600,8 +683,22 @@ class NestedSampling(data):
         fig.suptitle(f'Power spectra comparison - Nreal={n_real} ' + path_plot) 
         plt.savefig(path_plot + f'/Comparison_plot_Nreal={n_real}')
 
+        fig, axes = plt.subplots(self.nrec, self.nrec, figsize = (10,8))
+        for x in range(self.nrec):
+            for y in range(self.nrec):
+                axes[x,y].plot(self.ell, Dl_test[x][y], label = 'Model test : r=0, Ad=10, alphad=-0.15')
+                axes[x,y].plot(self.ell, Dl_ns[x][y], label = 'NS')
+                axes[x,y].errorbar(self.ell, self.mean_ps_sky[x][y], self.error_ps_sky[x][y], label = 'Data')
+                axes[x,y].legend()
+                axes[x,y].set_xlabel('l')
+                axes[x,y].set_ylabel('Dl')
+                axes[x,y].set_title(f'{int(self.nus[x])} x {int(self.nus[y])}')
+        fig.suptitle(f'Power spectra comparison - Nreal={n_real} ' + path_plot) 
+        plt.savefig(path_plot + f'/Comparison_plot_extended_Nreal={n_real}')
+
 with open('sampling_config.yml', "r") as stream:
     param = yaml.safe_load(stream)
+print('Sampling Parameters', param)
 
 if param['Method'] == 'MCMC':
     print("Chosen method = MCMC")
