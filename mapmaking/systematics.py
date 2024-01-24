@@ -414,12 +414,12 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
         #    for i in range(len(self.subacqs)):
         #        del(self.H[i].operands[-1])# = IdentityOperator()
         
-        #for i in range(len(self.multiinstrument)):
+        for i in range(len(self.multiinstrument)):
         #    #print(i)
         #    #self.Proj += [qubic.QubicAcquisition(self.multiinstrument[i], self.sampling, self.scene, self.d).get_projection_operator()]
         #    self.H += [qubic.QubicAcquisition(self.multiinstrument[i], self.sampling, self.scene, self.d).get_operator()]
         #    self.subacqs += [qubic.QubicAcquisition(self.multiinstrument[i], self.sampling, self.scene, self.d)]
-        #    self.allfwhm[i] = self.multiinstrument[i].get_convolution_peak_operator().fwhm
+            self.allfwhm[i] = self.multiinstrument[i].get_convolution_peak_operator().fwhm
         
         
         #if self.d['comm'] is not None:

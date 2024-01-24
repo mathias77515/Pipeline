@@ -322,7 +322,6 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
         
         sky = {}
         for ii, i in enumerate(self.params['Sky'].keys()):
-            #print(ii, i)
 
             if i == 'CMB':
                 if self.params['Sky']['CMB']['cmb']:
@@ -334,12 +333,10 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
                         seed = self.comm.bcast(seed, root=0)
                     else:
                         seed = self.params['QUBIC']['seed']
-                    #stop
                     sky['cmb'] = seed
                 
             else:
                 for jj, j in enumerate(self.params['Sky']['Foregrounds']):
-                    #print(j, self.params['Foregrounds'][j])
                     if j == 'Dust':
                         if self.params['Sky']['Foregrounds'][j]:
                             sky['dust'] = self.params['QUBIC']['dust_model']
@@ -364,7 +361,6 @@ class FakeFrequencyMapMaking(ExternalData2Timeline):
         nus_eff = []
         f = int(self.nsub / self.nrec)
         for i in range(self.nrec):
-            #print(f'Doing average between {np.min(self.nus[i*f:(i+1)*f])} and {np.max(self.nus[i*f:(i+1)*f])} GHz')
             nus_eff += [np.mean(self.nus[i*f : (i+1)*f], axis=0)]
         return np.array(nus_eff)
     def _get_sig(self, depth):
@@ -517,7 +513,6 @@ class MapMakingFromSpec(NoiseFromDl, ExternalData2Timeline):
                         
                     else:
                         seed = self.params['QUBIC']['seed']
-                    #stop
                     sky['cmb'] = seed
                 
             else:
@@ -685,7 +680,8 @@ class PipelineFrequencyMapMaking:
         self.invN = self.joint.get_invntt_operator(mask=self.mask)
 
         ### Noises
-        seed_noise_planck = int(os.environ.get('SLURM_JOB_ID'))
+        seed_noise_planck = int(sys.argv[1])
+        print('seed_noise_planck', seed_noise_planck)
         
         self.noise143 = self.planck_acquisition143.get_noise(seed_noise_planck) * self.params['Data']['level_planck_noise']
         self.noise217 = self.planck_acquisition217.get_noise(seed_noise_planck+1) * self.params['Data']['level_planck_noise']
@@ -697,7 +693,10 @@ class PipelineFrequencyMapMaking:
 
         self.noiseq = qubic_noise.total_noise(self.params['QUBIC']['ndet'], 
                                        self.params['QUBIC']['npho150'], 
-                                       self.params['QUBIC']['npho220']).ravel()
+                                       self.params['QUBIC']['npho220'],
+                                       seed=seed_noise_planck).ravel()
+        #print("HFUEKFJE", self.noiseq)
+        #stop
 
     def _get_H(self):
         
@@ -749,7 +748,6 @@ class PipelineFrequencyMapMaking:
                     else:
                         seed = self.params['QUBIC']['seed']
                     print(f'Seed of the CMB is {seed} for rank {self.rank}')
-                    #stop
                     sky['cmb'] = seed
                 
             else:
