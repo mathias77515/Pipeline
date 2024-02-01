@@ -181,19 +181,18 @@ class Spectra:
 
         return allfwhm
 
-    def compute_auto_spectrum(self, map):
+    def compute_auto_spectrum(self, map, fwhm):
         '''
         Function to compute the auto-spectrum of a given map
 
         Argument : 
             - map(array) [nrec/ncomp, npix, nstokes] : map to compute the auto-spectrum
-        
+            - allfwhm(float) : in radian
         Return : 
             - (list) [len(ell)] : BB auto-spectrum
         '''
 
-        DlBB = self.namaster.get_spectra(map=map.T, map2=None)[1][:, 2]
-        
+        DlBB = self.namaster.get_spectra(map=map.T, map2=None, beam_correction = np.rad2deg(fwhm))[1][:, 2]
         return DlBB
 
     def compute_cross_spectrum(self, map1, fwhm1, map2, fwhm2):
@@ -211,21 +210,13 @@ class Spectra:
         # Put the map with the highest resolution at the worst one before doing the cross spectrum
         # Important because the two maps had to be at the same resolution and you can't increase the resolution
         if fwhm1<fwhm2 :
-            if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
-                print('convo', fwhm1, fwhm2)
-                C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm2**2 - fwhm1**2))
-            else:
-                C = HealpixConvolutionGaussianOperator(fwhm=0)
+            C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm2**2 - fwhm1**2))
             convoluted_map = C*map1
-            return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T)[1][:, 2]
+            return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T, fwhm2)[1][:, 2]
         else:
-            if self.pkl_sky['parameters']['QUBIC']['convolution'] is True:
-                print('convo_bis', fwhm1, fwhm2)
-                C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm1**2 - fwhm2**2))
-            else:
-                C = HealpixConvolutionGaussianOperator(fwhm=0)
+            C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm1**2 - fwhm2**2))
             convoluted_map = C*map2
-            return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T)[1][:, 2]
+            return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T, fwhm1)[1][:, 2]
 
     def compute_array_power_spectra(self, maps):
         ''' 
@@ -249,10 +240,10 @@ class Spectra:
             for j in range(idx_lenght):
                 if i==j :
                     # Compute the auto-spectrum
-                    power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i])
+                    power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[(i+1)*self.fsub - 1])
                 else:
                     # Compute the cross-spectrum
-                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[(i+1)*self.fsub - 1],maps[j], self.allfwhm[(j+1)*self.fsub - 1])
+                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[(i+1)*self.fsub - 1], maps[j], self.allfwhm[(j+1)*self.fsub - 1])
         return power_spectra_array
 
     def compute_power_spectra(self):
