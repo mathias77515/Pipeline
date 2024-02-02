@@ -212,11 +212,11 @@ class Spectra:
         if fwhm1<fwhm2 :
             C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm2**2 - fwhm1**2))
             convoluted_map = C*map1
-            return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T, fwhm2)[1][:, 2]
+            return self.namaster.get_spectra(map=convoluted_map.T, map2=map2.T, beam_correction = np.rad2deg(fwhm2))[1][:, 2]
         else:
             C = HealpixConvolutionGaussianOperator(fwhm=np.sqrt(fwhm1**2 - fwhm2**2))
             convoluted_map = C*map2
-            return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T, fwhm1)[1][:, 2]
+            return self.namaster.get_spectra(map=map1.T, map2=convoluted_map.T, beam_correction = np.rad2deg(fwhm1))[1][:, 2]
 
     def compute_array_power_spectra(self, maps):
         ''' 
