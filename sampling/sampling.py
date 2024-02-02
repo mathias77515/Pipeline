@@ -401,6 +401,7 @@ class MCMC(data):
                 ax[j].plot(samples[:, i, j])
                 ax[j].set_title(self.sky_parameters_fitted_names[j])
 
+        name = self.param_sampling['data']['name']
         config = self.param_sampling['simu']['qubic_config']
         nrec = self.param_sampling['simu']['nrec']
         n_real = self.param_sampling['data']['n_real']
@@ -409,7 +410,7 @@ class MCMC(data):
             loglike = 'inv_cov'
         else :
             loglike = 'inv_diag_cov'
-        path_plot = f'{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_MCMC'
+        path_plot = f'{name}_{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_MCMC'
         if not os.path.isdir(path_plot):
             os.makedirs(path_plot)
         fig.suptitle(f'Walkers plot - Nreal={n_real} ' + path_plot) 
@@ -628,6 +629,7 @@ class NestedSampling(data):
         nrec = self.param_sampling['simu']['nrec']
         n_real = self.param_sampling['data']['n_real']
         convo = self.param_sampling['simu']['convo']
+        name = self.param_sampling['data']['name']
         if self.param_sampling['Loglike'] is True:
             loglike = 'inv_cov'
         else :
@@ -635,7 +637,7 @@ class NestedSampling(data):
         if self.param_sampling['NS']['DynamicNS'] is True:
             path_plot = f'{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_DynamicNS'
         else:
-            path_plot = f'{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_NS'
+            path_plot = f'{name}_{config}_Nrec={nrec}_Loglike={loglike}_Convolution={convo}_plots_NS'
         if not os.path.isdir(path_plot):
             os.makedirs(path_plot)
         #plt.title(f'Traceplot - Nreal={n_real} ' + path_plot)
