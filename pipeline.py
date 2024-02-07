@@ -695,8 +695,6 @@ class PipelineFrequencyMapMaking:
                                        self.params['QUBIC']['npho150'], 
                                        self.params['QUBIC']['npho220'],
                                        seed=seed_noise_planck).ravel()
-        #print("HFUEKFJE", self.noiseq)
-        #stop
 
     def _get_H(self):
         
