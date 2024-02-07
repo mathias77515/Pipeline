@@ -1,0 +1,40 @@
+data:
+  path : '/pbs/home/t/tlaclave/sps/Pipeline/spectra/spectra_with_convolution/DB_Nrec=2_spectra'
+  name : 'test'
+  n_real : 20
+  pipeline : 'FMM'
+
+simu: 
+  nrec : 2 
+  qubic_config : DB
+  convo : True
+  noise : True
+  name : 'Sky'
+
+MCMC:
+  nwalkers : 10
+  mcmc_steps : 50
+  discard : 0
+  stretch_move_factor : 0.7
+  snooker_move_gamma : 1.7
+  thin : 15
+
+NS:
+  DynamicNS : True
+  nlive : 2000
+  prior_transform : 'uniform'
+  bound : 'multi'
+  queue_size : 16
+  maxiter : 1000000000000000
+
+SKY_PARAMETERS:
+  r : [True, 1, 2, -1, 1] 
+  Alens : [1, 0, 1, 0, 1]
+  nu0_d : [353, 0, 1, 0, 1000]
+  Ad : [True, 0, 20, 0, 1000]
+  alphad : [True, 5, 10, -5, 5]
+  betad : [1.54, 0, 1, 1.3, 1.7]
+  deltad : [1, 0, 1, 0, 1000]
+
+Method : 'MCMC'
+Loglike : 'diag'

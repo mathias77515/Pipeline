@@ -276,6 +276,7 @@ class QubicAcquisition(Acquisition):
         return hit
 
     def get_noise(self, det_noise, photon_noise, seed=None, out=None):
+        
         np.random.seed(seed)
         out = self.instrument.get_noise(
             self.sampling, self.scene, det_noise, photon_noise, out=out)
@@ -1925,7 +1926,6 @@ class QubicFullBand(QubicPolyAcquisition):
         return (invn150 + invn220)/2   # factor 2 because it added twice the detector noise
     
     def get_noise(self, det_noise, photon_noise150, photon_noise220, seed=None):
-        
         np.random.seed(seed)
         ndet = self.subacqs150[0].get_noise(det_noise, False)
         npho150 = self.subacqs150[0].get_noise(False, photon_noise150)# - ndet

@@ -625,7 +625,7 @@ class PipelineFrequencyMapMaking:
 
         self.file = file
         self.externaldata = PipelineExternalData(file)
-        self.job_id = os.environ.get('SLURM_JOB_ID')
+        self.job_id = np.random.randint(10000)
         
         ### Initialize plot instance
         self.plots = PlotsMM(self.params)
@@ -680,7 +680,7 @@ class PipelineFrequencyMapMaking:
         self.invN = self.joint.get_invntt_operator(mask=self.mask)
 
         ### Noises
-        seed_noise_planck = int(sys.argv[1])
+        seed_noise_planck = np.random.randint(10000000)
         print('seed_noise_planck', seed_noise_planck)
         
         self.noise143 = self.planck_acquisition143.get_noise(seed_noise_planck) * self.params['Data']['level_planck_noise']
@@ -978,6 +978,7 @@ class PipelineFrequencyMapMaking:
 
         ### PCG
         start = time.time()
+        print(start)
         solution_qubic_planck = pcg(A=A, 
                                     b=b, 
                                     comm=self.comm,
@@ -1245,11 +1246,10 @@ class PipelineEnd2End:
             self.params = yaml.safe_load(stream)
 
         self.comm = comm
-        self.job_id = os.environ.get('SLURM_JOB_ID')
+        self.job_id = np.random.randint(10000)
         
         create_folder_if_not_exists(self.comm, f'allplots_{self.job_id}')
 
-        self.job_id = os.environ.get('SLURM_JOB_ID')
         if not os.path.isdir(self.params['path_out']):
             os.makedirs(self.params['path_out'])
         file = self.params['path_out'] + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
