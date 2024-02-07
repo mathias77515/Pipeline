@@ -61,6 +61,7 @@ class Spectra:
             self.pkl_sky = self.find_data(self.path_sky)
             self.pkl_noise = self.find_data(self.path_noise)
             self.sky_maps = self.pkl_sky['maps']
+            self.maps_parameters = self.pkl_sky['parameters']
             self.noise_maps = self.pkl_noise['maps']
             self.nrec = self.param_spectrum['simu']['nrec']
             self.nsub = self.pkl_sky['parameters']['QUBIC']['nsub']
@@ -71,12 +72,18 @@ class Spectra:
             self.my_dict, _ = self.get_dict()
 
         self.ell, self.namaster = NamasterEll(self.iter).ell()
-        _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
-        _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
-        self.allnus = np.array(list(allnus150) + list(allnus220))
-        self.allfwhm = self.allfwhm()
-        print('allnus', self.allnus)
-        print('allfwhm', self.allfwhm)
+        
+        if self.maps_parameters['QUBIC']['convolution'] is True:
+            _, allnus150, _, _, _, _ = qubic.compute_freq(150, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
+            _, allnus220, _, _, _, _ = qubic.compute_freq(220, Nfreq=int(self.nsub/2)-1, relative_bandwidth=0.25)
+            self.allnus = np.array(list(allnus150) + list(allnus220))
+            fwhm = self.allfwhm()
+            allfwhm = []
+            for i in range(self.nrec):
+                allfwhm.append(fhhm[(i+1)*self.fsub - 1])
+            self.allfwhm = fwhm
+        else:
+            self.allfwhm = np.zeros(self.nrec)
 
     def find_data(self, path):
         '''
@@ -240,10 +247,10 @@ class Spectra:
             for j in range(idx_lenght):
                 if i==j :
                     # Compute the auto-spectrum
-                    power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[(i+1)*self.fsub - 1])
+                    power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[i])
                 else:
                     # Compute the cross-spectrum
-                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[(i+1)*self.fsub - 1], maps[j], self.allfwhm[(j+1)*self.fsub - 1])
+                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i], maps[j], self.allfwhm[j])
         return power_spectra_array
 
     def compute_power_spectra(self):

@@ -1,12 +1,12 @@
 data:
-  path_out : '/pbs/home/t/tlaclave/sps/Pipeline/spectra/with_convolution/UWB_Nrec=2_spectra_test/'
-  path_noise : '/pbs/home/t/tlaclave/sps/Pipeline/data_with_convolution/UWB_Nrec=2_Noise'
-  path_sky : '/pbs/home/t/tlaclave/sps/Pipeline/data_with_convolution/UWB_Nrec=2_Sky'
+  path_out : '/pbs/home/t/tlaclave/sps/Pipeline/spectra/spectra_dust_without_noise_without_convolution_/'
+  path_noise : '/pbs/home/t/tlaclave/sps/Pipeline/data_noise'
+  path_sky : '/pbs/home/t/tlaclave/sps/Pipeline/data_dust_without_noise'
   pipeline : 'FMM'
 
 simu: 
   nrec : 2
-  qubic_config : UWB
+  qubic_config : DB
 
 Spectrum:
   lmin : 40
