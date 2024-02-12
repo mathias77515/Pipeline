@@ -1,0 +1,40 @@
+data:
+  path : '/pbs/home/t/tlaclave/sps/Pipeline/spectra/spectra_without_convolution/cmb_only/DB_Nrec=2_spectra'
+  name : 'cmb_only'
+  n_real : 50
+  pipeline : 'FMM'
+
+simu: 
+  nrec : 2 
+  qubic_config : DB
+  convo : False
+  noise : True
+  name : 'CMB'
+
+MCMC:
+  nwalkers : 20
+  mcmc_steps : 300
+  discard : 150
+  stretch_move_factor : 0.7
+  snooker_move_gamma : 1.7
+  thin : 15
+
+NS:
+  DynamicNS : True
+  nlive : 2000
+  prior_transform : 'uniform'
+  bound : 'multi'
+  queue_size : 16
+  maxiter : 1000000000000000
+
+SKY_PARAMETERS:
+  r : [True, 1, 2, -1, 1] 
+  Alens : [True, 0, 1, 0, 10]
+  nu0_d : [353, 0, 1, 0, 1000]
+  Ad : [10, 0, 20, 0, 1000]
+  alphad : [-0.1, 5, 10, -5, 5]
+  betad : [1.54, 0, 1, 1.3, 1.7]
+  deltad : [1, 0, 1, 0, 1000]
+
+Method : 'MCMC'
+Loglike : 'cov'

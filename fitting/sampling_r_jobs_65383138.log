@@ -1,0 +1,29 @@
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+* Date:                 Mon Feb 12 20:49:11 CET 2024
+* Job name:             sampling
+* Job id:               65383138
+* User:                 tlaclave
+* Account:              qubic
+* Submit host:          cca010
+* Partition:            hpc
+* Quality of service:   normal
+* Nodelist:             ccwpslurm0001
+****************************************************************
+python: can't open file 'sampling.py': [Errno 2] No such file or directory
+python: can't open file 'sampling.py': [Errno 2] No such file or directory
+python: can't open file 'sampling.py': [Errno 2] No such file or directory
+python: can't open file 'sampling.py': [Errno 2] No such file or directory
+****************************************************************
+*                      SLURM Batch System                      *
+*           IN2P3 Computing Centre, Villeurbanne FR            *
+****************************************************************
+Date: Mon Feb 12 20:49:13 CET 2024
+Job informations can be found using these commands:
+Accounting:
+sacct -j 65383138
+Efficiency:
+seff 65383138
+****************************************************************
