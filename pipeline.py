@@ -22,7 +22,7 @@ from fgb.mixing_matrix import *
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pyoperators import MPI
 from tools.cg import pcg
-from spectrum.spectra import Spectrum
+#from spectrum.spectra import Spectrum
 
 def save_pkl(name, d):
     with open(name, 'wb') as handle:
@@ -474,8 +474,10 @@ class PipelineFrequencyMapMaking:
         self.rms_as_fct_ite = np.delete(self.rms_as_fct_ite, (0), axis=0)
         #print(self.rms_as_fct_ite.shape)
         plt.figure()
-        plt.plot(self.rms_as_fct_ite[:, 0, 1])
-        plt.plot(self.rms_as_fct_ite[:, 1, 1])
+        for i in range(self.s_hat.shape[0]):
+            plt.plot(self.rms_as_fct_ite[:, i, 1], '-')
+            plt.plot(self.rms_as_fct_ite[:, i, 2], '--')
+        #plt.plot(self.rms_as_fct_ite[:, 1, 1])
         plt.show()
         ### Plots and saving
         if self.rank == 0:
