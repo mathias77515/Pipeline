@@ -44,6 +44,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         figsize=(10, 8),
         seenpix=None,
         jobid=None,
+        inputs=None,
     ):
         """
         Parameters
@@ -96,7 +97,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.figsize = figsize
         self.seenpix = seenpix
         self.jobid = jobid
-
+        self.inputs = inputs
         dtype = A.dtype or np.dtype(float)
         if dtype.kind == 'c':
             raise TypeError('The complex case is not yet implemented.')
@@ -178,7 +179,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
         #print(self.x.shape)
-        rms = np.array([np.std(self.x[:, self.seenpix, :], axis=1)])
+        rms = np.array([np.std(self.x[:, self.seenpix, :] - self.inputs[:, self.seenpix, :], axis=1)])
         #print(rms, rms.shape, self.rms_solution.shape)
         self.rms_solution = np.concatenate((self.rms_solution, rms), axis=0)
         #print(self.rms_solution)
@@ -218,6 +219,7 @@ def pcg(
     reso=15,
     seenpix=None,
     jobid=None,
+    inputs=None
 ):
     """
     output = pcg(A, b, [x0, tol, maxiter, M, disp, callback,
@@ -282,6 +284,7 @@ def pcg(
         reso=reso,
         seenpix=seenpix,
         jobid=jobid,
+        inputs=inputs,
     )
     try:
         output = algo.run()

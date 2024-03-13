@@ -22,7 +22,7 @@ from fgb.mixing_matrix import *
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pyoperators import MPI
 from tools.cg import pcg
-#from spectrum.spectra import Spectrum
+from spectrum.spectra import Spectrum
 
 def save_pkl(name, d):
     with open(name, 'wb') as handle:
@@ -121,8 +121,7 @@ class PipelineFrequencyMapMaking:
 
         self.noiseq = qubic_noise.total_noise(self.params['QUBIC']['ndet'], 
                                        self.params['QUBIC']['npho150'], 
-                                       self.params['QUBIC']['npho220'],
-                                       seed=seed_noise_planck).ravel()
+                                       self.params['QUBIC']['npho220']).ravel()
 
     def _get_random_value(self):
         
@@ -427,7 +426,8 @@ class PipelineFrequencyMapMaking:
                                     center=self.center, 
                                     reso=self.params['QUBIC']['dtheta'], 
                                     seenpix=self.seenpix,
-                                    jobid=self.job_id)
+                                    jobid=self.job_id, 
+                                    inputs=self.m_nu_in)
 
         self._barrier()
         #print(solution_qubic_planck)
@@ -477,8 +477,9 @@ class PipelineFrequencyMapMaking:
         for i in range(self.s_hat.shape[0]):
             plt.plot(self.rms_as_fct_ite[:, i, 1], '-')
             plt.plot(self.rms_as_fct_ite[:, i, 2], '--')
-        #plt.plot(self.rms_as_fct_ite[:, 1, 1])
-        plt.show()
+        plt.savefig('rms_as_function_iteration.png')
+        plt.close()
+        
         ### Plots and saving
         if self.rank == 0:
             
