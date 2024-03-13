@@ -1,5 +1,5 @@
 Method: 'FMM'
-path_out: '/Users/mregnier/Desktop/git/Pipeline/test_compsep/'
+path_out: 'test/'
 
 Sky:
     CMB:
