@@ -20,6 +20,7 @@ from qubic import NamasterLib as nam
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pyoperators import MPI
 from tools.cg import pcg
+from spectrum.spectra import Spectrum
 
 def save_pkl(name, d):
     with open(name, 'wb') as handle:
@@ -49,6 +50,9 @@ class PipelineFrequencyMapMaking:
 
         self.file = file
         self.externaldata = PipelineExternalData(file)
+        self.externaldata.run()
+        #print(self.externaldata.maps.shape)
+        #stop
         self.job_id = os.environ.get('SLURM_JOB_ID')
         
         ### Initialize plot instance
@@ -104,7 +108,8 @@ class PipelineFrequencyMapMaking:
         self.invN = self.joint.get_invntt_operator(mask=self.mask)
 
         ### Noises
-        seed_noise_planck = int(sys.argv[1])
+        
+        seed_noise_planck = self._get_random_value()
         print('seed_noise_planck', seed_noise_planck)
         
         self.noise143 = self.planck_acquisition143.get_noise(seed_noise_planck) * self.params['Data']['level_planck_noise']
@@ -120,6 +125,16 @@ class PipelineFrequencyMapMaking:
                                        self.params['QUBIC']['npho220'],
                                        seed=seed_noise_planck).ravel()
 
+    def _get_random_value(self):
+        
+        np.random.seed(None)
+        if self.rank == 0:
+            seed = np.random.randint(10000000)
+        else:
+            seed = None
+            
+        seed = self.comm.bcast(seed, root=0)
+        return seed
     def _get_H(self):
         
         """
@@ -347,7 +362,6 @@ class PipelineFrequencyMapMaking:
         self.m_nu_in = self.get_input_map()
 
         return TOD
-
     def _barrier(self):
 
         """
@@ -394,10 +408,10 @@ class PipelineFrequencyMapMaking:
 
         A = self.H.T * self.invN * self.H
         b = self.H.T * self.invN * d
-        print(self.params)
+        #print(self.params)
         ### Preconditionning
-        M = acq.get_preconditioner(np.ones(12*self.params['Sky']['nside']**2))
-        #M = self._get_preconditionner()
+        #M = acq.get_preconditioner(np.ones(12*self.params['Sky']['nside']**2))
+        M = self._get_preconditionner()
         #print("PRECONDITIONNER")
 
         ### PCG
@@ -456,17 +470,26 @@ class PipelineFrequencyMapMaking:
 
         ### Solve map-making equation
         self.s_hat = self._pcg(self.TOD)
+        self.s_hat[:, ~self.seenpix, :] = 0
         
         ### Plots and saving
         if self.rank == 0:
             
             self.save_data(self.file, {'maps':self.s_hat, 'nus':self.nus_Q, 'coverage':self.coverage, 'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params})
             self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
+            self.external_maps = self.externaldata.maps.copy()
+            self.external_maps[:, ~self.seenpix, :] = 0
+            if len(self.externaldata.external_nus) != 0:
+                self.s_hat = np.concatenate((self.s_hat, self.external_maps), axis=0)
+                self.nus_Q = np.array(list(self.nus_Q) + list(self.externaldata.external_nus))
+            #print(self.external_maps.shape)
+            #stop
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, fwhm=0.0048)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=1, nsig=3, fwhm=0.0048)
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=2, nsig=3, fwhm=0.0048) 
 
         self._barrier()   
+
 
 class PipelineEnd2End:
 
@@ -487,44 +510,26 @@ class PipelineEnd2End:
         create_folder_if_not_exists(self.comm, f'allplots_{self.job_id}')
 
         self.job_id = os.environ.get('SLURM_JOB_ID')
-        if not os.path.isdir(self.params['path_out']):
-            os.makedirs(self.params['path_out'])
-        file = self.params['path_out'] + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
+        if self.comm.Get_rank() == 0:
+            if not os.path.isdir(self.params['path_out']):
+                os.makedirs(self.params['path_out'])
+        self.file = self.params['path_out'] + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
+        self.file_spectrum = self.params['path_out'] + 'spectrum_' + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
 
         ### Initialization
+        self.mapmaking = PipelineFrequencyMapMaking(self.comm, self.file)
         
-        if self.params['QUBIC']['method'] == 'MM':
-            self.mapmaking = PipelineFrequencyMapMaking(self.comm, file)
-            self.spectrum = Spectrum(file, self.mapmaking.seenpix)
-            
-        elif self.params['QUBIC']['method'] == 'fake':
-            self.mapmaking = FakeFrequencyMapMaking(self.comm, file, fsky=self.params['QUBIC']['fsky'])
-            self.spectrum = Spectrum(file, self.mapmaking.seenpix)
-            
-        elif self.params['QUBIC']['method'] == 'spec':
-            self.spectrum = Spectrum(file, None)
-            self.mapmaking = MapMakingFromSpec(self.spectrum.ell, file, randomreal=self.params['QUBIC']['randomreal'])
-        
-        self.cross = PipelineCrossSpectrum(file, fsky=self.params['QUBIC']['fsky'])
         
     
     def main(self):
 
         ### Execute Frequency Map-Making
-        self.mapmaking.run()
+        self.mapmaking.run() 
         
-        ### Execute MCMC sampler
-        if self.params['Spectrum']['do_spectrum']:
-            if self.comm.Get_rank() == 0:
-
-                ### Run -> compute Dl-cross
-                self.spectrum.run()
-
-        self.comm.Barrier()
-        
-        if self.params['Sampler']['do_sampler']:
-            ### Run
-            self.cross.run()       
+        ### Execute spectrum
+        if self.mapmaking.rank == 0:
+            self.spectrum = Spectrum(self.params, self.mapmaking)
+            self.spectrum.run(self.file_spectrum)
 
         
 
