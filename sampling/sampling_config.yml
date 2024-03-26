@@ -1,5 +1,5 @@
 data:
-  path : '/pbs/home/t/tlaclave/sps/Pipeline/spectra/spectra_with_convolution/DB_Nrec=2_spectra'
+  path : '/home/regnier/work/regnier/Pipeline/signal'
   name : 'test'
   n_real : 20
   pipeline : 'FMM'
@@ -12,29 +12,36 @@ simu:
   name : 'Sky'
 
 MCMC:
-  nwalkers : 10
-  mcmc_steps : 50
-  discard : 0
-  stretch_move_factor : 0.7
-  snooker_move_gamma : 1.7
-  thin : 15
+  nwalkers : 50
+  mcmc_steps : 450
+  discard : 400
 
-NS:
-  DynamicNS : True
-  nlive : 2000
-  prior_transform : 'uniform'
-  bound : 'multi'
-  queue_size : 16
-  maxiter : 1000000000000000
+NUS:
+  qubic: [True, 2]
+  95GHz: False
+  150GHz: False
+  220GHz: False
+  30GHz: False
+  44GHz: False
+  70GHz: False
+  100GHz: False
+  143GHz: False
+  217GHz: False
+  353GHz: True
+
 
 SKY_PARAMETERS:
-  r : [True, 1, 2, -1, 1] 
-  Alens : [1, 0, 1, 0, 1]
+  r : [True, -1, 1, 0.01, 0.005] 
+  Alens : [1, -100000, 100000, 1, 0.1]
   nu0_d : [353, 0, 1, 0, 1000]
-  Ad : [True, 0, 20, 0, 1000]
-  alphad : [True, 5, 10, -5, 5]
-  betad : [1.54, 0, 1, 1.3, 1.7]
-  deltad : [1, 0, 1, 0, 1000]
+  Ad : [True, 0, 10000, 13.5, 0.1]     #13.4
+  alphad : [True, -100000, 0, -0.2, 0.01]
+  betad : [True, 1, 2, 1.6, 0.1]    #1.52
+  deltad : [1, 0, 2, 1, 0.1]
+  nu0_s : [23, 0, 1, 0, 1000]
+  As : [0, -100000, 10000, 0, 0.1]
+  alphas : [0, -100000, 10000, -0.1, 0.01]
+  betas : [-3, -10, 0, -3, 0.1]
+  eps : [0, -1, 1, 0, 0.01]
 
-Method : 'MCMC'
-Loglike : 'diag'
+filename: 'test'

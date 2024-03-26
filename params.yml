@@ -1,10 +1,10 @@
 Method: 'FMM'
-path_out: '/home/regnier/work/regnier/Pipeline/xspectrum_nrec2_cmbdust_noise/'
+path_out: '/home/regnier/work/regnier/Pipeline/E2E_nrec2/Xspectrum_nrec2_cmb/'
 
 Sky:
     CMB:
 
-        cmb: False
+        cmb: True
         r: [0, 'f', 'r', 0.001]
         Alens: [1, 'f', 'A_{lens}', 1]
 
@@ -55,6 +55,7 @@ QUBIC:
     dust_model: 'd0'
     sync_model: 's0'
     fsky: 0.035
+    do_noise_only: True
 
 Spectrum:
     dl: 30
