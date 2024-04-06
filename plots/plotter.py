@@ -23,7 +23,6 @@ class Plots:
 
     def _make_samples(self, chain, names, labels):
         self.sample = MCSamples(samples=chain, names=names, labels=labels)
-
     def make_list_free_parameter(self):
 
         '''
@@ -55,7 +54,6 @@ class Plots:
             except: pass
 
         return fp, fp_name, fp_latex
-
     def _set_marker(self, values):
         
         '''
@@ -72,7 +70,6 @@ class Plots:
         if self.params['Sampler']['markers'] is False:
             dict = None
         return dict
-    
     def get_convergence(self, chain, job_id):
 
         '''
@@ -98,7 +95,6 @@ class Plots:
         plt.xlabel('Iterations', fontsize=12)
         plt.savefig(f'allplots_{job_id}/Convergence_chain.png')
         plt.close()
-
     def get_triangle(self, chain, names, labels, job_id):
         
         '''
@@ -122,7 +118,6 @@ class Plots:
                 #title_limit=1)
         plt.savefig(f'allplots_{job_id}/triangle_plot.png')
         plt.close()
-
     def get_Dl_plot(self, ell, Dl, Dl_err, nus, job_id, figsize=(10, 10), model=None):
 
         plt.figure(figsize=figsize)
@@ -148,26 +143,27 @@ class PlotsMM:
         self.params = params
         self.stk = ['I', 'Q', 'U']
 
-    def plot_FMM(self, m_in, m_out, center, seenpix, nus, job_id, figsize=(10, 8), istk=1, nsig=3, fwhm=0):
+    def plot_FMM(self, m_in, m_out, center, seenpix, nus, job_id, figsize=(10, 8), istk=1, nsig=3, fwhm=0, name='signal'):
         
         m_in[:, ~seenpix, :] = hp.UNSEEN
         m_out[:, ~seenpix, :] = hp.UNSEEN
 
-        C = HealpixConvolutionGaussianOperator(fwhm=fwhm)
+        
         plt.figure(figsize=figsize)
 
         k=1
         for i in range(self.params['QUBIC']['nrec']):
+            C = HealpixConvolutionGaussianOperator(fwhm=fwhm[i])
             hp.gnomview(C(m_in[i, :, istk]), rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k),
                         title=r'Input - $\nu$ = '+f'{nus[i]:.0f} GHz')
-            hp.gnomview(C(m_out[i, :, istk]), rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+1),
+            hp.gnomview(m_out[i, :, istk], rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+1),
                         title=r'Output - $\nu$ = '+f'{nus[i]:.0f} GHz')
-            res = C(m_in[i, :, istk]) - C(m_out[i, :, istk])
+            res = C(m_in[i, :, istk]) - m_out[i, :, istk]
             res[~seenpix] = hp.UNSEEN
             hp.gnomview(res, rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2))
 
             k+=3
-        plt.savefig(f'allplots_{job_id}/frequency_maps_{self.stk[istk]}.png')
+        plt.savefig(f'allplots_{job_id}/frequency_maps_{self.stk[istk]}_{name}.png')
         plt.close()
 
     def plot_FMM_mollview(self, m_in, m_out, nus, job_id, figsize=(10, 8), istk=1, nsig=3, fwhm=0):

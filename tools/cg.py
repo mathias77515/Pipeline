@@ -44,7 +44,6 @@ class PCGAlgorithm(IterativeAlgorithm):
         figsize=(10, 8),
         seenpix=None,
         jobid=None,
-        inputs=None,
     ):
         """
         Parameters
@@ -97,7 +96,9 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.figsize = figsize
         self.seenpix = seenpix
         self.jobid = jobid
-        self.inputs = inputs
+        self.IQU = np.std(x0[:, seenpix, :], axis=1)
+        #print(self.IQU, self.IQU.shape)
+        #stop
         dtype = A.dtype or np.dtype(float)
         if dtype.kind == 'c':
             raise TypeError('The complex case is not yet implemented.')
@@ -118,7 +119,6 @@ class PCGAlgorithm(IterativeAlgorithm):
             self,
             x=x0,
             convergence=np.array([]),
-            rms_solution=np.zeros((1, b.shape[0], b.shape[-1])),
             abnormal_stop_condition=abnormal_stop_condition,
             disp=disp,
             dtype=dtype,
@@ -156,9 +156,14 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.r = empty(b.shape, dtype)
         self.s = empty(b.shape, dtype)
 
+        #self.dict, self.dict_mono = self.get_dict()
+        #self.skyconfig = self._get_sky_config()
+        #self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
+        #self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
+
     def initialize(self):
         IterativeAlgorithm.initialize(self)
-        
+
         if self.b_norm == 0:
             self.error = 0
             self.x[...] = 0
@@ -178,12 +183,8 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
-        #print(self.x.shape)
-        rms = np.array([np.std(self.x[:, self.seenpix, :] - self.inputs[:, self.seenpix, :], axis=1)])
-        #print(rms, rms.shape, self.rms_solution.shape)
-        self.rms_solution = np.concatenate((self.rms_solution, rms), axis=0)
-        #print(self.rms_solution)
-        #stop 
+        self.IQU = np.std(self.x[:, self.seenpix, :], axis=1)
+            
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
         self.convergence = np.append(self.convergence, self.error)
@@ -200,7 +201,7 @@ class PCGAlgorithm(IterativeAlgorithm):
     @staticmethod
     def callback(self):
         if self.disp:
-            print(f'{self.niterations:4}: {self.error:.4e} {time.time() - self.t0:.5f}')
+            print(f'{self.niterations:4}: {self.error:.4e} {time.time() - self.t0:.5f} {self.IQU[:, 0]} {self.IQU[:, 1]} {self.IQU[:, 2]}')
 
 
 def pcg(
@@ -219,7 +220,6 @@ def pcg(
     reso=15,
     seenpix=None,
     jobid=None,
-    inputs=None
 ):
     """
     output = pcg(A, b, [x0, tol, maxiter, M, disp, callback,
@@ -284,7 +284,6 @@ def pcg(
         reso=reso,
         seenpix=seenpix,
         jobid=jobid,
-        inputs=inputs,
     )
     try:
         output = algo.run()

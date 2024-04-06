@@ -1,12 +1,14 @@
 # Pipeline
 
-Repository that contain End-2-End pipeline to perform QUBIC frequency map-making only. 
+Repository that contain End-2-End pipeline to perform QUBIC frequency map-making, power spectrum estimation and cosmological analysis. 
 
 # Description
 
 First step is compute frequency observations based on 3 way to do it :
 
 * Usual map-making by deconvolving multiple peaks (large memory requirement)
+* Fake frequency map-making using PySM python package using instrumental noise description
+* Spectrum-based map-making assuming perfect or gaussian foregrounds (idealistic model)
 
 # Run 
 

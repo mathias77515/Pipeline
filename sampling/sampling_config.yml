@@ -1,6 +1,6 @@
 data:
   path : '/home/regnier/work/regnier/Pipeline/signal'
-  name : 'test'
+  name : 'QU_wide_cmb'
   n_real : 20
   pipeline : 'FMM'
 
@@ -12,36 +12,39 @@ simu:
   name : 'Sky'
 
 MCMC:
-  nwalkers : 10
-  mcmc_steps : 300
-  discard : 200
+  nwalkers : 20
+  mcmc_steps : 200
+  discard : 100
+  diag : False
+  sample_covariance : True
 
 NUS:
   qubic: [True, 2]
+  # Bicep/Keck
   95GHz: False
-  150GHz: Truev
+  150GHz: False
   220GHz: False
+  # Planck
   30GHz: True
   44GHz: False
   70GHz: True
-  100GHz: True
+  100GHz: False
   143GHz: False
   217GHz: False
-  353GHz: True
-
+  353GHz: False
 
 SKY_PARAMETERS:
-  r : [True, -1, 1, 0.01, 0.01] 
+  r : [True, -1, 1, 0, 0.01] 
   Alens : [1, -100000, 100000, 1, 0.1]
   nu0_d : [353, 0, 1, 0, 1000]
-  Ad : [True, -100000, 10000, 12, 1]
-  alphad : [True, -100000, 10000, -0.1, 0.01]
-  betad : [True, 0, 3, 1.5, 0.1]
+  Ad : [True, 0, 10000, 10.5, 0.1]     #13.4
+  alphad : [True, -100000, 0, -0.15, 0.01]
+  betad : [1.54, 1, 2, 1.54, 0.01]    #1.52
   deltad : [1, 0, 2, 1, 0.1]
   nu0_s : [23, 0, 1, 0, 1000]
-  As : [True, -100000, 10000, 1, 0.1]
-  alphas : [0, -100000, 10000, -0.1, 0.01]
+  As : [0, -100000, 10000, 0, 0.1]
+  alphas : [0, -100000, 10000, 1, 0.1]
   betas : [-3, -10, 0, -3, 0.1]
+  eps : [0, -1, 1, 0, 0.01]
 
-Method : 'MCMC'
-Loglike : 'diag'
+filename: 'QU_HFI_two'

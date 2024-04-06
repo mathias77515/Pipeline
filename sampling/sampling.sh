@@ -4,10 +4,10 @@
 
 # we ask for n MPI tasks with N cores each on c nodes
 
-#SBATCH --partition=quiet
+#SBATCH --partition=hpc
 #SBATCH --nodes=1                # c
-#SBATCH --ntasks-per-node=1      # n
-#SBATCH --cpus-per-task=10        # N
+#SBATCH --ntasks-per-node=12      # n
+#SBATCH --cpus-per-task=1        # N
 #SBATCH --mem=10G
 #SBATCH --time=0-10:00:00
 #SBATCH --output=mulitple_jobs_%j.log
