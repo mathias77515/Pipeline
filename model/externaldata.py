@@ -179,7 +179,7 @@ class PipelineExternalData:
         self.maps = np.zeros((len(self.external_nus), 12*self.nside**2, 3))
 
         for inu, nu in enumerate(self.external_nus):
-            print(self.external_nus, inu, nu)
+            #print(self.external_nus, inu, nu)
             self.maps[inu] = self._get_ave_map(nu, 10)
             if noise:
                 self.maps[inu] += self._get_noise(nu)
