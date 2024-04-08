@@ -10,20 +10,20 @@ Sky:
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: True
+        Dust: False
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 32
+    nside: 256
 
 QUBIC:
-    npointings: 80
+    npointings: 4000
     fsub: 4
     nrec: 2
     iteration: 1
-    ndet: 1
-    npho150: 1
-    npho220: 1
+    ndet: 0.001
+    npho150: 0.001
+    npho220: 0.001
     synthbeam_kmax: 1
     detector_nep: 4.7e-17
     nhwp_angles: 3
@@ -31,7 +31,8 @@ QUBIC:
     type: 'two'
     covcut: 0.2
     kappa: 0
-    convolution: True
+    convolution: False
+    reconvolution_after_MM: True
     bandpass_correction: True
     RA_center: 0
     DEC_center: -57
@@ -43,7 +44,7 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 4
+    maxiter: 1
     tol: 1.0e-20
 
 Data:

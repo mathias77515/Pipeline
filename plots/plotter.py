@@ -143,7 +143,7 @@ class PlotsMM:
         self.params = params
         self.stk = ['I', 'Q', 'U']
 
-    def plot_FMM(self, m_in, m_out, center, seenpix, nus, job_id, figsize=(10, 8), istk=1, nsig=3, fwhm=0, name='signal'):
+    def plot_FMM(self, m_in, m_out, center, seenpix, nus, job_id, figsize=(10, 8), istk=1, nsig=3, name='signal'):
         
         m_in[:, ~seenpix, :] = hp.UNSEEN
         m_out[:, ~seenpix, :] = hp.UNSEEN
@@ -153,13 +153,21 @@ class PlotsMM:
 
         k=1
         for i in range(self.params['QUBIC']['nrec']):
-            C = HealpixConvolutionGaussianOperator(fwhm=fwhm[i])
-            hp.gnomview(C(m_in[i, :, istk]), rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k),
+            
+            hp.gnomview(m_in[i, :, istk], rot=center, reso=15, cmap='jet', 
+                        min = - nsig * np.std(m_out[0, seenpix, istk]), 
+                        max = nsig * np.std(m_out[0, seenpix, istk]), 
+                        sub=(self.params['QUBIC']['nrec'], 3, k),
                         title=r'Input - $\nu$ = '+f'{nus[i]:.0f} GHz')
-            hp.gnomview(m_out[i, :, istk], rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+1),
+            hp.gnomview(m_out[i, :, istk], rot=center, reso=15, cmap='jet', 
+                        min = - nsig * np.std(m_out[0, seenpix, istk]), 
+                        max = nsig * np.std(m_out[0, seenpix, istk]), 
+                        sub=(self.params['QUBIC']['nrec'], 3, k+1),
                         title=r'Output - $\nu$ = '+f'{nus[i]:.0f} GHz')
-            res = C(m_in[i, :, istk]) - m_out[i, :, istk]
+            
+            res = m_in[i, :, istk] - m_out[i, :, istk]
             res[~seenpix] = hp.UNSEEN
+            
             hp.gnomview(res, rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2))
 
             k+=3
