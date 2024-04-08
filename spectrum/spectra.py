@@ -6,6 +6,7 @@ import pickle
  
 #### QUBIC packages
 import qubic
+import mapmaking.systematics as acq
 from qubic import NamasterLib as nam
 from qubic.beams import BeamGaussian
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
@@ -57,12 +58,13 @@ class Spectrum:
         self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
         
         if self.params['QUBIC']['convolution'] is True:
-            fwhm = self.allfwhm()
-            print(fwhm)
-            allfwhm = np.zerso(self.nfreq)
-            for i in range(self.nrec):
-                allfwhm[i] = fwhm[(i+1)*self.fsub - 1]
-            self.allfwhm = allfwhm
+            self.allfwhms = self.allfwhm()
+            #print('fwhm = ', self.allfwhms)
+            #stop
+            #allfwhm = np.zeros(self.nfreq)
+            #for i in range(self.nrec):
+            #    allfwhm[i] = fwhm[(i+1)*self.fsub - 1]
+            #self.allfwhm = allfwhm
         else:
             self.allfwhm = np.zeros(self.nfreq)
 
@@ -133,15 +135,29 @@ class Spectrum:
             sb.peak150 = BeamGaussianRippled(synthbeam_peak150_fwhm,
                                              nripples=nripples)
         return sb    
+    def read_pkl(self, name):
+        
+        with open(name, 'rb') as f:
+            data = pickle.load(f)
+        return data
+    def get_fwhm_planck(self, nu):
+        return acq.arcmin2rad(self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}'])
+    def get_fwhm_qubic(self, nu):
+        return np.deg2rad(0.39268176 * (150 / nu))
     def allfwhm(self):
         '''
         Function to compute the fwhm for all sub bands.
 
         Return :
-            - allfwhm (list [nrec * nsub])
+            - allfwhm (list [nfreq])
         '''
-
-        return 0.39268176 * (150 / self.nus)
+        allfwm = np.zeros(self.nfreq)
+        for i in range(self.nfreq):
+            if i <= self.nrec:
+                allfwm[i] = self.get_fwhm_qubic(self.nus[i])
+            else:
+                allfwm[i] = self.get_fwhm_planck(self.nus[i])
+        return allfwm
     def compute_auto_spectrum(self, map, fwhm):
         '''
         Function to compute the auto-spectrum of a given map
@@ -194,13 +210,13 @@ class Spectrum:
         for i in range(self.nfreq):
             for j in range(i, self.nfreq):
                 print(f'====== {self.nus[i]:.0f}x{self.nus[j]:.0f} ======')
-                #print(self.allfwhm)
+                #print(self.allfwhms)
                 if i==j :
                     # Compute the auto-spectrum
-                    power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[i])
+                    power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhms[i])
                 else:
                     # Compute the cross-spectrum
-                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i], maps[j], self.allfwhm[j])
+                    power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhms[i], maps[j], self.allfwhms[j])
                 #print(power_spectra_array[i, j])
         return power_spectra_array
     def compute_power_spectra(self):
@@ -231,7 +247,8 @@ class Spectrum:
         
         print('Power spectra computed !!!')
         
-        self.save_data(self.path_spectrum + '/' + f'spectrum_{self.jobid}.pkl', {'nus':self.nus,
-                              'ell':self.ell,
-                              'Dls':self.Dl,
-                              'Nl':self.Nl})
+        self.save_data(self.path_spectrum + '/' + f'spectrum_{self.jobid}.pkl', 
+                            {'nus':self.nus,
+                             'ell':self.ell,
+                             'Dls':self.Dl,
+                             'Nl' :self.Nl})
