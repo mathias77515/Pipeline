@@ -145,7 +145,7 @@ class Foreground:
                         s[j, i] = 1
         
         return models
-        
+
 class BBPip:
     
     def __init__(self, path):
@@ -160,11 +160,8 @@ class BBPip:
         self.rank = COMM.Get_rank()
         self.size = COMM.Get_size()
         self.path = path
-        #self.path_noise = path_noise
         self.files = os.listdir(self.path)
-        #self.files_noise = os.listdir(self.path_noise)
         self.N = len(self.files)
-        #self.Nn = len(self.files_noise)
         self.nus = self.open_data(self.path + '/' + self.files[0])['nus']
 
         self.bandpower = []
@@ -481,9 +478,14 @@ if pip.rank == 0:
     print('Error   : ', np.std(chains_flat, axis=0))
     filename = pip.params['filename']
     with open(f'{filename}_samplevariance{pip.is_samp}_diag{pip.is_diag}.pkl', 'wb') as handle:
-        pickle.dump({'chains':chains, 'chains_flat':chains_flat, 'ell':pip.ell, 
-                     'Dls':pip.Dl, 'Nl':pip.Nl, 
-                     'nus':pip.nus, 'names':pip.names, 'labels':pip.names}, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump({'chains':chains, 
+                     'chains_flat':chains_flat, 
+                     'ell':pip.ell, 
+                     'Dls':pip.Dl, 
+                     'Nl':pip.Nl, 
+                     'nus':pip.nus, 
+                     'names':pip.names, 
+                     'labels':pip.names}, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     s = MCSamples(samples=chains_flat, names=pip.names, labels=pip.names)
     

@@ -31,7 +31,7 @@ QUBIC:
     type: 'two'
     covcut: 0.2
     kappa: 0
-    convolution: False
+    convolution: True
     bandpass_correction: True
     RA_center: 0
     DEC_center: -57
