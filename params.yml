@@ -1,4 +1,4 @@
-path_out: 'test/folder_test/'
+path_out: 'mytest_to_remove/'
 
 Sky:
     CMB:
@@ -10,15 +10,15 @@ Sky:
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: False
+        Dust: True
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 128
+    nside: 256
 
 QUBIC:
-    npointings: 1000
-    fsub: 2
+    npointings: 80
+    fsub: 4
     nrec: 2
     iteration: 1
     ndet: 1
@@ -43,15 +43,15 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 50
+    maxiter: 400
     tol: 1.0e-20
 
 Data:
     datafilename: 'MC'
-    planck: False
+    planck: True
     level_external_data_noise: 1
 
 Pipeline:
-    mapmaking: True
-    spectrum: False
+    mapmaking: False
+    spectrum: True
 

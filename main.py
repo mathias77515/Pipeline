@@ -3,6 +3,9 @@ import yaml
 
 from pipeline import *
 from pyoperators import *
+import sys
+
+file = str(sys.argv[1])
 
 if __name__ == "__main__":
 
@@ -12,6 +15,6 @@ if __name__ == "__main__":
     ### Initialization
     pipeline = PipelineEnd2End(comm)
 
-    ### Execution
-    pipeline.main()
+    ### Execution 
+    pipeline.main(specific_file=file)
 

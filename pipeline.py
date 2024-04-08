@@ -53,8 +53,11 @@ class PipelineFrequencyMapMaking:
         self.externaldata.run()
         self.externaldata_noise = PipelineExternalData(file, noise_only=True)
         self.externaldata_noise.run()
-        #print(self.externaldata.maps.shape)
-        #stop
+        
+        if comm.Get_rank() == 0:
+            if not os.path.isdir(self.params['path_out'] + 'maps/'):
+                os.makedirs(self.params['path_out'] + 'maps/')
+                
         self.job_id = os.environ.get('SLURM_JOB_ID')
         
         ### Initialize plot instance
@@ -528,7 +531,6 @@ class PipelineFrequencyMapMaking:
                          'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params}
             
             self.save_data(self.file, dict_solution)
-            print(self.s_hat.shape, self.nus_Q, self.m_nu_in.shape)
         self._barrier()   
 
 
@@ -548,33 +550,38 @@ class PipelineEnd2End:
         self.comm = comm
         self.job_id = os.environ.get('SLURM_JOB_ID')
         
-        create_folder_if_not_exists(self.comm, f'allplots_{self.job_id}')
+        
 
         self.job_id = os.environ.get('SLURM_JOB_ID')
-        if self.comm.Get_rank() == 0:
-            if not os.path.isdir(self.params['path_out'] + 'maps/'):
-                os.makedirs(self.params['path_out'] + 'maps/')
+        
+        
+        ### Initialization
+        if self.params['Pipeline']['mapmaking']:
+            create_folder_if_not_exists(self.comm, f'allplots_{self.job_id}')
+            self.mapmaking = PipelineFrequencyMapMaking(self.comm, self.file)
+        else:
+            self.mapmaking = None
+        
         self.file = self.params['path_out'] + 'maps/' + self.params['Data']['datafilename'] + f'_{self.job_id}.pkl'
         self.file_spectrum = self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
-        #print(self.file)
-        #print(self.file_spectrum)
-        #stop
-        ### Initialization
-        self.mapmaking = PipelineFrequencyMapMaking(self.comm, self.file)
         
-        
-    
-    def main(self):
+    def main(self, specific_file=None):
 
         ### Execute Frequency Map-Making
         if self.params['Pipeline']['mapmaking']:
             self.mapmaking.run() 
         
+        
+        
         ### Execute spectrum
         if self.params['Pipeline']['spectrum']:
-            if self.mapmaking.rank == 0:
-                self.spectrum = Spectrum(self.params, self.mapmaking)
-                self.spectrum.run(self.file_spectrum)
+            if self.comm.Get_rank() == 0:
+                if self.mapmaking is not None:
+                    self.spectrum = Spectrum(self.file)
+                else:
+                    print(specific_file)
+                    self.spectrum = Spectrum(specific_file)
+                    self.spectrum.run()
 
         
 
