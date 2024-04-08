@@ -549,11 +549,9 @@ class PipelineEnd2End:
 
         self.comm = comm
         self.job_id = os.environ.get('SLURM_JOB_ID')
-        
-        
 
-        self.job_id = os.environ.get('SLURM_JOB_ID')
-        
+        self.file = self.params['path_out'] + 'maps/' + self.params['Data']['datafilename'] + f'_{self.job_id}.pkl'
+        self.file_spectrum = self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
         
         ### Initialization
         if self.params['Pipeline']['mapmaking']:
@@ -561,9 +559,6 @@ class PipelineEnd2End:
             self.mapmaking = PipelineFrequencyMapMaking(self.comm, self.file)
         else:
             self.mapmaking = None
-        
-        self.file = self.params['path_out'] + 'maps/' + self.params['Data']['datafilename'] + f'_{self.job_id}.pkl'
-        self.file_spectrum = self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
         
     def main(self, specific_file=None):
 
@@ -581,7 +576,8 @@ class PipelineEnd2End:
                 else:
                     print(specific_file)
                     self.spectrum = Spectrum(specific_file)
-                    self.spectrum.run()
+                
+                self.spectrum.run()
 
         
 

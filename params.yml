@@ -14,7 +14,7 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 256
+    nside: 32
 
 QUBIC:
     npointings: 80
@@ -43,7 +43,7 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 400
+    maxiter: 4
     tol: 1.0e-20
 
 Data:
@@ -52,6 +52,6 @@ Data:
     level_external_data_noise: 1
 
 Pipeline:
-    mapmaking: False
+    mapmaking: True
     spectrum: True
 

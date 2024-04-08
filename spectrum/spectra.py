@@ -59,15 +59,10 @@ class Spectrum:
         
         if self.params['QUBIC']['convolution'] is True:
             self.allfwhms = self.allfwhm()
-            #print('fwhm = ', self.allfwhms)
-            #stop
-            #allfwhm = np.zeros(self.nfreq)
-            #for i in range(self.nrec):
-            #    allfwhm[i] = fwhm[(i+1)*self.fsub - 1]
-            #self.allfwhm = allfwhm
         else:
             self.allfwhm = np.zeros(self.nfreq)
 
+        print('init finished')
     def get_dict(self):
         """
         Method to modify the qubic dictionary.

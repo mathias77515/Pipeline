@@ -5,7 +5,10 @@ from pipeline import *
 from pyoperators import *
 import sys
 
-file = str(sys.argv[1])
+try:
+    file = str(sys.argv[1])
+except IndexError:
+    file = 1
 
 if __name__ == "__main__":
 
