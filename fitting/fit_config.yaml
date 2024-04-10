@@ -1,0 +1,50 @@
+data:
+  path : '/pbs/home/t/tlaclave/sps/Pipeline/mytest_to_remove/'
+  n_real : 8
+
+simu: 
+  nrec : 2 
+  convo : True
+  noise : True
+  cmb : True
+  dust : True
+  sync : False
+  corr_dust_sync : False
+
+MCMC:
+  nwalkers : 20
+  mcmc_steps : 100
+  discard : 0
+  stretch_move_factor : 0.7
+  snooker_move_gamma : 1.7
+  thin : 15
+
+fitting:
+  noise_covariance_matrix : True
+  cmb_sample_variance : True
+  dust_sample_variance : True
+
+NUS:
+  qubic: [True, 2]
+  # Planck
+  30GHz: False
+  44GHz: False
+  70GHz: False
+  100GHz: False
+  143GHz: False
+  217GHz: False
+  353GHz: False
+
+SKY_PARAMETERS:
+  r : [True, 1, 2, -1, 1] 
+  Alens : [1, 0, 1, 0, 10]
+  nu0_d : [353, 0, 1, 0, 1000]
+  Ad : [True, 0, 20, 0, 1000]
+  alphad : [True, 5, 10, -5, 5]
+  betad : [1.54, 0, 1, 1.3, 1.7]
+  deltad : [1, 0, 1, 0, 1000]
+  nu0_s : [23, 0, 1, 0, 1000]
+  As : [0, 0, 0.1, -100000, 10000]
+  alphas : [0, 1, 0.1, -100000, 10000]
+  betas : [-3, -3, 0.1, -10, 0]
+  eps : [0, 0, 0.01, -1, 1]
