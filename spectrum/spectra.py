@@ -22,17 +22,16 @@ class Spectrum:
         filename = os.path.split(file)
         self.jobid = filename[1].split('_')[1].split('.')[0]
         print(f'Job id found : ', self.jobid)
+        
+        self.path_spectrum = os.path.join(os.path.dirname(os.path.dirname(file)), "spectrum")
+        if not os.path.isdir(self.path_spectrum):
+            os.makedirs(self.path_spectrum)
 
         with open('params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
         
-        self.path_spectrum = os.path.join(os.path.dirname(os.path.dirname(file)), "spectrum")
-        
         with open(file, 'rb') as f:
             self.dict_file = pickle.load(f)
-        #stop
-        if not os.path.isdir(self.path_spectrum):
-            os.makedirs(self.path_spectrum)
         
         self.verbose = verbose
         self.sky_maps = self.dict_file['maps']
@@ -43,7 +42,6 @@ class Spectrum:
         self.fsub = self.params['QUBIC']['fsub']
         self.nside = self.params['Sky']['nside']
         self.nsub = int(self.fsub * self.nrec)
-        self.my_dict, _ = self.get_dict()
 
         # Define Namaster class
         self.coverage = self.dict_file['coverage']
@@ -55,87 +53,11 @@ class Spectrum:
 
         self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
 
-        if self.params['QUBIC']['convolution'] is True:
-            fwhm = self.allfwhm()
-            print(fwhm)
-            allfwhm = np.zerso(self.nfreq)
-            for i in range(self.nrec):
-                allfwhm[i] = fwhm[(i+1)*self.fsub - 1]
-            self.allfwhm = allfwhm
+        if self.params['QUBIC']['convolution'] or self.params['QUBIC']['reconvolution_after_MM']:
+            self.allfwhm = self.allfwhm()
         else:
             self.allfwhm = np.zeros(self.nfreq)
 
-    def get_dict(self):
-        """
-        Method to modify the qubic dictionary.
-        """
-
-        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
-
-        args = {'npointings':self.params['QUBIC']['npointings'], 
-                'nf_recon':self.nrec, 
-                'nf_sub':self.nsub, 
-                'nside':self.nside, 
-                'MultiBand':True, 
-                'period':1, 
-                'RA_center':self.params['QUBIC']['RA_center'], 
-                'DEC_center':self.params['QUBIC']['DEC_center'],
-                'filter_nu':nu_ave*1e9, 
-                'noiseless':False, 
-                'dtheta':self.params['QUBIC']['dtheta'],
-                'nprocs_sampling':1,
-                'photon_noise':True, 
-                'nhwp_angles':self.params['QUBIC']['nhwp_angles'], 
-                'effective_duration':3, 
-                'filter_relative_bandwidth':delta_nu_over_nu, 
-                'type_instrument':'wide', 
-                'TemperatureAtmosphere150':None, 
-                'TemperatureAtmosphere220':None,
-                'EmissivityAtmosphere150':None, 
-                'EmissivityAtmosphere220':None, 
-                'detector_nep':float(self.params['QUBIC']['detector_nep']), 
-                'synthbeam_kmax':self.params['QUBIC']['synthbeam_kmax']}
-
-        args_mono = args.copy()
-        args_mono['nf_recon'] = 1
-        args_mono['nf_sub'] = 1
-
-        ### Get the default dictionary
-        dictfilename = 'dicts/pipeline_demo.dict'
-        d = qubic.qubicdict.qubicDict()
-        d.read_from_file(dictfilename)
-        dmono = d.copy()
-
-        for i in args.keys():
-            d[str(i)] = args[i]
-            dmono[str(i)] = args_mono[i]
-
-        return d, dmono
-    def get_ultrawideband_config(self):
-        """
-        Method that pre-compute UWB configuration.
-        """
-
-        nu_up = 247.5
-        nu_down = 131.25
-        nu_ave = np.mean(np.array([nu_up, nu_down]))
-        delta = nu_up - nu_ave
-        return nu_ave, 2*delta/nu_ave    
-    def synthbeam(self, synthbeam_peak150_fwhm, dtype=np.float32):
-        sb = SyntheticBeam()
-        sb.dtype = np.dtype(dtype)
-        nripples = self.my_dict['nripples']
-        synthbeam_peak150_fwhm = np.radians(self.my_dict['synthbeam_peak150_fwhm'])
-        if not nripples:
-            sb.peak150 = BeamGaussian(synthbeam_peak150_fwhm)
-        else:
-            sb.peak150 = BeamGaussianRippled(synthbeam_peak150_fwhm,
-                                             nripples=nripples)
-        return sb
-    def get_fwhm_planck(self, nu):
-        return self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}'] 
-    def get_fwhm_qubic(self, nu):
-        return 0.39268176 * (150 / nu)
     def allfwhm(self):
         '''
         Function to compute the fwhm for all sub bands.
@@ -143,13 +65,12 @@ class Spectrum:
         Return :
             - allfwhm (list [nfreq])
         '''
-        allfwm = np.zeros(self.nfreq)
-        for i in range(self.nfrec):
-            if i <= self.nrec:
-                allfwm[i] = self.get_fwhm_qubic(self.nus[i])
-            else:
-                allfwm[i] = self.get_fwhm_planck(self.nus[i])
-        return allfwm
+        allfwhm = np.zeros(self.nfreq)
+        for i in range(self.nfreq):
+            print('my fwhm is ', self.dict_file['fwhm_rec'][i])
+            allfwhm[i] = self.dict_file['fwhm_rec'][i]
+        return allfwhm
+
     def compute_auto_spectrum(self, map, fwhm):
         '''
         Function to compute the auto-spectrum of a given map

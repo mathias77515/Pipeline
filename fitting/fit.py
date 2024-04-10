@@ -7,7 +7,7 @@ import numpy as np
 import healpy as hp
 import emcee
 import yaml
-from multiprocessing import Pool
+from schwimmbad import MPIPool
 
 sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
 
@@ -452,7 +452,7 @@ class Fitting(data):
         print(self.simu_parameters)
         
         # Start the MCMC
-        with Pool() as pool:
+        with MPIPool() as pool:
             sampler = emcee.EnsembleSampler(nwalkers, self.ndim, log_prob_fn = self.loglikelihood, pool = pool, moves = [(emcee.moves.StretchMove(), self.params['MCMC']['stretch_move_factor']), (emcee.moves.DESnookerMove(gammas=self.params['MCMC']['snooker_move_gamma']), 1 - self.params['MCMC']['stretch_move_factor'])])
             sampler.run_mcmc(p0, mcmc_steps, progress=True)
 

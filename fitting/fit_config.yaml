@@ -1,6 +1,6 @@
 data:
   path : '/pbs/home/t/tlaclave/sps/Pipeline/mytest_to_remove/'
-  n_real : 10
+  n_real : 8
 
 simu: 
   nrec : 2 

@@ -14,18 +14,26 @@ from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
 class PipelineExternalData:
 
-    def __init__(self, file):
+    def __init__(self, file, noise_only=False):
         
         with open('params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
 
         with open('noise.yml', "r") as stream:
             self.noise = yaml.safe_load(stream)
-
+        
+        self.noise_only = noise_only
+        if self.noise_only:
+            self.factor = 0
+        else:
+            self.factor = 1
         self.external_nus = self._read_external_nus()
+        #print('external nus : ', self.external_nus)
+        
         self.nside = self.params['Sky']['nside']
         self.skyconfig = self._get_sky_config()
         self.file = file
+        
     
     def _get_sky_config(self):
         
@@ -34,12 +42,12 @@ class PipelineExternalData:
             #print(ii, i)
 
             if i == 'CMB':
-                if self.params['Sky']['CMB']['cmb']:
-                    if self.params['QUBIC']['seed'] == 0:
+                if self.params['Sky']['CMB']['cmb'][0]:
+                    if self.params['Sky']['CMB']['cmb'][1] == 0:
                         seed = np.random.randint(10000000)
                         
                     else:
-                        seed = self.params['QUBIC']['seed']
+                        seed = self.params['Sky']['CMB']['cmb'][1]
                     #stop
                     sky['cmb'] = seed
                 
@@ -48,10 +56,10 @@ class PipelineExternalData:
                     #print(j, self.params['Foregrounds'][j])
                     if j == 'Dust':
                         if self.params['Sky']['Foregrounds'][j]:
-                            sky['dust'] = self.params['QUBIC']['dust_model']
+                            sky['dust'] = 'd0'
                     elif j == 'Synchrotron':
                         if self.params['Sky']['Foregrounds'][j]:
-                            sky['synchrotron'] = self.params['QUBIC']['sync_model']
+                            sky['synchrotron'] = 's0'
 
         return sky
     def _get_depth(self, nus):
@@ -59,12 +67,27 @@ class PipelineExternalData:
         res = []
     
         for mynu in nus:
-            index = self.noise['Planck']['frequency'].index(mynu) if mynu in self.noise['Planck']['frequency'] else -1
-            if index != -1:
-                d = self.noise['Planck']['depth_p'][index]
-                res.append(d)
-            else:
-                res.append(None)  # Fréquence non trouvée, ajout d'une valeur None
+            
+            
+            is_bicep = np.sum(mynu == np.array([95, 150, 220])) != 0
+            is_planck = np.sum(mynu == np.array([30, 44, 70, 100, 143, 217, 353])) != 0
+
+            if is_bicep:
+                
+                index = self.noise['Bicep']['frequency'].index(mynu) if mynu in self.noise['Bicep']['frequency'] else -1
+                if index != -1:
+                    d = self.noise['Bicep']['depth_p'][index]
+                    res.append(d)
+                else:
+                    res.append(None)  # Fréquence non trouvée, ajout d'une valeur None
+    
+            elif is_planck:
+                index = self.noise['Planck']['frequency'].index(mynu) if mynu in self.noise['Planck']['frequency'] else -1
+                if index != -1:
+                    d = self.noise['Planck']['depth_p'][index]
+                    res.append(d)
+                else:
+                    res.append(None)  # Fréquence non trouvée, ajout d'une valeur None
     
         return res
     def _update_data(self, maps, nus):
@@ -78,11 +101,21 @@ class PipelineExternalData:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
     def _read_external_nus(self):
 
-        allnus = [30, 44, 70, 100, 143, 217, 353]
+        allnus_pl = [30, 44, 70, 100, 143, 217, 353]
+        allnus = []
+
+        if self.params['Data']['planck']:
+            allnus += allnus_pl
+        #allnus = allnus_bk + allnus_pl
         nus = []
-        for i, name in enumerate(self.params['Data']['planck'].keys()):
-            if self.params['Data']['planck'][name]:
-                nus += [allnus[i]]
+
+        for inu, nu in enumerate(allnus):
+            if inu < 3:
+                nus += [allnus[inu]]
+            else:
+                 nus += [allnus[inu]]
+        #print(nus)
+        #stop
         return nus
     def read_pkl(self, name):
         
@@ -114,19 +147,21 @@ class PipelineExternalData:
             edges_min = central_nu - bw/2
             edges_max = central_nu + bw/2
             bandpass_frequencies = np.linspace(edges_min, edges_max, nb) * u.GHz
-            mysky += np.array(sky.get_emission(bandpass_frequencies)).T.copy()
+            mysky += np.array(sky.get_emission(bandpass_frequencies)).T 
 
         if is_cmb:
             cmb = self._get_cmb(self.skyconfig['cmb'])
-            mysky += cmb.copy()
+            mysky += cmb
             
-        return mysky      
+        return mysky * self.factor   
     def _get_fwhm(self, nu):
         return self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
     def _get_noise(self, nu):
         
         np.random.seed(None)
+        #print(nu)
         sigma = self._get_depth([nu])[0] / hp.nside2resol(self.nside, arcmin=True)
+        #print(sigma)
         #sigma = np.array([hp.ud_grade(self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'noise{nu:.0f}'][:, i], self.params['Sky']['nside']) for i in range(3)]).T
         out = np.random.standard_normal(np.ones((12*self.params['Sky']['nside']**2, 3)).shape) * sigma
         return out
@@ -144,6 +179,7 @@ class PipelineExternalData:
         self.maps = np.zeros((len(self.external_nus), 12*self.nside**2, 3))
 
         for inu, nu in enumerate(self.external_nus):
+            #print(self.external_nus, inu, nu)
             self.maps[inu] = self._get_ave_map(nu, 10)
             if noise:
                 self.maps[inu] += self._get_noise(nu)
@@ -151,7 +187,7 @@ class PipelineExternalData:
                 C = HealpixConvolutionGaussianOperator(fwhm=acq.arcmin2rad(self._get_fwhm(nu)))
                 self.maps[inu] = C(self.maps[inu])
 
-        self._update_data(self.maps, self.external_nus)
+        #self._update_data(self.maps, self.external_nus)
         
         #with open(self.params['Data']['datafilename'], 'rb') as f:
         #    data = pickle.load(f)
