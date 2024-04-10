@@ -1,12 +1,9 @@
 data:
   path : '/pbs/home/t/tlaclave/sps/Pipeline/mytest_to_remove/'
-  name : 'test'
   n_real : 10
-  pipeline : 'FMM'
 
 simu: 
   nrec : 2 
-  qubic_config : DB 
   convo : True
   noise : True
   cmb : True
@@ -23,7 +20,6 @@ MCMC:
   thin : 15
 
 fitting:
-  Method : 'MCMC'
   noise_covariance_matrix : True
   cmb_sample_variance : True
   dust_sample_variance : True
@@ -52,5 +48,3 @@ SKY_PARAMETERS:
   alphas : [0, 1, 0.1, -100000, 10000]
   betas : [-3, -3, 0.1, -10, 0]
   eps : [0, 0, 0.01, -1, 1]
-
-filename: 'QU_HFI_two'
