@@ -14,10 +14,10 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 256
+    nside: 128
 
 QUBIC:
-    npointings: 1000
+    npointings: 500
     fsub: 2
     nrec: 2
     iteration: 1
@@ -31,8 +31,8 @@ QUBIC:
     type: 'two'
     covcut: 0.2
     kappa: 0
-    convolution: False
-    reconvolution_after_MM: True
+    convolution: True
+    reconvolution_after_MM: False
     bandpass_correction: True
     RA_center: 0
     DEC_center: -57
@@ -40,16 +40,16 @@ QUBIC:
 Spectrum:
     dl: 30
     lmin: 40
-    lmax: 511
+    lmax: 120 #511
     aposize: 10
 
 PCG:
-    maxiter: 100
+    maxiter: 10
     tol: 1.0e-20
 
 Data:
     datafilename: 'MC'
-    planck: False
+    planck: True
     level_external_data_noise: 1
 
 Pipeline:

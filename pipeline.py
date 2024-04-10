@@ -520,7 +520,7 @@ class PipelineFrequencyMapMaking:
         if self.params['QUBIC']['convolution']:
             for i in range(self.params['QUBIC']['nrec']):
                 fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                print(fwhm_min)
+                #print(fwhm_min)
                 C = HealpixConvolutionGaussianOperator(fwhm=fwhm_min)
                 self.m_nu_in[i] = C(self.m_nu_in[i])
                 
@@ -562,7 +562,7 @@ class PipelineFrequencyMapMaking:
             
             self.external_maps_noise = self.externaldata_noise.maps.copy()
             self.external_maps_noise[:, ~self.seenpix, :] = 0
-            
+
             if len(self.externaldata.external_nus) != 0:
                 fwhm_ext = [np.min(self.fwhm_rec)] * len(self.externaldata.external_nus)
                 
@@ -626,7 +626,6 @@ class PipelineEnd2End:
                 if self.mapmaking is not None:
                     self.spectrum = Spectrum(self.file)
                 else:
-                    print(specific_file)
                     self.spectrum = Spectrum(specific_file)
                 
                 self.spectrum.run()

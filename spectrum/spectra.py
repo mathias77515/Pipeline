@@ -57,7 +57,6 @@ class Spectrum:
             self.allfwhm = self.allfwhm()
         else:
             self.allfwhm = np.zeros(self.nfreq)
-
     def allfwhm(self):
         '''
         Function to compute the fwhm for all sub bands.
@@ -70,7 +69,6 @@ class Spectrum:
             print('my fwhm is ', self.dict_file['fwhm_rec'][i])
             allfwhm[i] = self.dict_file['fwhm_rec'][i]
         return allfwhm
-
     def compute_auto_spectrum(self, map, fwhm):
         '''
         Function to compute the auto-spectrum of a given map
