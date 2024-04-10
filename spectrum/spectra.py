@@ -7,6 +7,7 @@ import pickle
 #### QUBIC packages
 import qubic
 import mapmaking.systematics as acq
+from mapmaking.instrument import compute_freq
 from qubic import NamasterLib as nam
 from qubic.beams import BeamGaussian
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
@@ -57,12 +58,14 @@ class Spectrum:
 
         self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
         
-        if self.params['QUBIC']['convolution'] is True:
+        if self.params['QUBIC']['convolution'] or self.params['QUBIC']['reconvolution_after_MM']:
             self.allfwhms = self.allfwhm()
         else:
-            self.allfwhm = np.zeros(self.nfreq)
-
-        print('init finished')
+            self.allfwhms = np.zeros(self.nfreq)
+        #print(self.allfwhms)
+        #print(self.nus)
+        #print('init finished')
+        #stop
     def get_dict(self):
         """
         Method to modify the qubic dictionary.
@@ -146,13 +149,19 @@ class Spectrum:
         Return :
             - allfwhm (list [nfreq])
         '''
-        allfwm = np.zeros(self.nfreq)
+        allfwhm = np.zeros(self.nfreq)
         for i in range(self.nfreq):
-            if i <= self.nrec:
-                allfwm[i] = self.get_fwhm_qubic(self.nus[i])
-            else:
-                allfwm[i] = self.get_fwhm_planck(self.nus[i])
-        return allfwm
+            print('my fwhm is ', self.dict_file['fwhm_rec'][i])
+            allfwhm[i] = self.dict_file['fwhm_rec'][i]
+            #if i <= self.nrec:
+            #    if self.params['QUBIC']['reconvolution_after_MM'] or self.params['QUBIC']['convolution']:
+            #        print('my fwhm is ', self.dict_file['fwhm_rec'][i])
+            #        allfwhm[i] = self.dict_file['fwhm_rec'][i]
+            #    else:
+            #        allfwhm[i] = self.get_fwhm_qubic(self.nus[i])
+            #else:
+            #    allfwhm[i] = self.get_fwhm_planck(self.nus[i])
+        return allfwhm
     def compute_auto_spectrum(self, map, fwhm):
         '''
         Function to compute the auto-spectrum of a given map

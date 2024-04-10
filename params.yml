@@ -1,4 +1,4 @@
-path_out: 'mytest_to_remove/'
+path_out: 'E2E_nrec2/cmbdust_reconvolved_wide/'
 
 Sky:
     CMB:
@@ -10,28 +10,28 @@ Sky:
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: False
+        Dust: True
         # Synchrotron emission
         Synchrotron: False
 
     nside: 256
 
 QUBIC:
-    npointings: 4000
+    npointings: 8000
     fsub: 4
     nrec: 2
     iteration: 1
-    ndet: 0.001
-    npho150: 0.001
-    npho220: 0.001
+    ndet: 1
+    npho150: 1
+    npho220: 1
     synthbeam_kmax: 1
     detector_nep: 4.7e-17
     nhwp_angles: 3
     dtheta: 15
-    type: 'two'
+    type: 'wide'
     covcut: 0.2
     kappa: 0
-    convolution: False
+    convolution: True
     reconvolution_after_MM: True
     bandpass_correction: True
     RA_center: 0
@@ -44,7 +44,7 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 1
+    maxiter: 400
     tol: 1.0e-20
 
 Data:

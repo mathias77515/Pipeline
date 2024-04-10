@@ -111,18 +111,31 @@ class PipelineFrequencyMapMaking:
         #    self.fwhm_rec = [0] * self.params['QUBIC']['nrec']
         
         self.targets2 = []
+        self.fwhm_rec = []
         if self.params['QUBIC']['reconvolution_after_MM']:
             for i in range(self.params['QUBIC']['nrec']):
                 fwhm_i = np.max(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
                 fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
                 #print(fwhm_i)
-                if self.params['QUBIC']['convolution'] is False:
-                    self.targets2 += [fwhm_i]
-                else:
+                if self.params['QUBIC']['convolution']:
                     self.targets2 += [np.sqrt(fwhm_i**2 - fwhm_min**2)]
+                    self.fwhm_rec += [fwhm_i]
+                    
+                else:
+                    self.targets2 += [fwhm_i]
+                    self.fwhm_rec += [fwhm_i]
+            
         else:
             for i in range(self.params['QUBIC']['nrec']):
-                self.targets2 += [0]
+                
+                if self.params['QUBIC']['convolution']:
+                    fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
+                    self.targets2 += [fwhm_min]
+                    self.fwhm_rec += [fwhm_min] 
+                else:
+                    self.targets2 += [0]
+                    self.fwhm_rec += [0]
+        
         
         self.external_timeline = ExternalData2Timeline(self.skyconfig, 
                                                        self.joint.qubic.allnus, 
@@ -486,6 +499,7 @@ class PipelineFrequencyMapMaking:
         
         with open(name, 'wb') as handle:
             pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
     def run(self):
 
         """
@@ -517,9 +531,10 @@ class PipelineFrequencyMapMaking:
         ### Wait for all processes
         self._barrier()
         
+        ### Solve map-making equation for noise only
         self.s_hat_noise = self._pcg(self.n, x0=self.m_nu_in*0)
         
-        
+        self.fwhm_ext = []
         if self.params['QUBIC']['reconvolution_after_MM']:
             for i in range(self.params['QUBIC']['nrec']):
                 fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
@@ -531,6 +546,7 @@ class PipelineFrequencyMapMaking:
                 self.m_nu_in[i] = C2(self.m_nu_in[i])
                 self.s_hat[i] = C2(self.s_hat[i])
                 self.s_hat_noise[i] = C2(self.s_hat_noise[i])
+                
         
         self.s_hat[:, ~self.seenpix, :] = 0
         self.s_hat_noise[:, ~self.seenpix, :] = 0
@@ -548,9 +564,13 @@ class PipelineFrequencyMapMaking:
             self.external_maps_noise[:, ~self.seenpix, :] = 0
             
             if len(self.externaldata.external_nus) != 0:
+                fwhm_ext = [np.min(self.fwhm_rec)] * len(self.externaldata.external_nus)
+                
                 self.s_hat = np.concatenate((self.s_hat, self.external_maps), axis=0)
                 self.s_hat_noise = np.concatenate((self.s_hat_noise, self.external_maps_noise), axis=0)
                 self.nus_Q = np.array(list(self.nus_Q) + list(self.externaldata.external_nus))
+                self.fwhm_rec = np.array(list(self.fwhm_rec) + list(fwhm_ext))
+                
             
             
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, name='signal')
@@ -562,7 +582,7 @@ class PipelineFrequencyMapMaking:
             self.plots.plot_FMM(self.m_nu_in*0, self.s_hat_noise, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=2, nsig=3, name='noise') 
 
             dict_solution = {'maps':self.s_hat, 'maps_noise':self.s_hat_noise, 'nus':self.nus_Q, 'coverage':self.coverage, 
-                         'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params}
+                         'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params, 'fwhm_rec':self.fwhm_rec}
             
             self.save_data(self.file, dict_solution)
         self._barrier()   
@@ -599,8 +619,6 @@ class PipelineEnd2End:
         ### Execute Frequency Map-Making
         if self.params['Pipeline']['mapmaking']:
             self.mapmaking.run() 
-        
-        
         
         ### Execute spectrum
         if self.params['Pipeline']['spectrum']:
