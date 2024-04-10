@@ -20,5 +20,5 @@ if __name__ == "__main__":
     pipeline = PipelineEnd2End(comm)
 
     ### Execution
-    pipeline.main()
+    pipeline.main(specific_file=file)
 
