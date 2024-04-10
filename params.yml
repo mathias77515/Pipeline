@@ -1,4 +1,4 @@
-path_out: 'mytest_to_remove/'
+path_out: 'E2E_nrec2/test/'
 
 Sky:
     CMB:
@@ -17,7 +17,7 @@ Sky:
     nside: 128
 
 QUBIC:
-    npointings: 500
+    npointings: 1000
     fsub: 2
     nrec: 2
     iteration: 1
