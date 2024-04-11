@@ -50,10 +50,13 @@ class PipelineFrequencyMapMaking:
 
         self.file = file
         self.externaldata = PipelineExternalData(file)
-        self.externaldata.run()
-        self.externaldata_noise = PipelineExternalData(file, noise_only=True)
-        self.externaldata_noise.run()
+        self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
         
+        self.externaldata_noise = PipelineExternalData(file, noise_only=True)
+        self.externaldata_noise.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
+        print(self.externaldata.fwhm_ext)
+        print(self.externaldata_noise.fwhm_ext)
+        stop
         if comm.Get_rank() == 0:
             if not os.path.isdir(self.params['path_out'] + 'maps/'):
                 os.makedirs(self.params['path_out'] + 'maps/')
@@ -553,9 +556,6 @@ class PipelineFrequencyMapMaking:
         
         ### Plots and saving
         if self.rank == 0:
-            
-            
-            self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
             
             self.external_maps = self.externaldata.maps.copy()
             self.external_maps[:, ~self.seenpix, :] = 0

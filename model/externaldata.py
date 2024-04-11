@@ -155,7 +155,8 @@ class PipelineExternalData:
             
         return mysky * self.factor   
     def _get_fwhm(self, nu):
-        return self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
+        fwhmi = self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
+        return fwhmi
     def _get_noise(self, nu):
         
         np.random.seed(None)
@@ -177,7 +178,7 @@ class PipelineExternalData:
         '''
 
         self.maps = np.zeros((len(self.external_nus), 12*self.nside**2, 3))
-
+        self.fwhm_ext = []
         for inu, nu in enumerate(self.external_nus):
             #print(self.external_nus, inu, nu)
             self.maps[inu] = self._get_ave_map(nu, 10)
@@ -185,7 +186,10 @@ class PipelineExternalData:
                 self.maps[inu] += self._get_noise(nu)
             if fwhm:
                 C = HealpixConvolutionGaussianOperator(fwhm=acq.arcmin2rad(self._get_fwhm(nu)))
+                self.fwhm_ext.append(acq.arcmin2rad(self._get_fwhm(nu)))
                 self.maps[inu] = C(self.maps[inu])
+            else:
+                self.fwhm_ext.append(0)
 
         #self._update_data(self.maps, self.external_nus)
         
