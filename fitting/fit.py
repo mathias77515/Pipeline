@@ -9,11 +9,14 @@ import emcee
 import yaml
 from schwimmbad import MPIPool
 
-sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
+sys.path.append('/pbs/home/m/mregnier/sps1/Pipeline')
 
 #### QUBIC packages
 import fgb.component_model as c
 import fgb.mixing_matrix as mm
+from pyoperators import *
+
+comm = MPI.COMM_WORLD
 
 class data:
     '''
@@ -32,8 +35,10 @@ class data:
         self.path_repository = self.params['data']['path']
         self.path_spectra = self.path_repository + 'spectrum'
         self.path_fit = self.path_repository + 'fit'
-        if not os.path.isdir(self.path_fit):
-            os.makedirs(self.path_fit)
+        
+        if comm.Get_rank() == 0:
+            if not os.path.isdir(self.path_fit):
+                os.makedirs(self.path_fit)
         self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage, self.nus, self.ell = self.import_power_spectra(self.path_spectra)
         self.fsub = self.simu_parameters['QUBIC']['fsub']
         self.nrec = self.simu_parameters['QUBIC']['nrec']
@@ -282,21 +287,17 @@ class Fitting(data):
                 sky_parameters_fitted_names.append(parameter)
 
         return ndim, sky_parameters_fitted_names, sky_parameters_all_names
-
     def dl_to_cl(self, dl):
         cl = np.zeros(self.ell.shape[0])
         for i in range(self.ell.shape[0]):
             cl[i] = dl[i]*(2*np.pi)/(self.ell[i]*(self.ell[i] + 1))
-        return cl
-    
+        return cl    
     def knox_errors(self, dlth):
         dcl = (2. / (2 * self.ell + 1) / 0.01 / self.simu_parameters['Spectrum']['dl']) * dlth
         return dcl
-
     def knox_covariance(self, dlth):
         dcl = self.knox_errors(dlth)
         return np.diag(dcl ** 2)
-
     def prior(self, x):
         '''
         Function to define priors to help the MCMC convergence
@@ -315,7 +316,6 @@ class Fitting(data):
                 return - np.inf
 
         return 0
-
     def initial_conditions(self):
         '''
         Function to computes the MCMC initial conditions
@@ -333,7 +333,6 @@ class Fitting(data):
                 p0[i,j] = np.random.random() * self.params['SKY_PARAMETERS'][name][2] - self.params['SKY_PARAMETERS'][name][1]
 
         return p0
-
     def ptform_uniform(self, u):
         '''
         Function to perform an uniform prior transform for the Nested fitting
@@ -352,7 +351,6 @@ class Fitting(data):
                 ptform.append(u[cpt]*self.params['SKY_PARAMETERS'][iname][2] - self.params['SKY_PARAMETERS'][iname][1])
                 cpt += 1
         return ptform
-
     def loglikelihood(self, tab):
         '''
         loglikelihood function
@@ -426,8 +424,7 @@ class Fitting(data):
             for j in range(i, self.nfreq):
                 self.inv_noise_matrix = np.linalg.pinv(noise_matrix[i][j])
                 loglike += - 0.5 * (self.mean_ps_sky[i][j] - model[i][j]).T @ self.inv_noise_matrix @ (self.mean_ps_sky[i][j] - model[i][j])
-        return loglike
-    
+        return loglike    
     def save_data(self, name, d):
 
         """
@@ -456,13 +453,13 @@ class Fitting(data):
             sampler = emcee.EnsembleSampler(nwalkers, self.ndim, log_prob_fn = self.loglikelihood, pool = pool, moves = [(emcee.moves.StretchMove(), self.params['MCMC']['stretch_move_factor']), (emcee.moves.DESnookerMove(gammas=self.params['MCMC']['snooker_move_gamma']), 1 - self.params['MCMC']['stretch_move_factor'])])
             sampler.run_mcmc(p0, mcmc_steps, progress=True)
 
-        samples_flat = sampler.get_chain(flat = True, discard = self.params['MCMC']['discard'], thin = self.params['MCMC']['thin'])
-        samples = sampler.get_chain()
+        self.samples_flat = sampler.get_chain(flat = True, discard = self.params['MCMC']['discard'], thin = self.params['MCMC']['thin'])
+        self.samples = sampler.get_chain()
 
         self.save_data(self.path_fit + '/fit_dict.pkl', {'nus':self.nus,
                               'ell':self.ell,
-                              'samples': samples,
-                              'samples_flat': samples_flat,
+                              'samples': self.samples,
+                              'samples_flat': self.samples_flat,
                               'fitted_parameters_names':self.sky_parameters_fitted_names,
                               'parameters': self.params,
                               'Dls' : self.power_spectra_sky,
@@ -471,6 +468,15 @@ class Fitting(data):
         print("Fitting done !!!")
 
 
+
+fit = Fitting()
+fit.run()
+
+if comm.Get_rank() == 0:
+    print()
+    print(f'Average : {np.mean(fit.samples_flat, axis=0)}')
+    print(f'Error : {np.std(fit.samples_flat, axis=0)}')
+    print()
 
 
 
