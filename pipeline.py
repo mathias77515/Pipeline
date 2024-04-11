@@ -54,9 +54,9 @@ class PipelineFrequencyMapMaking:
         
         self.externaldata_noise = PipelineExternalData(file, noise_only=True)
         self.externaldata_noise.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
-        print(self.externaldata.fwhm_ext)
-        print(self.externaldata_noise.fwhm_ext)
-        stop
+        #print(self.externaldata.fwhm_ext)
+        #print(self.externaldata_noise.fwhm_ext)
+        #stop
         if comm.Get_rank() == 0:
             if not os.path.isdir(self.params['path_out'] + 'maps/'):
                 os.makedirs(self.params['path_out'] + 'maps/')
@@ -564,14 +564,18 @@ class PipelineFrequencyMapMaking:
             self.external_maps_noise[:, ~self.seenpix, :] = 0
 
             if len(self.externaldata.external_nus) != 0:
-                fwhm_ext = [np.min(self.fwhm_rec)] * len(self.externaldata.external_nus)
+                if self.params['QUBIC']['reconvolution_after_MM']:
+                    fwhm_ext = [np.min(self.fwhm_rec)] * len(self.externaldata.external_nus)
+                else:
+                    fwhm_ext = self.externaldata.fwhm_ext.copy()
+                        
+                
                 
                 self.s_hat = np.concatenate((self.s_hat, self.external_maps), axis=0)
                 self.s_hat_noise = np.concatenate((self.s_hat_noise, self.external_maps_noise), axis=0)
                 self.nus_Q = np.array(list(self.nus_Q) + list(self.externaldata.external_nus))
                 self.fwhm_rec = np.array(list(self.fwhm_rec) + list(fwhm_ext))
-                
-            
+
             
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, name='signal')
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=1, nsig=3, name='signal')
