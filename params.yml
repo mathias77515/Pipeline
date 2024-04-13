@@ -14,7 +14,7 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 128
+    nside: 64
 
 QUBIC:
     npointings: 1000
@@ -31,7 +31,7 @@ QUBIC:
     type: 'two'
     covcut: 0.2
     kappa: 0
-    convolution: True
+    convolution: False
     reconvolution_after_MM: False
     bandpass_correction: True
     RA_center: 0
@@ -44,7 +44,7 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 10
+    maxiter: 1
     tol: 1.0e-20
 
 Data:
