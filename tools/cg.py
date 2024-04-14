@@ -96,9 +96,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.figsize = figsize
         self.seenpix = seenpix
         self.jobid = jobid
-        self.IQU = np.std(x0[:, seenpix, :], axis=1)
-        #print(self.IQU, self.IQU.shape)
-        #stop
+
         dtype = A.dtype or np.dtype(float)
         if dtype.kind == 'c':
             raise TypeError('The complex case is not yet implemented.')
@@ -156,11 +154,6 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.r = empty(b.shape, dtype)
         self.s = empty(b.shape, dtype)
 
-        #self.dict, self.dict_mono = self.get_dict()
-        #self.skyconfig = self._get_sky_config()
-        #self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
-        #self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
-
     def initialize(self):
         IterativeAlgorithm.initialize(self)
 
@@ -183,7 +176,39 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
-        self.IQU = np.std(self.x[:, self.seenpix, :], axis=1)
+        if self.gif:
+            if self.comm is not None:
+                if self.comm.Get_rank() == 0:
+                    plt.figure(figsize=self.figsize)
+                    print(self.x.shape)
+                    k=1
+                    for i in range(self.x.shape[0]):
+                        for j in range(self.x.shape[2]):
+                            mymap = self.x[i, :, j].copy()
+                            mymap[~self.seenpix] = hp.UNSEEN
+                            hp.gnomview(mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0]*2, self.x.shape[2]*2, k), title='Map', notext=True,
+                                min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
+                            hp.gnomview(self.input_map[i, :, j] - mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0]*2, self.x.shape[2]*2, k+1), title='Residual', notext=True,
+                                min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
+                            k+=2
+                    plt.suptitle(f'Iteration : {self.niterations}')
+                    plt.savefig(f'gif_convergence_{self.jobid}/maps_{self.niterations}.png')
+                    plt.close()
+            else:
+                plt.figure(figsize=self.figsize)
+
+                k=1
+                for i in range(self.x.shape[0]):
+                    for j in range(self.x.shape[2]):
+                        mymap = self.x[i, :, j].copy()
+                        mymap[~self.seenpix] = hp.UNSEEN
+                        hp.gnomview(mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0], self.x.shape[2], k), title='', notext=True,
+                                min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
+                
+                        k+=1
+                plt.suptitle(f'Iteration : {self.niterations}')
+                plt.savefig(f'gif_convergence_{self.jobid}/maps_{self.niterations}.png')
+                plt.close()
             
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
@@ -201,7 +226,7 @@ class PCGAlgorithm(IterativeAlgorithm):
     @staticmethod
     def callback(self):
         if self.disp:
-            print(f'{self.niterations:4}: {self.error:.4e} {time.time() - self.t0:.5f} {self.IQU[:, 0]} {self.IQU[:, 1]} {self.IQU[:, 2]}')
+            print(f'{self.niterations:4}: {self.error:.4e} {time.time() - self.t0:.5f}')
 
 
 def pcg(

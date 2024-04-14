@@ -21,7 +21,7 @@ class PipelineExternalData:
 
         with open('noise.yml', "r") as stream:
             self.noise = yaml.safe_load(stream)
-
+        
         self.noise_only = noise_only
         if self.noise_only:
             self.factor = 0
@@ -42,12 +42,12 @@ class PipelineExternalData:
             #print(ii, i)
 
             if i == 'CMB':
-                if self.params['Sky']['CMB']['cmb']:
-                    if self.params['QUBIC']['seed'] == 0:
+                if self.params['Sky']['CMB']['cmb'][0]:
+                    if self.params['Sky']['CMB']['cmb'][1] == 0:
                         seed = np.random.randint(10000000)
                         
                     else:
-                        seed = self.params['QUBIC']['seed']
+                        seed = self.params['Sky']['CMB']['cmb'][1]
                     #stop
                     sky['cmb'] = seed
                 
@@ -56,10 +56,10 @@ class PipelineExternalData:
                     #print(j, self.params['Foregrounds'][j])
                     if j == 'Dust':
                         if self.params['Sky']['Foregrounds'][j]:
-                            sky['dust'] = self.params['QUBIC']['dust_model']
+                            sky['dust'] = 'd0'
                     elif j == 'Synchrotron':
                         if self.params['Sky']['Foregrounds'][j]:
-                            sky['synchrotron'] = self.params['QUBIC']['sync_model']
+                            sky['synchrotron'] = 's0'
 
         return sky
     def _get_depth(self, nus):
@@ -101,16 +101,21 @@ class PipelineExternalData:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
     def _read_external_nus(self):
 
-        allnus = [95, 150, 220, 30, 44, 70, 100, 143, 217, 353]
+        allnus_pl = [30, 44, 70, 100, 143, 217, 353]
+        allnus = []
+
+        if self.params['Data']['planck']:
+            allnus += allnus_pl
+        #allnus = allnus_bk + allnus_pl
         nus = []
-        
-        dic = {**self.params['Data']['bicep'], **self.params['Data']['planck']}
-        #name_allnus = np.array(list(self.params['Data']['nus'].keys())
-        #print(name_allnus)
+
+        for inu, nu in enumerate(allnus):
+            if inu < 3:
+                nus += [allnus[inu]]
+            else:
+                 nus += [allnus[inu]]
+        #print(nus)
         #stop
-        for i, name in enumerate(dic.keys()):
-            if dic[name]:
-                nus += [allnus[i]]
         return nus
     def read_pkl(self, name):
         
@@ -150,7 +155,8 @@ class PipelineExternalData:
             
         return mysky * self.factor   
     def _get_fwhm(self, nu):
-        return self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
+        fwhmi = self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
+        return fwhmi
     def _get_noise(self, nu):
         
         np.random.seed(None)
@@ -172,14 +178,18 @@ class PipelineExternalData:
         '''
 
         self.maps = np.zeros((len(self.external_nus), 12*self.nside**2, 3))
-
+        self.fwhm_ext = []
         for inu, nu in enumerate(self.external_nus):
+            #print(self.external_nus, inu, nu)
             self.maps[inu] = self._get_ave_map(nu, 10)
             if noise:
                 self.maps[inu] += self._get_noise(nu)
             if fwhm:
                 C = HealpixConvolutionGaussianOperator(fwhm=acq.arcmin2rad(self._get_fwhm(nu)))
+                self.fwhm_ext.append(acq.arcmin2rad(self._get_fwhm(nu)))
                 self.maps[inu] = C(self.maps[inu])
+            else:
+                self.fwhm_ext.append(0)
 
         #self._update_data(self.maps, self.external_nus)
         
