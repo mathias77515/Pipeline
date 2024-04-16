@@ -20,10 +20,11 @@ class Spectrum:
     def __init__(self, file, verbose=True):
         
         print('\n=========== Power Spectra ===========\n')
+
         filename = os.path.split(file)
         self.jobid = filename[1].split('_')[1].split('.')[0]
         print(f'Job id found : ', self.jobid)
-        
+
         self.path_spectrum = os.path.join(os.path.dirname(os.path.dirname(file)), "spectrum")
         if not os.path.isdir(self.path_spectrum):
             os.makedirs(self.path_spectrum)
@@ -68,7 +69,7 @@ class Spectrum:
         
         if self.params['QUBIC']['reconvolution_after_MM']:
             for irec in range(self.nrec):
-                print(self.kernels[irec])
+                print(f'Reconvolved map {irec} at fwhm = {self.allfwhm[irec]:.5f} with kernels of fwhm = {self.kernels[irec]:.5f}')
                 C = HealpixConvolutionGaussianOperator(fwhm=self.kernels[irec])
                 self.sky_maps[irec] = C(self.sky_maps[irec])
                 self.noise_maps[irec] = C(self.noise_maps[irec])

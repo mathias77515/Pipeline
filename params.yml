@@ -1,4 +1,4 @@
-path_out: 'E2E_nrec2/cmbdust_correct_convolution_DB/'
+path_out: 'E2E_nrec2/cmbdust_convolution_fixext_DB/'
 
 Sky:
     CMB:
@@ -14,10 +14,10 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 64
+    nside: 256
 
 QUBIC:
-    npointings: 1000
+    npointings: 8000
     fsub: 4
     nrec: 2
     iteration: 1
@@ -38,13 +38,13 @@ QUBIC:
     DEC_center: -57
 
 Spectrum:
-    dl: 10
+    dl: 30
     lmin: 40
-    lmax: 120 #511
+    lmax: 511
     aposize: 10
 
 PCG:
-    maxiter: 100
+    maxiter: 400
     tol: 1.0e-20
 
 Data:
@@ -53,6 +53,10 @@ Data:
     level_external_data_noise: 1
 
 Pipeline:
-    mapmaking: False
+    mapmaking: True
     spectrum: True
+
+bandwidth_qubic: 0.25
+bandwidth_planck: 0.2
+nb_integration: 100
 
