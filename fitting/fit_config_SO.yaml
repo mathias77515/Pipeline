@@ -23,10 +23,8 @@ MCMC:
   snooker_move_gamma : 1.7
   thin : 15
 
-fitting:
-  noise_covariance_matrix : True
-  cmb_sample_variance : True
-  dust_sample_variance : True
+noise_covariance_matrix : True
+sample_variance : True
 
 NUS:
   qubic: [True, 2]
@@ -53,6 +51,3 @@ SKY_PARAMETERS:
   alphas : [0, 1, 0.1, -100000, 10000]
   betas : [-3, -3, 0.1, -10, 0]
   eps : [0, 0, 0.01, -1, 1]
-
-bandwidth_qubic: 0.25
-bandwidth_planck: 0.000000001

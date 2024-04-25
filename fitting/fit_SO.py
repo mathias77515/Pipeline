@@ -35,10 +35,6 @@ class data:
 
         with open('fit_config_SO.yaml', "r") as stream:
             self.params = yaml.safe_load(stream)
-
-        self.is_cov_matrix = self.params['fitting']['noise_covariance_matrix']
-        self.is_samp_cmb = self.params['fitting']['cmb_sample_variance']
-        self.is_samp_dust = self.params['fitting']['dust_sample_variance']
         
         self.path_repository = self.params['data']['path']
         self.path_spectra = self.path_repository + self.params['data']['foldername']
@@ -329,30 +325,27 @@ class Fitting(data):
         self.sky_parameters = self.params['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_fitted_names, self.sky_parameters_all_names = self.ndim_and_parameters_names()
         
+        ### Compute noise covariance matrix
         self.noise_cov_matrix = np.zeros((self.nspecs, len(self.ell), len(self.ell), self.nspecs)) 
-        #self.sample_cov_matrix = np.zeros((self.nspecs, len(self.ell), len(self.ell), self.nspecs)) 
-        
-        #print(np.diag(np.cov(self.ps_noise_reshape[:, 0, :], self.ps_noise_reshape[:, 0, :], rowvar = False)[:16, :16]))
-        #print(np.diag(np.cov(self.ps_noise_reshape[:, 0, :], self.ps_noise_reshape[:, 1, :], rowvar = False)[:16, 16:32]))
         samples = self.ps_noise_reshape.reshape((self.ps_noise_reshape.shape[0], self.nspecs*len(self.ell)))
         cov = np.cov(samples, rowvar=False)
-        #print(cov.shape)
         self.noise_cov_matrix = cov.reshape((self.nspecs*len(self.ell), self.nspecs*len(self.ell)))
-        self.sample_cov_matrix = self._fill_sample_variance(self.mean_ps_sky).reshape((self.nspecs*len(self.ell), self.nspecs*len(self.ell)))
-        self.covariance = self.noise_cov_matrix + self.sample_cov_matrix
+        self.covariance = self.noise_cov_matrix
+        
+        ### If wanted, add the sample variance
+        if self.params['sample_variance']:
+            self.sample_cov_matrix = self._fill_sample_variance(self.mean_ps_sky).reshape((self.nspecs*len(self.ell), self.nspecs*len(self.ell)))
+            self.covariance += self.sample_cov_matrix
+        
+        ### Compute the inverse noise covariance matrix
         self.inv_cov = np.linalg.pinv(self.covariance)
-        k=0
-        #for i in range(self.nfreq):
-        #    for j in range(i, self.nfreq):
-        #        print(i, j, ' ', i*len(self.ell), (i+1)*len(self.ell), j*len(self.ell), (j+1)*len(self.ell))
-        #        #self.noise_cov_matrix[k] = np.cov(self.power_spectra_noise[:, i, j, :], rowvar = False)
-        #        k+=1
-        #stop
 
+        ### Initiate models
         self.cmb = CMB(self.ell, self.nus)
         self.foregrounds = Foreground(self.ell, self.nus)
         model = self.cmb.model_cmb(0, 1) + self.foregrounds.model_dust(0, -0.17, 1.54, 1, 353)
         
+        ### Produce plot of all the spectra
         self._get_Dl_plot(self.nus, self.ell, self.mean_ps_sky, self.error_ps_noise, model, nbins=self.params['nbins'], nrec=self.nrec)
 
         
