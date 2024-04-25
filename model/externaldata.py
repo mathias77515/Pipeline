@@ -142,15 +142,12 @@ class PipelineExternalData:
         mysky = np.zeros((12*self.params['Sky']['nside']**2, 3))
 
         if len(model) != 0:
-            sky = pysm3.Sky(nside=self.nside, preset_strings=model, output_unit="uK_CMB")
+            sky = pysm3.Sky(nside=self.nside, preset_strings=model)
             edges_min = central_nu - bw/2
             edges_max = central_nu + bw/2
             bandpass_frequencies = np.linspace(edges_min, edges_max, nb)
             print(f'Integrating bandpass from {edges_min} GHz to {edges_max} GHz with {nb} frequencies.')
-            mysky += np.array(sky.get_emission(bandpass_frequencies * u.GHz, np.ones(nb)) * utils.bandpass_unit_conversion(bandpass_frequencies * u.GHz,
-                                                                                                   np.ones(nb),
-                                                                                                   u.uK_CMB)).T
-            #mysky += np.array(sky.get_emission(bandpass_frequencies)).T 
+            mysky += np.array(sky.get_emission(bandpass_frequencies * u.GHz, None) * utils.bandpass_unit_conversion(bandpass_frequencies * u.GHz, None, u.uK_CMB)).T / 1.5
 
         if is_cmb:
             cmb = self._get_cmb(self.skyconfig['cmb'])

@@ -20,7 +20,7 @@ class Spectrum:
     def __init__(self, file, verbose=True):
         
         print('\n=========== Power Spectra ===========\n')
-
+ 
         filename = os.path.split(file)
         self.jobid = filename[1].split('_')[1].split('.')[0]
         print(f'Job id found : ', self.jobid)
@@ -154,6 +154,8 @@ class Spectrum:
                 if i==j :
                     # Compute the auto-spectrum
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[i])
+                    #print(power_spectra_array[i,j])
+                    #stop
                 else:
                     # Compute the cross-spectrum
                     power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i], maps[j], self.allfwhm[j])

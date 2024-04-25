@@ -1,4 +1,4 @@
-path_out: 'E2E_nrec2/cmbdust_convolution_fixext_DB/'
+path_out: 'E2E_nrec2/cmbdust_fixAdbicep_convolved_DB/'
 
 Sky:
     CMB:
