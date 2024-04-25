@@ -584,7 +584,7 @@ class Fitting(data):
                     name += [str(i)]
 
         name = '_'.join(name)
-        self.save_data(self.path_fit + f'/fit_dict_{name}.pkl', {'nus':self.nus,
+        self.save_data(f'fit_dict_{name}.pkl', {'nus':self.nus,
                               'ell':self.ell,
                               'samples': self.samples,
                               'samples_flat': self.samples_flat,
