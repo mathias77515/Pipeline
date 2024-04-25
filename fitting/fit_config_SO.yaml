@@ -23,7 +23,6 @@ MCMC:
   snooker_move_gamma : 1.7
   thin : 15
 
-noise_covariance_matrix : True
 sample_variance : True
 
 NUS:
