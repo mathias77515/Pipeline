@@ -64,8 +64,6 @@ class QubicWideBandNoise:
     def total_noise(self, wdet, wpho150, wpho220, seed=None):
         
         Qubic150 = QubicNoise(150, self.npointings, comm=self.d['comm'], size=self.d['nprocs_instrument'], detector_nep=self.detector_nep, seed=seed)
-        if seed is not None :
-            seed += 1
         Qubic220 = QubicNoise(220, self.npointings, comm=self.d['comm'], size=self.d['nprocs_instrument'], detector_nep=self.detector_nep, seed=seed)
         
         ndet = wdet * Qubic150.detector_noise()
@@ -86,8 +84,6 @@ class QubicDualBandNoise:
     def total_noise(self, wdet, wpho150, wpho220, seed=None):
         
         Qubic150 = QubicNoise(150, self.npointings, comm=self.d['comm'], size=self.d['nprocs_instrument'], detector_nep=self.detector_nep, seed=seed)
-        if seed is not None :
-            seed += 1
         Qubic220 = QubicNoise(220, self.npointings, comm=self.d['comm'], size=self.d['nprocs_instrument'], detector_nep=self.detector_nep, seed=seed)
         
         ndet150 = wdet * Qubic150.detector_noise().ravel()

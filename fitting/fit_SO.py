@@ -18,6 +18,7 @@ sys.path.append('/pbs/home/m/mregnier/sps1/Pipeline')
 import fgb.component_model as c
 import fgb.mixing_matrix as mm
 from pyoperators import *
+import qubic
 
 comm = MPI.COMM_WORLD
 def _Dl2Cl(ell, Dl):
@@ -38,7 +39,7 @@ class data:
         
         self.path_repository = self.params['data']['path']
         self.path_spectra = self.path_repository + self.params['data']['foldername']
-        self.path_fit = self.path_repository + 'fit' + f"_{self.params['data']['filename']}"
+        self.path_fit = 'fit' + f"_{self.params['data']['filename']}"
 
         ### Create fit folder
         if comm.Get_rank() == 0:
@@ -57,6 +58,7 @@ class data:
         bp_to_rm = self.select_bandpower()
         self.nfreq = len(self.nus)
         self.nspecs = (self.nfreq * (self.nfreq + 1)) // 2
+        self.nspecs_qubic = (self.nrec * (self.nrec + 1)) // 2
     
         ### Remove bandpowers not selected
         self.power_spectra_sky = np.delete(self.power_spectra_sky, bp_to_rm, 1)
@@ -90,7 +92,9 @@ class data:
                 self.mean_ps_sky_reshape[k] = self.mean_ps_sky[i, j].copy()
                 self.mean_ps_noise_reshape[k] = self.mean_ps_noise[i, j].copy()
                 k+=1
-        
+                
+        #print(np.std(self.power_spectra_noise, axis=0)[..., 0])
+        #stop      
     def select_bandpower(self):
         '''
         Function to remove some bamdpowers if they are not selected.
@@ -101,9 +105,10 @@ class data:
         k=0
         bp_to_rm = []
         for ii, i in enumerate(self.nus):
-            if ii < self.params['NUS']['qubic'][1]:
-                if self.params['NUS']['qubic'][0]:
-                    k += (self.params['NUS']['qubic'][1])
+            if ii < self.params['simu']['nrec']:
+                if self.params['NUS']['qubic']:
+                    pass
+                    #k += [self.params['NUS']['qubic'][1]
                 else:
                     bp_to_rm += [ii]
                     k+=1
@@ -245,7 +250,7 @@ class Foreground:
         Function to define the Dust model for two frequencies
         '''
 
-        return abs(A) * delta * fnu1 * fnu2 * (self.ell/80)**alpha
+        return abs(A) * delta * fnu1 * fnu2 * (self.ell/80)**(2 + alpha)
     def model_sync_frequency(self, A, alpha, fnu1, fnu2):
         '''
         Function to define the Dust model for two
@@ -310,7 +315,6 @@ class Foreground:
                     models[i, j] += self.model_dustsync_corr(Ad, As, alphad, alphas, fnu1d, fnu2d, fnu1s, fnu2s, eps)
         return models
 
-
 class Fitting(data):
     '''
     Class to perform MCMC on the chosen sky parameters
@@ -325,20 +329,53 @@ class Fitting(data):
         self.sky_parameters = self.params['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_fitted_names, self.sky_parameters_all_names = self.ndim_and_parameters_names()
         
-        ### Compute noise covariance matrix
+        ### Compute noise covariance/correlation matrix
         self.noise_cov_matrix = np.zeros((self.nspecs, len(self.ell), len(self.ell), self.nspecs)) 
         samples = self.ps_noise_reshape.reshape((self.ps_noise_reshape.shape[0], self.nspecs*len(self.ell)))
-        cov = np.cov(samples, rowvar=False)
-        self.noise_cov_matrix = cov.reshape((self.nspecs*len(self.ell), self.nspecs*len(self.ell)))
-        self.covariance = self.noise_cov_matrix
+        self.noise_cov_matrix = np.cov(samples, rowvar=False)
+        self.noise_correlation_matrix = np.corrcoef(samples, rowvar=False)
+        self.covariance = self.noise_cov_matrix.copy()
+        
+        self.index_only_qubic = []
+        self.index_both = []
+        self.index_only_planck = []
+        k = 0
+
+        for i in range(self.nspecs):
+            for j in range(self.nspecs):
+                if (i < self.nspecs_qubic) and (j < self.nspecs_qubic):
+                    self.index_only_qubic += [(i, j)]
+                elif (i < self.nspecs_qubic) or (j < self.nspecs_qubic):
+                    self.index_both += [(i, j)]
+                elif (i > self.nspecs_qubic) and (j < self.nspecs_qubic):
+                    self.index_both += [(i, j)]
+                elif (i < self.nspecs_qubic) and (j > self.nspecs_qubic):
+                    self.index_both += [(i, j)]
+                else:
+                    self.index_only_planck += [(i, j)]
+                k+=1
         
         ### If wanted, add the sample variance
         if self.params['sample_variance']:
             self.sample_cov_matrix = self._fill_sample_variance(self.mean_ps_sky).reshape((self.nspecs*len(self.ell), self.nspecs*len(self.ell)))
-            self.covariance += self.sample_cov_matrix
+            self.covariance += self.sample_cov_matrix.copy()
         
-        ### Compute the inverse noise covariance matrix
         self.inv_cov = np.linalg.pinv(self.covariance)
+        
+        ### Remove off-diagonal elements in covariance matrix for QUBIC data
+        if self.params['diagonal_qubic']:
+            for ii in self.index_only_qubic:
+                self.inv_cov[ii[0]*len(self.ell):(ii[0]+1)*len(self.ell), ii[1]*len(self.ell):(ii[1]+1)*len(self.ell)] *= np.eye(len(self.ell))
+        
+        
+        ### Remove off-diagonal elements in covariance matrix for Planck data
+        if self.params['diagonal_planck']:
+            for ii in self.index_only_planck:
+                self.inv_cov[ii[0]*len(self.ell):(ii[0]+1)*len(self.ell), ii[1]*len(self.ell):(ii[1]+1)*len(self.ell)] *= np.eye(len(self.ell))
+        
+        #for ii in self.index_both:
+        #    self.inv_cov[ii[0]*len(self.ell):(ii[0]+1)*len(self.ell), ii[1]*len(self.ell):(ii[1]+1)*len(self.ell)] *= np.eye(len(self.ell))
+        
 
         ### Initiate models
         self.cmb = CMB(self.ell, self.nus)
@@ -487,7 +524,7 @@ class Fitting(data):
         
         indices_tr = np.triu_indices(len(self.nus))
         matrix = np.zeros((self.nspecs, len(self.ell), self.nspecs, len(self.ell)))
-        factor_modecount = 1/((2*self.ell+1) * 0.015 * self.simu_parameters['Spectrum']['dl'])
+        factor_modecount = 1/((2 * self.ell + 1) * 0.015 * self.simu_parameters['Spectrum']['dl'])
         for ii, (i1, i2) in enumerate(zip(indices_tr[0], indices_tr[1])):
             for jj, (j1, j2) in enumerate(zip(indices_tr[0], indices_tr[1])):
                 covar = (bandpower[i1, j1, :] * bandpower[i2, j2, :] + bandpower[i1, j2, :] * bandpower[i2, j1, :]) * factor_modecount
@@ -514,7 +551,7 @@ class Fitting(data):
             - (float) : loglikelihood function
         '''
         tab_parameters = np.zeros(len(self.params['SKY_PARAMETERS']))
-        cpt = 0        
+        cpt = 0 
 
         for i, iname in enumerate(self.params['SKY_PARAMETERS']):
             if self.params['SKY_PARAMETERS'][iname][0] is not True:
@@ -523,26 +560,18 @@ class Fitting(data):
                 tab_parameters[i] = tab[cpt]
                 cpt += 1
         r, Alens, nu0_d, Ad, alphad, betad, deltad, nu0_s, As, alphas, betas, eps = tab_parameters
-        
-        # Loglike initialisation + prior
-        loglike = self.prior(tab) 
 
         # Define the sky model & the sample variance associated
-        model = self.cmb.model_cmb(r, Alens)# + np.zeros((self.nfreq, self.nfreq, len(self.ell)))
+        model = self.cmb.model_cmb(r, Alens)
         model += self.foregrounds.model_dust(Ad, alphad, betad, deltad, nu0_d)
         
         
-        #print(f'Sample variance : ', np.diag(self.sample_cov_matrix[0, :, :, 0]))
-        #print(f'Noise variance : ', np.diag(self.noise_cov_matrix.reshape((self.nspecs, len(self.ell), self.nspecs, len(self.ell)))[0, :, 0, :]))
-        #sample_cov_matrix = sample_cov_matrix.reshape((self.nspecs*len(self.ell), self.nspecs*len(self.ell)))
-        model = self._reshape_spectra(model)
-        
-        #covariance = self.noise_cov_matrix + sample_cov_matrix
+        model = self._reshape_spectra(model)  
         _r = model - (self.mean_ps_sky_reshape)
         _r = _r.reshape((self.nspecs*len(self.ell)))
-        #stop
-        loglike -= 0.5 * (_r.T @ self.inv_cov @ _r)
-        #stop
+
+        loglike = self.prior(tab) - 0.5 * (_r.T @ self.inv_cov @ _r)
+
         return loglike
     def save_data(self, name, d):
 
@@ -564,35 +593,40 @@ class Fitting(data):
         mcmc_steps = self.params['MCMC']['mcmc_steps']
         p0 = self.initial_conditions()
         
-        # Start the MCMC
-        with MPIPool() as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, self.ndim, log_prob_fn = self.loglikelihood, pool=pool)#,
-            #moves = [(emcee.moves.StretchMove(), self.params['MCMC']['stretch_move_factor']), 
-            #         (emcee.moves.DESnookerMove(gammas=self.params['MCMC']['snooker_move_gamma']), 
-            #          1 - self.params['MCMC']['stretch_move_factor'])])
-            sampler.run_mcmc(p0, mcmc_steps, progress=True)
+        if comm.Get_size() != 1:
+            # Start the MCMC
+            with MPIPool() as pool:
+                sampler = emcee.EnsembleSampler(nwalkers, self.ndim, log_prob_fn = self.loglikelihood, pool=pool)
+                sampler.run_mcmc(p0, mcmc_steps, progress=True)
+        else:
+            # Start the MCMC
+            with Pool() as pool:
+                sampler = emcee.EnsembleSampler(nwalkers, self.ndim, log_prob_fn = self.loglikelihood, pool=pool)
+                sampler.run_mcmc(p0, mcmc_steps, progress=True)
 
         self.samples_flat = sampler.get_chain(flat = True, discard = self.params['MCMC']['discard'], thin = self.params['MCMC']['thin'])
         self.samples = sampler.get_chain()
 
         name = []
         for inu, i in enumerate(self.params['NUS']):
-            if inu == 0 and self.params['NUS'][str(i)][0]:
-                name += ['QUBIC']
+            if inu == 0 and self.params['NUS'][str(i)]:
+                name += ['qubic']
             else:
                 if self.params['NUS'][str(i)]:
                     name += [str(i)]
 
         name = '_'.join(name)
-        self.save_data(f'fit_dict_{name}.pkl', {'nus':self.nus,
-                              'ell':self.ell,
-                              'samples': self.samples,
-                              'samples_flat': self.samples_flat,
-                              'fitted_parameters_names':self.sky_parameters_fitted_names,
-                              'parameters': self.params,
-                              'Dls' : self.power_spectra_sky,
-                              'Nls' : self.power_spectra_noise,
-                              'simulation_parameters': self.simu_parameters})        
+        self.save_data(self.path_fit + f'/fit_dict_{name}.pkl', {'nus':self.nus,
+                                                'covariance_matrix':self.noise_cov_matrix,
+                                                'correlation_matrix':self.noise_correlation_matrix,
+                                                'ell':self.ell,
+                                                'samples': self.samples,
+                                                'samples_flat': self.samples_flat,
+                                                'fitted_parameters_names':self.sky_parameters_fitted_names,
+                                                'parameters': self.params,
+                                                'Dls' : self.power_spectra_sky,
+                                                'Nls' : self.power_spectra_noise,
+                                                'simulation_parameters': self.simu_parameters})        
         print("Fitting done !!!")
 
 

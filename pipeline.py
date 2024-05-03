@@ -81,7 +81,8 @@ class PipelineFrequencyMapMaking:
         ### Joint acquisition
         self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], 
                                                             self.params['QUBIC']['nrec'], 
-                                                            self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'])
+                                                            self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'],
+                                                            add_regularization=self.params['QUBIC']['planck_regularization'])
         self.planck_acquisition143 = acq.PlanckAcquisition(143, self.joint.qubic.scene)
         self.planck_acquisition217 = acq.PlanckAcquisition(217, self.joint.qubic.scene)
         self.nus_Q = self._get_averaged_nus()
@@ -90,8 +91,10 @@ class PipelineFrequencyMapMaking:
         self.joint_tod = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], 
                                                                 self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'], 
                                                                 self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'],
-                                                                H=self.joint.qubic.H)
-
+                                                                H=self.joint.qubic.H,
+                                                                add_regularization=self.params['QUBIC']['planck_regularization'])
+        print(self.joint.qubic.nsamples)
+        print(self.joint.qubic.nsamples*992*2)
         ### Coverage map
         self.coverage = self.joint.qubic.subacqs[0].get_coverage()
         covnorm = self.coverage / self.coverage.max()
@@ -390,24 +393,27 @@ class PipelineFrequencyMapMaking:
             TOD_QUBIC220 = TOD_QUBIC[sh_q:].copy()
 
             TOD = TOD_QUBIC150.copy()
-    
-            TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
-            for irec in range(int(self.params['QUBIC']['nrec']/2)):
-                if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
-                else:
-                    C = HealpixConvolutionGaussianOperator(fwhm=0)
+
+            if self.params['QUBIC']['planck_regularization']:
+                TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+                for irec in range(int(self.params['QUBIC']['nrec']/2)):
+                    if self.params['QUBIC']['convolution']:
+                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
+                    else:
+                        C = HealpixConvolutionGaussianOperator(fwhm=0)
         
-                TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise143).ravel()]
+                    TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise143).ravel()]
 
             TOD = np.r_[TOD, TOD_QUBIC220.copy()]
-            for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
-                if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
-                else:
-                    C = HealpixConvolutionGaussianOperator(fwhm=0)
+            
+            if self.params['QUBIC']['planck_regularization']:
+                for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
+                    if self.params['QUBIC']['convolution']:
+                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
+                    else:
+                        C = HealpixConvolutionGaussianOperator(fwhm=0)
         
-                TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise217).ravel()]
+                    TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise217).ravel()]
 
         self.m_nu_in = self.get_input_map()
 

@@ -3,7 +3,8 @@ import numpy as np
 import os
 import yaml
 import pickle
- 
+import matplotlib.pyplot as plt
+import healpy as hp
 #### QUBIC packages
 import qubic
 from qubic.polyacquisition import compute_freq
@@ -36,9 +37,9 @@ class Spectrum:
             self.dict_file = pickle.load(f)
         
         self.verbose = verbose
-        self.sky_maps = self.dict_file['maps']
-        self.noise_maps = self.dict_file['maps_noise']
-
+        self.sky_maps = self.dict_file['maps'].copy()
+        self.noise_maps = self.dict_file['maps_noise'].copy()
+        
         self.nus = self.dict_file['nus']
         self.nfreq = len(self.nus)
         self.nrec = self.params['QUBIC']['nrec']
@@ -58,11 +59,12 @@ class Spectrum:
         
         # Define Namaster class
         self.coverage = self.dict_file['coverage']
-        seenpix = self.coverage/np.max(self.coverage) < 0.2
-        self.namaster = nam.Namaster(weight_mask = list(~np.array(seenpix)),
-                                 lmin = self.params['Spectrum']['lmin'],
-                                 lmax = self.params['Spectrum']['lmax'],
-                                 delta_ell = self.params['Spectrum']['dl'])
+        self.seenpix = self.coverage/np.max(self.coverage) > 0.2
+
+        self.namaster = nam.Namaster(weight_mask = list(np.array(self.seenpix)),
+                                     lmin = self.params['Spectrum']['lmin'],
+                                     lmax = self.params['Spectrum']['lmax'],
+                                     delta_ell = self.params['Spectrum']['dl'])
 
         self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
         self.allfwhm = self._get_allfwhm()
@@ -147,14 +149,14 @@ class Spectrum:
         '''
 
         power_spectra_array = np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-
+        
         for i in range(self.nfreq):
             for j in range(i, self.nfreq):
                 print(f'====== {self.nus[i]:.0f}x{self.nus[j]:.0f} ======')
                 if i==j :
                     # Compute the auto-spectrum
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[i])
-                    #print(power_spectra_array[i,j])
+                    print(power_spectra_array[i,j, :3])
                     #stop
                 else:
                     # Compute the cross-spectrum

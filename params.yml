@@ -1,4 +1,4 @@
-path_out: 'E2E_nrec2/cmbdust_fixAdbicep_convolved_DB/'
+path_out: 'test_QU_only'
 
 Sky:
     CMB:
@@ -14,10 +14,10 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 256
+    nside: 64
 
 QUBIC:
-    npointings: 8000
+    npointings: 2000
     fsub: 4
     nrec: 2
     iteration: 1
@@ -31,11 +31,12 @@ QUBIC:
     type: 'two'
     covcut: 0.2
     kappa: 0
-    convolution: True
+    convolution: False
     reconvolution_after_MM: False
     bandpass_correction: True
     RA_center: 0
     DEC_center: -57
+    planck_regularization: False
 
 Spectrum:
     dl: 30
@@ -44,7 +45,7 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 400
+    maxiter: 100
     tol: 1.0e-20
 
 Data:
@@ -54,9 +55,11 @@ Data:
 
 Pipeline:
     mapmaking: True
-    spectrum: True
+    spectrum: False
 
 bandwidth_qubic: 0.25
 bandwidth_planck: 0.2
 nb_integration: 100
 
+#python main.py E2E_nrec1/maps/MC_10046631.pkl
+#python main.py E2E_nrec2/cmb_convolved_UWB/maps/MC_7721231.pkl

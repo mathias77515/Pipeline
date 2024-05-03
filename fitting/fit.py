@@ -548,14 +548,14 @@ class Fitting(data):
         else :
             noise_matrix = self.noise_cov_matrix.copy()
         
-        print('noise variance : ', np.diag(self.noise_cov_matrix.copy()[0, 0]))
+        #print('noise variance : ', np.diag(self.noise_cov_matrix.copy()[0, 0]))
         
         if self.params['fitting']['cmb_sample_variance']:
             noise_matrix += sample_cov_cmb.copy()
         if self.params['fitting']['dust_sample_variance']:
-            print('Sample variance : ', np.diag(sample_cov_dust.copy()[0, 0]))
+            #print('Sample variance : ', np.diag(sample_cov_dust.copy()[0, 0]))
             noise_matrix += sample_cov_dust.copy()
-        stop
+        #stop
         for i in range(self.nfreq):
             for j in range(i, self.nfreq):
                 self.inv_noise_matrix = np.linalg.pinv(noise_matrix[i][j])

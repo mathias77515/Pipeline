@@ -1,13 +1,14 @@
 data:
+  #path : '/pbs/home/m/mregnier/sps1/Pipeline/E2E_nrec1/'
   path : '/pbs/home/m/mregnier/sps1/Pipeline/E2E_nrec2/cmbdust_fixAdbicep_DB/'
   foldername : 'spectrum'
-  filename : 'baseline_cmbdust_DB_thesis'
-  n_real : 299
+  filename : 'baseline_cmbdust_DB_nrec2'
+  n_real : 290
 
-nbins: 17
+nbins: 16
 
 simu: 
-  nrec : 2 
+  nrec : 2
   convo : True
   noise : True
   cmb : True
@@ -17,16 +18,19 @@ simu:
 
 MCMC:
   nwalkers : 80
-  mcmc_steps : 400
+  mcmc_steps : 500
   discard : 100
   stretch_move_factor : 0.7
   snooker_move_gamma : 1.7
   thin : 15
 
+diagonal_qubic: False
+diagonal_planck: True
+
 sample_variance : True
 
 NUS:
-  qubic: [True, 2]
+  qubic: True
   
   # Planck
   30GHz: False
@@ -38,11 +42,11 @@ NUS:
   353GHz: True
 
 SKY_PARAMETERS:
-  r : [True, 0, 0.01, -1, 1] 
+  r : [True, 0, 0.2, -1, 1] 
   Alens : [1, 1, 0.2, 0, 10]
   nu0_d : [353, 0, 10, 0, 1000]
-  Ad : [True, 5, 1, 0, 1000000]
-  alphad : [True, -0.1, 0.01, -1, 1]
+  Ad : [True, 5, 1, 0, 1000]
+  alphad : [True, -2.1, 1, -10, 10]
   betad : [1.54, 1.5, 0.2, 0, 10000]
   deltad : [1, 0, 1, 0, 1000]
   nu0_s : [23, 0, 1, 0, 1000]
