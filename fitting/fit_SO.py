@@ -11,6 +11,7 @@ from schwimmbad import MPIPool
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import *
+from pyoperators import *
 
 sys.path.append('/pbs/home/m/mregnier/sps1/Pipeline')
 
@@ -52,7 +53,10 @@ class data:
         self.fsub = self.simu_parameters['QUBIC']['fsub']
         self.nrec = self.simu_parameters['QUBIC']['nrec']
         self.nsub = self.fsub * self.nrec
-        self.nreal = self.params['data']['n_real']
+
+        self.nreal = len(self.power_spectra_sky)
+        if comm.Get_rank() == 0:
+            print(f'Number of realizations : {self.nreal}')
         
         ### Select bandpowers for fitting
         bp_to_rm = self.select_bandpower()
@@ -74,12 +78,12 @@ class data:
         if self.params['simu']['noise'] is True:
             self.mean_ps_sky = self.spectra_noise_correction(self.mean_ps_sky, self.mean_ps_noise)
 
-        self.ps_sky_reshape = np.zeros((self.params['data']['n_real'], self.nspecs, len(self.ell)))
-        self.ps_noise_reshape = np.zeros((self.params['data']['n_real'], self.nspecs, len(self.ell))) 
+        self.ps_sky_reshape = np.zeros((self.nreal, self.nspecs, len(self.ell)))
+        self.ps_noise_reshape = np.zeros((self.nreal, self.nspecs, len(self.ell))) 
         self.mean_ps_sky_reshape = np.zeros((self.nspecs, len(self.ell)))
         self.mean_ps_noise_reshape = np.zeros((self.nspecs, len(self.ell))) 
         
-        for ireal in range(self.params['data']['n_real']):
+        for ireal in range(self.nreal):
             k=0
             for i in range(self.nfreq):
                 for j in range(i, self.nfreq):
@@ -136,12 +140,18 @@ class data:
 
         power_spectra_sky, power_spectra_noise = [], []
         names = os.listdir(path)
-        for i in range(self.params['data']['n_real']):
+        if self.params['data']['n_real'] == -1:
+            nreals = len(names)
+        else:
+            nreals = self.params['data']['n_real']
+        for i in range(nreals):
             #if comm.Get_rank() == 0:
                 #print(f"======== Importing power spectrum {i+1} / {self.params['data']['n_real']} ==========")
             ps = pickle.load(open(path + '/' + names[i], 'rb'))
             power_spectra_sky.append(ps['Dls'][:, :, :self.params['nbins']])
             power_spectra_noise.append(ps['Nl'][:, :, :self.params['nbins']])
+            
+            
         return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus'], ps['ell'][:self.params['nbins']]
     def compute_mean_std(self, ps):
         '''
@@ -644,8 +654,13 @@ if comm.Get_rank() == 0:
     print(fit.samples.shape)
     for i in range(fit.samples.shape[2]):
         plt.subplot(fit.samples.shape[2], 1, i+1)
+        if i == 0:
+            plt.axhline(0, color='black', ls='--')
+            plt.ylim(-0.07, 0.07)
         plt.plot(fit.samples[:, :, i], '-k', alpha=0.1)
-    
+        plt.plot(np.mean(fit.samples[:, :, i], axis=1), '-b', alpha=0.5)
+        plt.plot(np.mean(fit.samples[:, :, i], axis=1) + np.std(fit.samples[:, :, i], axis=1), '-r', alpha=0.5)
+        plt.xlim(0, fit.samples.shape[0])
     plt.savefig('chains.png')
     plt.close()
     

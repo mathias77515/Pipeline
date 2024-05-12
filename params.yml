@@ -1,4 +1,4 @@
-path_out: 'test_QU_only'
+path_out: 'E2E_nrec2/cmb_convolved_UWB/'
 
 Sky:
     CMB:
@@ -10,14 +10,14 @@ Sky:
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: True
+        Dust: False
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 64
+    nside: 256
 
 QUBIC:
-    npointings: 2000
+    npointings: 8000
     fsub: 4
     nrec: 2
     iteration: 1
@@ -28,15 +28,14 @@ QUBIC:
     detector_nep: 4.7e-17
     nhwp_angles: 3
     dtheta: 15
-    type: 'two'
+    type: 'wide'
     covcut: 0.2
     kappa: 0
-    convolution: False
+    convolution: True
     reconvolution_after_MM: False
     bandpass_correction: True
     RA_center: 0
     DEC_center: -57
-    planck_regularization: False
 
 Spectrum:
     dl: 30
@@ -45,7 +44,7 @@ Spectrum:
     aposize: 10
 
 PCG:
-    maxiter: 100
+    maxiter: 400
     tol: 1.0e-20
 
 Data:
@@ -55,11 +54,8 @@ Data:
 
 Pipeline:
     mapmaking: True
-    spectrum: False
+    spectrum: True
 
 bandwidth_qubic: 0.25
 bandwidth_planck: 0.2
 nb_integration: 100
-
-#python main.py E2E_nrec1/maps/MC_10046631.pkl
-#python main.py E2E_nrec2/cmb_convolved_UWB/maps/MC_7721231.pkl

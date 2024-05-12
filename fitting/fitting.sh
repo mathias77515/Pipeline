@@ -6,10 +6,10 @@
 
 #SBATCH --partition=hpc
 #SBATCH --nodes=1                # c
-#SBATCH --ntasks-per-node=10      # n
+#SBATCH --ntasks-per-node=1      # n
 #SBATCH --cpus-per-task=2        # N
-#SBATCH --mem=10G
-#SBATCH --time=0-10:00:00
+#SBATCH --mem=5G
+#SBATCH --time=0-02:00:00
 #SBATCH --output=fitting_r_jobs_%j.log
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}

@@ -789,13 +789,12 @@ class OtherDataParametric:
         return R2tod(out)
 class JointAcquisitionFrequencyMapMaking:
 
-    def __init__(self, d, kind, Nrec, Nsub, H=None, add_regularization=True):
+    def __init__(self, d, kind, Nrec, Nsub, H=None):
 
         self.kind = kind
         self.d = d
         self.Nrec = Nrec
         self.Nsub = Nsub
-        self.add_regularization = add_regularization
 
         self.qubic = QubicFullBandSystematic(self.d, comp=[], Nsub=self.Nsub, Nrec=self.Nrec, kind=self.kind, H=H)
         self.scene = self.qubic.scene
@@ -871,8 +870,6 @@ class JointAcquisitionFrequencyMapMaking:
             R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
             R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
             opefull = []
-            
-            
             for ifp in range(2):
                 ope_per_fp = []
                 for irec in range(int(self.Nrec/2)):
@@ -880,12 +877,11 @@ class JointAcquisitionFrequencyMapMaking:
                         operator = [R_qubic * H_qubic.operands[ifp].operands[irec]]
                     else:
                         operator = [R_qubic * H_qubic.operands[ifp]]
-                    if self.add_regularization:
-                        for jrec in range(int(self.Nrec/2)):
-                            if irec == jrec:
-                                operator += [R_planck]
-                            else:
-                                operator += [R_planck*0]
+                    for jrec in range(int(self.Nrec/2)):
+                        if irec == jrec:
+                            operator += [R_planck]
+                        else:
+                            operator += [R_planck*0]
                     ope_per_fp += [BlockColumnOperator(operator, axisout=0)]
                 opefull += [BlockRowOperator(ope_per_fp, new_axisin=0)]
             if self.Nrec == 2:
@@ -927,22 +923,22 @@ class JointAcquisitionFrequencyMapMaking:
             invn_q_150 = self.qubic.get_invntt_operator().operands[0]
             invn_q_220 = self.qubic.get_invntt_operator().operands[1]
             R = ReshapeOperator(invn_q_150.shapeout, invn_q_150.shape[0])
+
+
+            invntt_planck143 = weight_planck*self.pl143.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
+            invntt_planck217 = weight_planck*self.pl217.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
+            R_planck = ReshapeOperator(invntt_planck143.shapeout, invntt_planck143.shape[0])
+            invN_143 = R_planck(invntt_planck143(R_planck.T))
+            invN_217 = R_planck(invntt_planck217(R_planck.T))
             invN = [R(invn_q_150(R.T))]
-            if self.add_regularization:
-                invntt_planck143 = weight_planck*self.pl143.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
-                invntt_planck217 = weight_planck*self.pl217.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
-                R_planck = ReshapeOperator(invntt_planck143.shapeout, invntt_planck143.shape[0])
-                invN_143 = R_planck(invntt_planck143(R_planck.T))
-                invN_217 = R_planck(invntt_planck217(R_planck.T))
-            
-                for i in range(int(self.Nrec/2)):
-                    invN += [R_planck(invntt_planck143(R_planck.T))]
+            for i in range(int(self.Nrec/2)):
+                invN += [R_planck(invntt_planck143(R_planck.T))]#, 
+                    #R(invn_q_220(R.T)), R_planck(invntt_planck217(R_planck.T))]
             
             invN += [R(invn_q_220(R.T))]
 
-            if self.add_regularization:
-                for i in range(int(self.Nrec/2)):
-                    invN += [R_planck(invntt_planck217(R_planck.T))]
+            for i in range(int(self.Nrec/2)):
+                invN += [R_planck(invntt_planck217(R_planck.T))]
             
             return BlockDiagonalOperator(invN, axisout=0)
 

@@ -67,6 +67,8 @@ class Spectrum:
                                      delta_ell = self.params['Spectrum']['dl'])
 
         self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
+        print(self.ell)
+        #stop
         self.allfwhm = self._get_allfwhm()
         
         if self.params['QUBIC']['reconvolution_after_MM']:
