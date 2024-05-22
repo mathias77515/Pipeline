@@ -6,7 +6,7 @@
 
 #SBATCH --partition=hpc
 #SBATCH --nodes=1                # c
-#SBATCH --ntasks-per-node=1      # n
+#SBATCH --ntasks-per-node=10      # n
 #SBATCH --cpus-per-task=2        # N
 #SBATCH --mem=5G
 #SBATCH --time=0-02:00:00

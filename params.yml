@@ -18,7 +18,7 @@ Sky:
 
 QUBIC:
     npointings: 8000
-    fsub: 4
+    fsub: 8
     nrec: 2
     iteration: 1
     ndet: 1

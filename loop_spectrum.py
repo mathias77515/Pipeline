@@ -1,7 +1,7 @@
 import os
 import sys
 
-folder = 'E2E_nrec2/cmbdust_convolved_DB/maps/'
+folder = 'E2E_nrec2_withoutconv_MM/cmbdust_convolved_DB/maps/'
 
 files = os.listdir(folder)
 

@@ -1,11 +1,11 @@
 data:
   #/sps/qubic/Users/TomLaclavere/Pipeline/E2E_nrec2       ls -l | wc -l
-  path : '/pbs/home/m/mregnier/sps1/Pipeline/E2E_nrec4/cmb_convolved_UWB/'
+  path : '/pbs/home/m/mregnier/sps1/Pipeline/E2E_nrec4/cmbdust_convolved_DB/'
   foldername : 'spectrum'
-  filename : 'baseline_cmb_UWB_nrec4'
+  filename : 'baseline_cmb_DB_nrec4'
   n_real : -1 #475 #475
 
-nbins: 17
+nbins: 16
 
 simu: 
   nrec : 4
@@ -17,8 +17,8 @@ simu:
   corr_dust_sync : False
 
 MCMC:
-  nwalkers : 100
-  mcmc_steps : 200
+  nwalkers : 50
+  mcmc_steps : 300
   discard : 100
   stretch_move_factor : 0.7
   snooker_move_gamma : 1.7
@@ -37,16 +37,16 @@ NUS:
   44GHz: False
   70GHz: False
   100GHz: False
-  143GHz: False
-  217GHz: False
-  353GHz: False
+  143GHz: True
+  217GHz: True
+  353GHz: True
 
 SKY_PARAMETERS:
   r : [True, -0.1, 0.2, -1, 1] 
   Alens : [1, 1, 0.2, 0, 10]
   nu0_d : [353, 0, 10, 0, 1000]
-  Ad : [0, 3.5, 1, 0, 10]
-  alphad : [0, -2.3, 0.5, -3, 0]
+  Ad : [True, 3.5, 1, 0, 10]
+  alphad : [True, -2.3, 0.5, -3, 0]
   betad : [1.54, 1.5, 0.2, 0, 10000]
   deltad : [1, 0, 1, 0, 1000]
   nu0_s : [23, 0, 1, 0, 1000]
