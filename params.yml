@@ -1,4 +1,4 @@
-path_out: 'E2E_nrec2/cmb_convolved_UWB/'
+path_out: 'E2E_nrec6/cmbdust_convolved_DB/'
 
 Sky:
     CMB:
@@ -10,7 +10,7 @@ Sky:
     Foregrounds:
 
         # Thermal Dust emission
-        Dust: False
+        Dust: True
         # Synchrotron emission
         Synchrotron: False
 
@@ -18,8 +18,8 @@ Sky:
 
 QUBIC:
     npointings: 8000
-    fsub: 8
-    nrec: 2
+    fsub: 3
+    nrec: 6
     iteration: 1
     ndet: 1
     npho150: 1
@@ -28,7 +28,7 @@ QUBIC:
     detector_nep: 4.7e-17
     nhwp_angles: 3
     dtheta: 15
-    type: 'wide'
+    type: 'two'
     covcut: 0.2
     kappa: 0
     convolution: True

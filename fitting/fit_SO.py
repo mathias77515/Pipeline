@@ -345,6 +345,9 @@ class Fitting(data):
         self.noise_cov_matrix = np.cov(samples, rowvar=False)
         self.noise_correlation_matrix = np.corrcoef(samples, rowvar=False)
         self.covariance = self.noise_cov_matrix.copy()
+        self.covariance_to_save = self.noise_cov_matrix.copy()
+        self.correlation_to_save = self.noise_correlation_matrix.copy()
+        
         
         self.index_only_qubic = []
         self.index_both = []
@@ -627,8 +630,8 @@ class Fitting(data):
 
         name = '_'.join(name)
         self.save_data(self.path_fit + f'/fit_dict_{name}.pkl', {'nus':self.nus,
-                                                'covariance_matrix':self.noise_cov_matrix,
-                                                'correlation_matrix':self.noise_correlation_matrix,
+                                                'covariance_matrix':self.covariance_to_save,
+                                                'correlation_matrix':self.correlation_to_save,
                                                 'ell':self.ell,
                                                 'samples': self.samples,
                                                 'samples_flat': self.samples_flat,

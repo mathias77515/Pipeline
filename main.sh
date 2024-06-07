@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=BBPip2
+#SBATCH --job-name=BBPip6
 
 # we ask for n MPI tasks with N cores each on c nodes
 
@@ -9,7 +9,7 @@
 #SBATCH --ntasks-per-node=1      # n
 #SBATCH --cpus-per-task=4        # N
 #SBATCH --mem=35G
-#SBATCH --time=4-00:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --output=mulitple_jobs_%j.log
 #SBATCH --array=1-500
 
