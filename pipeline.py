@@ -139,13 +139,12 @@ class PipelineFrequencyMapMaking:
                     self.targets2 += [0]
                     self.fwhm_rec += [0]
         
-        
         self.external_timeline = ExternalData2Timeline(self.skyconfig, 
                                                        self.joint.qubic.allnus, 
                                                        self.params['QUBIC']['nrec'], 
                                                        nside=self.params['Sky']['nside'], 
                                                        corrected_bandpass=self.params['QUBIC']['bandpass_correction'])
-
+        #stop
         ### Define reconstructed and TOD operator
         self._get_H()
         
@@ -186,7 +185,7 @@ class PipelineFrequencyMapMaking:
         Method to compute QUBIC operators.
         
         """
-        
+        print(f'FWHM for reconstruction : {self.targets}')
         self.H = self.joint.get_operator(fwhm=self.targets)
         self.Htod = self.joint_tod.get_operator(fwhm=self.allfwhm)
         self.Hqtod = self.joint_tod.qubic.get_operator(fwhm=self.allfwhm)  
@@ -530,12 +529,12 @@ class PipelineFrequencyMapMaking:
         ### Solve map-making equation
         self.s_hat = self._pcg(self.TOD, x0=self.m_nu_in)
         
-        
         ### Wait for all processes
         self._barrier()
         
         ### Solve map-making equation for noise only
-        self.s_hat_noise = self._pcg(self.n, x0=self.m_nu_in*0)
+        self.s_hat_noise = self.s_hat - self.m_nu_in
+        #self.s_hat_noise = self._pcg(self.n, x0=self.m_nu_in*0)
         
         self.fwhm_ext = []
         if self.params['QUBIC']['reconvolution_after_MM']:

@@ -8,7 +8,9 @@ import healpy as hp
 import emcee
 import yaml
 from schwimmbad import MPIPool
+from multiprocessing import Pool
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import *
 
 sys.path.append('/pbs/home/m/mregnier/sps1/Pipeline')
 
@@ -18,7 +20,11 @@ import fgb.mixing_matrix as mm
 from pyoperators import *
 
 comm = MPI.COMM_WORLD
-
+def _Dl2Cl(ell, Dl):
+    _f = ell * (ell + 1) / (2 * np.pi)
+    return Dl / _f
+def _Cl2BK(ell, Cl):
+    return 100 * ell * Cl / (2 * np.pi)
 class data:
     '''
     Class to extract of the power spectra computed with spectrum.py and to compute useful things
@@ -32,11 +38,11 @@ class data:
         self.is_cov_matrix = self.params['fitting']['noise_covariance_matrix']
         self.is_samp_cmb = self.params['fitting']['cmb_sample_variance']
         self.is_samp_dust = self.params['fitting']['dust_sample_variance']
-
-        self.path_repository = self.params['data']['path']
-        self.path_spectra = self.path_repository + 'spectrum'
-        self.path_fit = self.path_repository + 'fit'
         
+        self.path_repository = self.params['data']['path']
+        self.path_spectra = self.path_repository + self.params['data']['foldername']
+        self.path_fit = self.path_repository + 'fit' + f"_{self.params['data']['filename']}"
+
         ### Create fit folder
         if comm.Get_rank() == 0:
             if not os.path.isdir(self.path_fit):
@@ -52,16 +58,39 @@ class data:
         ### Select bandpowers for fitting
         bp_to_rm = self.select_bandpower()
         self.nfreq = len(self.nus)
+
+        nb = 100
+        self.nus_integrated = np.zeros((len(self.nus), 100))
+        for inu in range(len(self.nus)):
+            if inu < self.nrec:
+                bw = self.params['bandwidth_qubic'] * self.nus[inu]
+                self.nus_integrated[inu] = np.linspace(self.nus[inu] - 0.00000001*bw/2, self.nus[inu] + 0.000001*bw/2, nb)
+            else:
+                bw = self.params['bandwidth_planck'] * self.nus[inu]
+                self.nus_integrated[inu] = np.linspace(self.nus[inu] - 10/2, self.nus[inu] + 10/2, nb)
+            #self.nus_integrated[inu] = np.linspace(self.nus[inu] - 5, self.nus[inu] + 5, nb)
         
         ### Remove bandpowers not selected
         self.power_spectra_sky = np.delete(self.power_spectra_sky, bp_to_rm, 1)
         self.power_spectra_sky = np.delete(self.power_spectra_sky, bp_to_rm, 2)
         self.power_spectra_noise = np.delete(self.power_spectra_noise, bp_to_rm, 1)
         self.power_spectra_noise = np.delete(self.power_spectra_noise, bp_to_rm, 2)
-
+        #print(self.power_spectra_sky[:, -1, -1, 0])
+        #stop
+        #print(np.where(self.power_spectra_sky[:, -1, -1, 0] > 100)[0])
+        #print(self.path_spectra)
+        #names = os.listdir(self.path_spectra)
+        #print(names)
+        #print(len(names))
+        #for i in range(len(names)):
+        #    if self.power_spectra_sky[i, -1, -1, 0] > 100:
+        #        print(f'removing {names[i]}')
+        #        os.remove(self.path_spectra + f'/{names[i]}')
+        #stop
         ### Average and standard deviation from realizations
         self.mean_ps_sky, self.error_ps_sky = self.compute_mean_std(self.power_spectra_sky)
         self.mean_ps_noise, self.error_ps_noise = self.compute_mean_std(self.power_spectra_noise)
+        
         if self.params['simu']['noise'] is True:
             self.mean_ps_sky = self.spectra_noise_correction(self.mean_ps_sky, self.mean_ps_noise)
         
@@ -106,10 +135,12 @@ class data:
         power_spectra_sky, power_spectra_noise = [], []
         names = os.listdir(path)
         for i in range(self.params['data']['n_real']):
+            #if comm.Get_rank() == 0:
+                #print(f"======== Importing power spectrum {i+1} / {self.params['data']['n_real']} ==========")
             ps = pickle.load(open(path + '/' + names[i], 'rb'))
-            power_spectra_sky.append(ps['Dls'])
-            power_spectra_noise.append(ps['Nl'])
-        return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus'], ps['ell']
+            power_spectra_sky.append(ps['Dls'][:, :, :self.params['nbins']])
+            power_spectra_noise.append(ps['Nl'][:, :, :self.params['nbins']])
+        return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus'], ps['ell'][:self.params['nbins']]
     def compute_mean_std(self, ps):
         '''
         Function to compute the mean ans the std on our power spectra realisations
@@ -138,8 +169,6 @@ class data:
             for j in range(np.shape(mean_data)[1]):
                 mean_data[i, j, :] -= mean_noise[i, j, :]
         return mean_data
-
-
 class CMB:
     '''
     Class to define the CMB model
@@ -179,18 +208,19 @@ class CMB:
 
         dlBB = self.cl_to_dl(self.get_pw_from_planck(r, Alens))
         return dlBB
-
-
 class Foreground:
     '''
     Class to define Dust and Synchrotron models
     '''
 
-    def __init__(self, ell, nus):
+    def __init__(self, ell, nus, nus_integrated=None):
         
         self.ell = ell
         self.nus = nus
         self.nfreq = len(self.nus)
+        self.nus_integrated = nus_integrated
+        #print(self.nus_integrated)
+        #stop
         #self.nspec = int(self.nfreq * (self.nfreq + 1) / 2)
     def scale_dust(self, nu, nu0_d, betad, temp=20):
         '''
@@ -198,8 +228,9 @@ class Foreground:
         '''
 
         comp = c.Dust(nu0 = nu0_d, temp=temp, beta_d = betad)
-        A = mm.MixingMatrix(comp).evaluator(np.array([nu]))()[0]
-
+        A = np.mean(mm.MixingMatrix(comp).evaluator(nu)())#[0]
+        #print(nu, A)
+        #stop
         return A
     def scale_sync(self, nu, nu0_s, betas):
         '''
@@ -233,12 +264,16 @@ class Foreground:
         for i in range(self.nfreq):
             for j in range(self.nfreq):
                 if i == j:
-                    fnud = self.scale_dust(self.nus[i], nu0_d, betad)
-                    models[i, j] = self.model_dust_frequency(Ad, alphad, deltad, fnud, fnud)
+                    #fnud = self.scale_dust(self.nus[i], nu0_d, betad)
+                    fnud = self.scale_dust(self.nus_integrated[i], nu0_d, betad)
+                    models[i, j] += self.model_dust_frequency(Ad, alphad, deltad, fnud, fnud)
                 else:
-                    fnu1d = self.scale_dust(self.nus[i], nu0_d, betad)
-                    fnu2d = self.scale_dust(self.nus[j], nu0_d, betad)
+                    #fnu1d = self.scale_dust(self.nus[i], nu0_d, betad)
+                    #fnu2d = self.scale_dust(self.nus[j], nu0_d, betad)
+                    fnu1d = self.scale_dust(self.nus_integrated[i], nu0_d, betad)
+                    fnu2d = self.scale_dust(self.nus_integrated[j], nu0_d, betad)
                     models[i, j] += self.model_dust_frequency(Ad, alphad, deltad, fnu1d, fnu2d)
+        
         return models
     def model_sync(self, As, alphas, betas, nu0_s):
         '''
@@ -291,14 +326,67 @@ class Fitting(data):
         self.sky_parameters = self.params['SKY_PARAMETERS']
         self.ndim, self.sky_parameters_fitted_names, self.sky_parameters_all_names = self.ndim_and_parameters_names()
         
-        #if self.params['noise_covariance'] is not True:
-        reshaped_noise_ps = np.reshape(self.power_spectra_noise, (self.nfreq, self.nfreq, self.nreal, len(self.ell)))
         self.noise_cov_matrix = np.zeros((self.nfreq, self.nfreq, len(self.ell), len(self.ell))) 
         for i in range(self.nfreq):
             for j in range(self.nfreq):
-                self.noise_cov_matrix[i, j] = np.cov(reshaped_noise_ps[i,j], rowvar = False)
+                self.noise_cov_matrix[i, j] = np.cov(self.power_spectra_noise[:, i, j, :], rowvar = False)
+
         self.cmb = CMB(self.ell)
-        self.foregrounds = Foreground(self.ell, self.nus)
+        self.foregrounds = Foreground(self.ell, self.nus, nus_integrated=self.nus_integrated)
+        model = self.cmb.model_cmb(0, 1) + self.foregrounds.model_dust(0, -0.17, 1.54, 1, 353)
+        
+        self._get_Dl_plot(self.nus, self.ell, self.mean_ps_sky, self.error_ps_noise, model, nbins=self.params['nbins'], nrec=self.nrec)
+        #stop
+        
+    def _get_Dl_plot(self, nus, ell, Dl, Dl_err, ymodel, nbins=8, nrec=2):
+        fig = plt.figure(figsize=(15, 12))
+        gs = GridSpec(len(nus), len(nus), figure=fig)
+
+        k1=0
+        kp=0
+        for i in range(len(nus)):
+            for j in range(i, len(nus)):
+                ax = fig.add_subplot(gs[i, j])
+            
+                if k1 ==0:
+                    ax.plot(ell[:nbins], _Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], ymodel[i, j, :nbins])), '--r', label=f'r + Dust + noise')
+                else:
+                    ax.plot(ell[:nbins], _Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], ymodel[i, j, :nbins])), '--r')
+
+            
+                ax.patch.set_alpha(0.3)
+            
+                ax.annotate(f'{nus[i]:.0f}x{nus[j]:.0f}', xy=(0.1, 0.9), xycoords='axes fraction', color='black', weight="bold")
+                if i < nrec and j < nrec :
+                    ax.set_facecolor("blue")
+                    if k1 == 0:
+                        ax.errorbar(ell[:nbins], _Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl[i, j, :nbins])),#Dls_mean[kp] - Nl_mean[kp], 
+                            yerr=_Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl_err[i, j, :nbins])), 
+                            capsize=5, color='darkblue', fmt='o', label=r'$\mathcal{D}_{\ell}^{\nu_1 \times \nu_2}$')
+                    
+                    else:
+                        ax.errorbar(ell[:nbins], _Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl[i, j, :nbins])),#Dls_mean[kp] - Nl_mean[kp], 
+                            yerr=_Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl_err[i, j, :nbins])), 
+                            capsize=5, color='darkblue', fmt='o')
+                elif i < nrec and j >= nrec :
+                    ax.set_facecolor("skyblue")
+                    ax.errorbar(ell[:nbins], _Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl[i, j, :nbins])),#Dls_mean[kp] - Nl_mean[kp], 
+                         yerr=_Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl_err[i, j, :nbins])), 
+                         capsize=5, color='blue', fmt='o')
+                else:
+                    ax.set_facecolor("green")
+                    ax.errorbar(ell[:nbins], _Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl[i, j, :nbins])),#Dls_mean[kp] - Nl_mean[kp], 
+                            yerr=_Cl2BK(ell[:nbins], _Dl2Cl(ell[:nbins], Dl_err[i, j, :nbins])), 
+                            capsize=5, color='darkgreen', fmt='o')
+                #ax[i, j].set_title(f'{data["nus"][i]:.0f}x{data["nus"][j]:.0f}')
+                kp+=1
+            else:
+                pass#ax.axis('off')
+            k1+=1
+
+        plt.tight_layout()
+        plt.savefig('Dls.png')
+        plt.close()
     def ndim_and_parameters_names(self):
         '''
         Function to create the name list of the parameter(s) that you want to find with the MCMC and to compute the number of these parameters
@@ -325,12 +413,13 @@ class Fitting(data):
         for i in range(self.ell.shape[0]):
             cl[i] = dl[i]*(2*np.pi)/(self.ell[i]*(self.ell[i] + 1))
         return cl    
-    def knox_errors(self, dlth):
-        dcl = (2. / (2 * self.ell + 1) / 0.01 / self.simu_parameters['Spectrum']['dl']) * dlth
+    def knox_errors(self, clth):
+        cl2dl = self.ell * (self.ell + 1) / (2 * np.pi)
+        dcl = cl2dl * np.sqrt(2 / ((2 * self.ell + 1) * 0.015 * self.simu_parameters['Spectrum']['dl'])) * clth
         return dcl
-    def knox_covariance(self, dlth):
-        dcl = self.knox_errors(dlth)
-        return np.diag(dcl ** 2)
+    def knox_covariance(self, clth):
+        dcl = self.knox_errors(clth)
+        return np.diag(dcl**2)
     def prior(self, x):
         '''
         Function to define priors to help the MCMC convergence
@@ -385,6 +474,7 @@ class Fitting(data):
                 cpt += 1
         return ptform
     def loglikelihood(self, tab):
+        
         '''
         loglikelihood function
 
@@ -410,17 +500,23 @@ class Fitting(data):
 
         # Define the sky model & the sample variance associated
         model = 0
+        
+        # CMB
         if self.params['simu']['cmb']:
             dlth_cmb = self.cmb.model_cmb(r, Alens)
             model += dlth_cmb + np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-            sample_cov_cmb = self.knox_covariance(dlth_cmb)
+            sample_cov_cmb = self.knox_covariance(dlth_cmb / (self.ell * (self.ell + 1) / (2 * np.pi)))
+        
+        # Dust
         if self.params['simu']['dust']:
             dlth_dust = self.foregrounds.model_dust(Ad, alphad, betad, deltad, nu0_d)
             model += dlth_dust
             sample_cov_dust = np.zeros((self.nfreq, self.nfreq, len(self.ell), len(self.ell)))
             for i in range(self.nfreq):
                 for j in range(i, self.nfreq):
-                    sample_cov_dust[i][j] = self.knox_covariance(dlth_dust[i][j])
+                    sample_cov_dust[i][j] = self.knox_covariance(dlth_dust[i][j] / (self.ell * (self.ell + 1) / (2 * np.pi)))
+        
+        # Synchrotron
         if self.params['simu']['sync']:
             dlth_sync = self.foregrounds.model_sync(As, alphas, betas, nu0_s)
             model += dlth_sync
@@ -428,6 +524,8 @@ class Fitting(data):
             for i in range(self.nfreq):
                 for j in range(i, self.nfreq):
                     sample_cov_sync[i][j] = self.knox_covariance(dlth_sync[i][j])
+        
+        # Correlation between dust and synchrotron
         if self.params['simu']['corr_dust_sync']:
             dlth_corr = self.foregrounds.model_corr_dust_sync(Ad, alphad, betad, nu0_d, As, alphas, betas, nu0_s, eps)
             model += dlth_corr
@@ -436,6 +534,8 @@ class Fitting(data):
                 for j in range(i, self.nfreq):
                     sample_cov_corr[i][j] = self.knox_covariance(dlth_corr[i][j])
 
+        
+        
         # Define the noise model
         if self.params['simu']['noise'] is not True:
             noise_matrix = np.identity(np.shape(self.noise_cov_matrix))
@@ -446,18 +546,21 @@ class Fitting(data):
                     for k in range(len(self.ell)):
                         noise_matrix[i][j][k][k] = (self.error_ps_noise[i][j][k])**2
         else :
-            noise_matrix = self.noise_cov_matrix
-
-        if self.params['fitting']['cmb_sample_variance']:
-            noise_matrix += sample_cov_cmb
-        if self.params['fitting']['dust_sample_variance']:
-            noise_matrix += sample_cov_dust
+            noise_matrix = self.noise_cov_matrix.copy()
         
+        #print('noise variance : ', np.diag(self.noise_cov_matrix.copy()[0, 0]))
+        
+        if self.params['fitting']['cmb_sample_variance']:
+            noise_matrix += sample_cov_cmb.copy()
+        if self.params['fitting']['dust_sample_variance']:
+            #print('Sample variance : ', np.diag(sample_cov_dust.copy()[0, 0]))
+            noise_matrix += sample_cov_dust.copy()
+        #stop
         for i in range(self.nfreq):
             for j in range(i, self.nfreq):
                 self.inv_noise_matrix = np.linalg.pinv(noise_matrix[i][j])
-                loglike += - 0.5 * (self.mean_ps_sky[i][j] - model[i][j]).T @ self.inv_noise_matrix @ (self.mean_ps_sky[i][j] - model[i][j])
-        return loglike    
+                loglike -= 0.5 * (self.mean_ps_sky[i][j] - model[i][j]).T @ self.inv_noise_matrix @ (self.mean_ps_sky[i][j] - model[i][j])
+        return loglike  
     def save_data(self, name, d):
 
         """
@@ -490,7 +593,19 @@ class Fitting(data):
         self.samples_flat = sampler.get_chain(flat = True, discard = self.params['MCMC']['discard'], thin = self.params['MCMC']['thin'])
         self.samples = sampler.get_chain()
 
-        self.save_data(self.path_fit + '/fit_dict.pkl', {'nus':self.nus,
+        name = []
+        for inu, i in enumerate(self.params['NUS']):
+            #print(i, self.params['NUS'][str(i)])
+            if inu == 0 and self.params['NUS'][str(i)][0]:
+                name += ['QUBIC']
+            else:
+                if self.params['NUS'][str(i)]:
+                    name += [str(i)]
+        #print(name)
+        name = '_'.join(name)
+        #print(name)
+        #stop
+        self.save_data(self.path_fit + f'/fit_dict_{name}.pkl', {'nus':self.nus,
                               'ell':self.ell,
                               'samples': self.samples,
                               'samples_flat': self.samples_flat,
@@ -502,25 +617,26 @@ class Fitting(data):
         print("Fitting done !!!")
 
 
-
 fit = Fitting()
 fit.run()
 
 if comm.Get_rank() == 0:
     
-    plt.figure()
-    print(fit.samples.shape)
-    for i in range(fit.samples.shape[2]):
-        plt.subplot(3, 1, i+1)
-        plt.plot(fit.samples[:, :, i], '-k', alpha=0.5)
-    
-    plt.savefig('chains.png')
-    plt.close()
-    
     print()
     print(f'Average : {np.mean(fit.samples_flat, axis=0)}')
     print(f'Error : {np.std(fit.samples_flat, axis=0)}')
     print()
+    
+    plt.figure()
+    print(fit.samples.shape)
+    for i in range(fit.samples.shape[2]):
+        plt.subplot(fit.samples.shape[2], 1, i+1)
+        plt.plot(fit.samples[:, :, i], '-k', alpha=0.1)
+    
+    plt.savefig('chains.png')
+    plt.close()
+    
+    
 
 
 
