@@ -14,7 +14,7 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 256
+    nside: 64
 
 QUBIC:
     npointings: 1000

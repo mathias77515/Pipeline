@@ -111,7 +111,7 @@ class PipelineFrequencyMapMaking:
                                                        self.params['QUBIC']['nrec'], 
                                                        nside=self.params['Sky']['nside'], 
                                                        corrected_bandpass=self.params['QUBIC']['bandpass_correction'])
-
+        #stop
         ### Define reconstructed and TOD operator
         self._get_H()
         
