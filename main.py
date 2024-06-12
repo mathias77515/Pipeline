@@ -3,7 +3,6 @@ import yaml
 
 from pipeline import *
 from pyoperators import *
-
 import sys
 
 try:
