@@ -156,11 +156,13 @@ class PipelineFrequencyMapMaking:
         ### Pointing matrix for TOD generation
         self.H_in = self.joint_tod.get_operator(fwhm=self.fwhm_in)
         
+        ### QUBIC Pointing matrix for TOD generation
+        self.H_in_qubic = self.joint_tod.qubic.get_operator(fwhm=self.fwhm_in) 
+        
         ### Pointing matrix for reconstruction
         self.H_out = self.joint.get_operator(fwhm=self.fwhm_out)
         
-        ### QUBIC Pointing matrix for TOD generation
-        self.H_in_qubic = self.joint_tod.qubic.get_operator(fwhm=self.fwhm_in)  
+         
     def _get_averaged_nus(self):
         
         """
