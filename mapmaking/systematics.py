@@ -124,8 +124,6 @@ def fit_beta(tod, nsamples, obj, H_qubic, outputs):
     r = minimize(mychi2, method='TNC', tol=1e-15, x0=np.array([1.]), args=(obj, H_qubic, tod_norm, outputs, nsamples))
 
     return r.x
-
-
 def fill_hwp_position(nsamples, angle):
     ang = np.zeros(nsamples)
     nangle = len(angle)
@@ -136,7 +134,6 @@ def fill_hwp_position(nsamples, angle):
         ang[x*ii:x*(ii+1)] = i
         
     return ang
-
 def get_allA(nc, nf, npix, beta, nus, comp, active):
     # Initialize arrays to store mixing matrix values
     allA = np.zeros((beta.shape[0], nf, nc))

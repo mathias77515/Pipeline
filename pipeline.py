@@ -297,17 +297,20 @@ class PipelineFrequencyMapMaking:
             self.fwhm_out = np.array([])
             for irec in range(self.params['QUBIC']['nrec']):
                 self.fwhm_out = np.append(self.fwhm_out, np.sqrt(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub]**2 - np.min(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub])**2))
+
         
         ### Define reconstructed FWHM depending on the user's choice
         if self.params['QUBIC']['convolution_in'] and self.params['QUBIC']['convolution_out']:
             self.fwhm_rec = np.array([])
             for irec in range(self.params['QUBIC']['nrec']):
                 self.fwhm_rec = np.append(self.fwhm_rec, np.min(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub]))
+
                 
         elif self.params['QUBIC']['convolution_in'] and self.params['QUBIC']['convolution_out'] is False:
             self.fwhm_rec = np.array([])
             for irec in range(self.params['QUBIC']['nrec']):
                 self.fwhm_rec = np.append(self.fwhm_rec, np.mean(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub]))
+
         
         else:
             self.fwhm_rec = np.array([])
@@ -343,6 +346,7 @@ class PipelineFrequencyMapMaking:
                 for irec in range(int(self.params['QUBIC']['nrec']/2)):
                     if self.params['QUBIC']['convolution_in']:
                         C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
+
                     else:
                         C = HealpixConvolutionGaussianOperator(fwhm=0)
         
@@ -351,12 +355,14 @@ class PipelineFrequencyMapMaking:
                 for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
                     if self.params['QUBIC']['convolution_in']:
                         C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
+
                     else:
                         C = HealpixConvolutionGaussianOperator(fwhm=0)
         
                     TOD_PLANCK[irec] = C(factor * self.external_timeline.maps[irec] + self.noise217)
             else:
                 TOD_PLANCK = np.zeros((2*self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
+
                 if self.params['QUBIC']['convolution_in']:
                     C = HealpixConvolutionGaussianOperator(fwhm=self.fwhm_in[-1])
                 else:
@@ -383,6 +389,7 @@ class PipelineFrequencyMapMaking:
             for irec in range(int(self.params['QUBIC']['nrec']/2)):
                 if self.params['QUBIC']['convolution_in']:
                     C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
+
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         
@@ -392,6 +399,7 @@ class PipelineFrequencyMapMaking:
             for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
                 if self.params['QUBIC']['convolution_in']:
                     C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
+
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         

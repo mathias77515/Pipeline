@@ -1,7 +1,6 @@
 import numpy as np
 import healpy as hp
 from getdist import plots, MCSamples
-import getdist
 import yaml
 import matplotlib.pyplot as plt
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
