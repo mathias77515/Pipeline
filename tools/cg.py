@@ -154,6 +154,128 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.r = empty(b.shape, dtype)
         self.s = empty(b.shape, dtype)
 
+        self.dict, self.dict_mono = self.get_dict()
+        self.skyconfig = self._get_sky_config()
+        self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['instrument'], self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
+        self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
+
+        self.external_timeline = ExternalData2Timeline(self.skyconfig, 
+                                                       self.joint.qubic.allnus, 
+                                                       self.params['QUBIC']['nrec'], 
+                                                       nside=self.params['SKY']['nside'], 
+                                                       corrected_bandpass=self.params['QUBIC']['bandpass_correction'])     
+
+        self.input_map = self.get_input_map()  
+
+    def get_input_map(self):
+        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
+
+        for i in range(self.params['QUBIC']['nrec']):
+            m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.fsub:(i+1)*self.fsub], axis=0)
+        
+        return m_nu_in
+    def get_ultrawideband_config(self):
+        
+        """
+        
+        Method that pre-compute UWB configuration.
+
+        """
+        
+        nu_up = 247.5
+        nu_down = 131.25
+        nu_ave = np.mean(np.array([nu_up, nu_down]))
+        delta = nu_up - nu_ave
+    
+        return nu_ave, 2*delta/nu_ave
+    def get_dict(self):
+    
+        """
+        
+        Method to modify the qubic dictionary.
+        
+        """
+
+        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
+
+        args = {'npointings':self.params['QUBIC']['npointings'], 
+                'nf_recon':self.params['QUBIC']['nrec'], 
+                'nf_sub':self.params['QUBIC']['nsub'], 
+                'nside':self.params['SKY']['nside'], 
+                'MultiBand':True, 
+                'period':1, 
+                'RA_center':self.params['SKY']['RA_center'], 
+                'DEC_center':self.params['SKY']['DEC_center'],
+                'filter_nu':nu_ave*1e9, 
+                'noiseless':False, 
+                'comm':self.comm, 
+                'dtheta':self.params['QUBIC']['dtheta'],
+                'nprocs_sampling':1, 
+                'nprocs_instrument':self.size,
+                'photon_noise':True, 
+                'nhwp_angles':3, 
+                'effective_duration':3, 
+                'filter_relative_bandwidth':delta_nu_over_nu, 
+                'type_instrument':'wide', 
+                'TemperatureAtmosphere150':None, 
+                'TemperatureAtmosphere220':None,
+                'EmissivityAtmosphere150':None, 
+                'EmissivityAtmosphere220':None, 
+                'detector_nep':float(self.params['QUBIC']['NOISE']['detector_nep']), 
+                'synthbeam_kmax':self.params['QUBIC']['SYNTHBEAM']['synthbeam_kmax']}
+        
+        args_mono = args.copy()
+        args_mono['nf_recon'] = 1
+        args_mono['nf_sub'] = 1
+
+        ### Get the default dictionary
+        dictfilename = 'dicts/pipeline_demo.dict'
+        d = qubic.qubicdict.qubicDict()
+        d.read_from_file(dictfilename)
+        dmono = d.copy()
+        for i in args.keys():
+        
+            d[str(i)] = args[i]
+            dmono[str(i)] = args_mono[i]
+
+    
+        return d, dmono
+    def _get_sky_config(self):
+        
+        """
+        
+        Method that read `params.yml` file and create dictionary containing sky emission such as :
+        
+                    d = {'cmb':seed, 'dust':'d0', 'synchrotron':'s0'}
+        
+        Note that the key denote the emission and the value denote the sky model using PySM convention. For CMB, seed denote the realization.
+        
+        """
+        sky = {}
+
+        if self.params['CMB']['cmb']:
+            if self.params['CMB']['seed'] == 0:
+                if self.rank == 0:
+                    seed = np.random.randint(10000000)
+                else:
+                    seed = None
+                seed = self.comm.bcast(seed, root=0)
+            else:
+                seed = self.params['CMB']['seed'] 
+            print(f'Seed of the CMB is {seed} for rank {self.rank}')
+            sky['cmb'] = seed
+
+        for j in self.params['Foregrounds']:
+            #print(j, self.params['Foregrounds'][j])
+            if j == 'Dust':
+                if self.params['Foregrounds'][j]:
+                    sky['dust'] = 'd0'
+            elif j == 'Synchrotron':
+                if self.params['Foregrounds'][j]:
+                    sky['synchrotron'] = 's0'
+
+        return sky
+
     def initialize(self):
         IterativeAlgorithm.initialize(self)
 

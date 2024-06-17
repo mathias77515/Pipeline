@@ -349,7 +349,7 @@ class PlanckAcquisition:
         return np.mean(m, axis=0)
 class QubicFullBandSystematic(QubicPolyAcquisition):
 
-    def __init__(self, d, Nsub, Nrec=1, comp=[], kind='Two', nu_co=None, H=None):
+    def __init__(self, d, Nsub, Nrec=1, comp=[], kind='DB', nu_co=None, H=None):
         
         #if Nsub % 2 != 0:
         #    raise TypeError('Nsub should not be odd')
@@ -365,11 +365,11 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
         self.nu_co = nu_co
 
         
-        if self.kind == 'Two' and self.Nrec == 1 and len(self.comp) == 0:
+        if self.kind == 'DB' and self.Nrec == 1 and len(self.comp) == 0:
             raise TypeError('Dual band instrument can not reconstruct one band')
 
-        if self.kind == 'Two': self.number_FP = 2
-        elif self.kind == 'Wide': self.number_FP = 1
+        if self.kind == 'DB': self.number_FP = 2
+        elif self.kind == 'UWB': self.number_FP = 1
 
         
         #self.relative_bandwidth = relative_bandwidth
@@ -586,14 +586,14 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
 
         subacq150 = QubicAcquisition(ins150, self.sampling, self.scene, d150)
         subacq220 = QubicAcquisition(ins220, self.sampling, self.scene, d220)
-        if self.kind == 'two':
+        if self.kind == 'DB':
 
             invn150 = subacq150.get_invntt_operator(det_noise=True, photon_noise=True)
             invn220 = subacq220.get_invntt_operator(det_noise=True, photon_noise=True)
 
             return BlockDiagonalOperator([invn150, invn220], axisout=0)
         
-        elif self.kind == 'wide':
+        elif self.kind == 'UWB':
 
             invn150 = subacq150.get_invntt_operator(det_noise=True, photon_noise=True)
             invn220 = subacq220.get_invntt_operator(det_noise=False, photon_noise=True)
@@ -830,7 +830,7 @@ class JointAcquisitionFrequencyMapMaking:
                 return BlockRowOperator(full_operator, new_axisin=0)
 
         
-        elif self.kind == 'wide':      # WideBand intrument
+        elif self.kind == 'UWB':      # WideBand intrument
 
             # Get QUBIC operator
             H_qubic = self.qubic.get_operator(angle_hwp=angle_hwp, fwhm=fwhm)
@@ -857,7 +857,7 @@ class JointAcquisitionFrequencyMapMaking:
                 
                 return BlockRowOperator(full_operator, new_axisin=0)
             
-        elif self.kind == 'two':
+        elif self.kind == 'DB':
 
             # Get QUBIC operator
             if self.Nrec == 2:
@@ -896,7 +896,7 @@ class JointAcquisitionFrequencyMapMaking:
         if beam_correction is None :
                 beam_correction = [0]*self.Nrec
 
-        if self.kind == 'wide':
+        if self.kind == 'UWB':
 
             invn_q = self.qubic.get_invntt_operator()
             R = ReshapeOperator(invn_q.shapeout, invn_q.shape[0])
@@ -915,7 +915,7 @@ class JointAcquisitionFrequencyMapMaking:
             invN = invn_q + invNe
             return BlockDiagonalOperator(invN, axisout=0)
         
-        elif self.kind == 'two':
+        elif self.kind == 'DB':
 
             invn_q_150 = self.qubic.get_invntt_operator().operands[0]
             invn_q_220 = self.qubic.get_invntt_operator().operands[1]

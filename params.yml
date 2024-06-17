@@ -1,61 +1,73 @@
-path_out: 'E2E_nrec6/cmbdust_convolved_DB/'
+path_out: '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/test/'
+datafilename: 'MC'
 
-Sky:
-    CMB:
+CMB:
+    cmb: True
+    seed: 1                                 # CMB realization
+    r: 0
+    Alens: 1
 
-        cmb: [True, 1]
-        r: 0
-        Alens: 1
+Foregrounds:
 
-    Foregrounds:
-
-        # Thermal Dust emission
-        Dust: True
-        # Synchrotron emission
-        Synchrotron: False
-
-    nside: 64
+    Dust: False                              # Thermal Dust emission
+    Synchrotron: False                      # Synchrotron emission
 
 QUBIC:
-    npointings: 1000
-    fsub: 4
-    nrec: 2
-    iteration: 1
-    ndet: 0
-    npho150: 0
-    npho220: 0
-    synthbeam_kmax: 1
-    detector_nep: 4.7e-17
-    nhwp_angles: 3
-    dtheta: 15
-    type: 'two'
-    covcut: 0.2
-    kappa: 0
-    convolution_in: False
-    convolution_out: False
-    bandpass_correction: True
-    RA_center: 0
+
+    ### This section control the parameters related to QUBIC
+
+    instrument: 'DB'                        # Instrumental design (DB or UWB)
+    npointings: 1000                        # Number of time samples
+    nsub: 4                                # Number of sub-acquisitions
+    nrec: 2                                 # Number of reconstructed frequency maps
+    convolution_in: False                   # Angular resolution in the input TOD
+    convolution_out: False                  # Angular resolution in the reconstruction
+    bandpass_correction: True               # Correction to keep the edges of the integration band constant
+    NOISE:                          
+        ndet: 0.1                             # Level of detector noise
+        npho150: 0.1                          # Level of photon noise at 150 GHz
+        npho220: 0.1                          # Level of photon noise at 220 GHz
+        detector_nep: 4.7e-17                 # NEP of detector noise
+    SYNTHBEAM:
+        synthbeam_kmax: 1                  # Order of synthesized beam diffraction (synthbeam_kmax = 1 means 9 peaks)
+    dtheta: 15                             # Angle for coverage
+
+SKY:
+
+    ### This section control the reconstructed sky
+
+    nside: 256                              # Nside of components
+    coverage_cut: 0.2                       # Define a cut where the coverage is too low
+    RA_center: 0                   
     DEC_center: -57
 
+PLANCK:
+
+    ### This section define which external data are we using
+
+    external_data: True                         
+    weight_planck: 0                            # Weight of Planck data within the QUBIC patch
+    level_noise_planck: 1                       # Noise level for Planck data
+    bandwidth_planck: 0.2                       # Multiplicative factor to define the bandwidth of Planck's data
+    nsub_planck: 100                            # Number of sub acquisitions for Planck's data
+
+Pipeline:
+    mapmaking: True                             # Run MapMaking Pipeline
+    spectrum: True                              # Compute Power Spectra of the frequency maps
+
+PCG:
+
+    ### This section control PCG parameters
+
+    n_iter_pcg: 2                                   # Number of PCG iterations
+    tol_pcg: 1.0e-10                                # Tolerance for PCG
+
 Spectrum:
-    dl: 30
+
+    ### This section define the parameters to compute the power spectra
+
+    dl: 30                                      
     lmin: 40
     lmax: 511
     aposize: 10
 
-PCG:
-    maxiter: 100
-    tol: 1.0e-20
-
-Data:
-    datafilename: 'MC'
-    planck: True
-    level_external_data_noise: 0.001
-
-Pipeline:
-    mapmaking: True
-    spectrum: False
-
-bandwidth_qubic: 0.25
-bandwidth_planck: 0.2
-nb_integration: 100

@@ -43,12 +43,14 @@ class Spectrum:
         self.nus = self.dict_file['nus']
         self.nfreq = len(self.nus)
         self.nrec = self.params['QUBIC']['nrec']
-        self.fsub = self.params['QUBIC']['fsub']
-        self.nside = self.params['Sky']['nside']
+        self.nsub = self.params['QUBIC']['nsub']
+        self.fsub = int(self.nsub / self.nrec)
+        self.nside = self.params['SKY']['nside']
         self.nsub = int(self.fsub * self.nrec)
 
-        _, nus150, _, _, _, _ = compute_freq(150, Nfreq=self.params['QUBIC']['fsub']-1)
-        _, nus220, _, _, _, _ = compute_freq(220, Nfreq=self.params['QUBIC']['fsub']-1)
+        _, nus150, _, _, _, _ = compute_freq(150, Nfreq=self.fsub-1)
+        _, nus220, _, _, _, _ = compute_freq(220, Nfreq=self.fsub-1)
+
         
         self.fwhm150 = self._get_fwhm_during_MM(nus150)
         self.fwhm220 = self._get_fwhm_during_MM(nus220)
@@ -66,17 +68,11 @@ class Spectrum:
                                      lmax = self.params['Spectrum']['lmax'],
                                      delta_ell = self.params['Spectrum']['dl'])
 
-        self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
+        self.ell = self.namaster.get_binning(self.params['SKY']['nside'])[0]
+
         print(self.ell)
         #stop
         self.allfwhm = self._get_allfwhm()
-        
-        if self.params['QUBIC']['reconvolution_after_MM']:
-            for irec in range(self.nrec):
-                print(f'Reconvolved map {irec} at fwhm = {self.allfwhm[irec]:.5f} with kernels of fwhm = {self.kernels[irec]:.5f}')
-                C = HealpixConvolutionGaussianOperator(fwhm=self.kernels[irec])
-                self.sky_maps[irec] = C(self.sky_maps[irec])
-                self.noise_maps[irec] = C(self.noise_maps[irec])
 
     def _get_fwhm_during_MM(self, nu):
         return np.deg2rad(0.39268176 * 150 / nu)
@@ -91,16 +87,11 @@ class Spectrum:
         kernels = np.zeros(self.nfreq)
         for i in range(self.nfreq):
             
-            if self.params['QUBIC']['convolution'] is False and self.params['QUBIC']['reconvolution_after_MM'] is False:
+            if self.params['QUBIC']['convolution_in'] is False : #and self.params['QUBIC']['reconvolution_after_MM'] is False:
                 allfwhm[i] = 0
-            elif self.params['QUBIC']['convolution'] is True and self.params['QUBIC']['reconvolution_after_MM'] is False:
+            elif self.params['QUBIC']['convolution_in'] is True : #and self.params['QUBIC']['reconvolution_after_MM'] is False:
                 allfwhm[i] = self.dict_file['fwhm_rec'][i]
-            elif self.params['QUBIC']['reconvolution_after_MM'] is True:
-                if i < self.nrec:
-                    fwhms = np.array([self.fwhm150[0], self.fwhm220[0]])
-                    allfwhm[i] = fwhms[i]
-                else:
-                    allfwhm[i] = self.dict_file['fwhm_rec'][i]
+
                 
         return allfwhm
     def compute_auto_spectrum(self, map, fwhm):
