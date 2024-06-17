@@ -1,4 +1,4 @@
-path_out: '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/test/'
+path_out: 'test/'
 datafilename: 'MC'
 
 CMB:
@@ -17,7 +17,7 @@ QUBIC:
     ### This section control the parameters related to QUBIC
 
     instrument: 'DB'                        # Instrumental design (DB or UWB)
-    npointings: 1000                        # Number of time samples
+    npointings: 100                        # Number of time samples
     nsub: 4                                # Number of sub-acquisitions
     nrec: 2                                 # Number of reconstructed frequency maps
     convolution_in: False                   # Angular resolution in the input TOD
@@ -52,8 +52,8 @@ PLANCK:
     nsub_planck: 100                            # Number of sub acquisitions for Planck's data
 
 Pipeline:
-    mapmaking: True                             # Run MapMaking Pipeline
-    spectrum: True                              # Compute Power Spectra of the frequency maps
+    mapmaking: True                              # Run MapMaking Pipeline
+    spectrum: False                              # Compute Power Spectra of the frequency maps
 
 PCG:
 

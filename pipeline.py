@@ -4,7 +4,6 @@ import pickle
 import time
 
 from model.models import *
-from likelihood.likelihood import *
 from plots.plotter import *
 import mapmaking.systematics as acq
 from mapmaking.frequency_acquisition import get_preconditioner
@@ -16,8 +15,8 @@ import qubic
 import os
 from fgb.component_model import *
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
-from tools.cg import pcg
 from spectrum.spectra import Spectrum
+from tools.cg import pcg
 
 def save_pkl(name, d):
     with open(name, 'wb') as handle:
