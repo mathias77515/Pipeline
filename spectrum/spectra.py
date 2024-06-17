@@ -3,9 +3,11 @@ import numpy as np
 import os
 import yaml
 import pickle
- 
+import matplotlib.pyplot as plt
+import healpy as hp
 #### QUBIC packages
 import qubic
+from qubic.polyacquisition import compute_freq
 from qubic import NamasterLib as nam
 from qubic.beams import BeamGaussian
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
@@ -19,10 +21,11 @@ class Spectrum:
     def __init__(self, file, verbose=True):
         
         print('\n=========== Power Spectra ===========\n')
+ 
         filename = os.path.split(file)
         self.jobid = filename[1].split('_')[1].split('.')[0]
         print(f'Job id found : ', self.jobid)
-        
+
         self.path_spectrum = os.path.join(os.path.dirname(os.path.dirname(file)), "spectrum")
         if not os.path.isdir(self.path_spectrum):
             os.makedirs(self.path_spectrum)
@@ -34,8 +37,9 @@ class Spectrum:
             self.dict_file = pickle.load(f)
         
         self.verbose = verbose
-        self.sky_maps = self.dict_file['maps']
-        self.noise_maps = self.dict_file['maps_noise']
+        self.sky_maps = self.dict_file['maps'].copy()
+        self.noise_maps = self.dict_file['maps_noise'].copy()
+        
         self.nus = self.dict_file['nus']
         self.nfreq = len(self.nus)
         self.nrec = self.params['QUBIC']['nrec']
@@ -43,22 +47,40 @@ class Spectrum:
         self.nside = self.params['Sky']['nside']
         self.nsub = int(self.fsub * self.nrec)
 
+        _, nus150, _, _, _, _ = compute_freq(150, Nfreq=self.params['QUBIC']['fsub']-1)
+        _, nus220, _, _, _, _ = compute_freq(220, Nfreq=self.params['QUBIC']['fsub']-1)
+        
+        self.fwhm150 = self._get_fwhm_during_MM(nus150)
+        self.fwhm220 = self._get_fwhm_during_MM(nus220)
+        
+        self.kernels150 = np.sqrt(self.fwhm150[0]**2 - self.fwhm150[-1]**2)
+        self.kernels220 = np.sqrt(self.fwhm220[0]**2 - self.fwhm220[-1]**2)
+        self.kernels = np.array([self.kernels150, self.kernels220])
+        
         # Define Namaster class
         self.coverage = self.dict_file['coverage']
-        seenpix = self.coverage/np.max(self.coverage) < 0.2
-        self.namaster = nam.Namaster(weight_mask = list(~np.array(seenpix)),
-                                 lmin = self.params['Spectrum']['lmin'],
-                                 lmax = self.params['Spectrum']['lmax'],
-                                 delta_ell = self.params['Spectrum']['dl'])
+        self.seenpix = self.coverage/np.max(self.coverage) > 0.2
+
+        self.namaster = nam.Namaster(weight_mask = list(np.array(self.seenpix)),
+                                     lmin = self.params['Spectrum']['lmin'],
+                                     lmax = self.params['Spectrum']['lmax'],
+                                     delta_ell = self.params['Spectrum']['dl'])
 
         self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
+        print(self.ell)
+        #stop
+        self.allfwhm = self._get_allfwhm()
+        
+        # if self.params['QUBIC']['reconvolution_after_MM']:
+        #     for irec in range(self.nrec):
+        #         print(f'Reconvolved map {irec} at fwhm = {self.allfwhm[irec]:.5f} with kernels of fwhm = {self.kernels[irec]:.5f}')
+        #         C = HealpixConvolutionGaussianOperator(fwhm=self.kernels[irec])
+        #         self.sky_maps[irec] = C(self.sky_maps[irec])
+        #         self.noise_maps[irec] = C(self.noise_maps[irec])
 
-        if self.params['QUBIC']['convolution'] or self.params['QUBIC']['reconvolution_after_MM']:
-            self.allfwhm = self.allfwhm()
-        else:
-            self.allfwhm = np.zeros(self.nfreq)
-
-    def allfwhm(self):
+    def _get_fwhm_during_MM(self, nu):
+        return np.deg2rad(0.39268176 * 150 / nu)
+    def _get_allfwhm(self):
         '''
         Function to compute the fwhm for all sub bands.
 
@@ -66,11 +88,21 @@ class Spectrum:
             - allfwhm (list [nfreq])
         '''
         allfwhm = np.zeros(self.nfreq)
+        kernels = np.zeros(self.nfreq)
         for i in range(self.nfreq):
-            print('my fwhm is ', self.dict_file['fwhm_rec'][i])
-            allfwhm[i] = self.dict_file['fwhm_rec'][i]
+            
+            if self.params['QUBIC']['convolution_in'] is False : #and self.params['QUBIC']['reconvolution_after_MM'] is False:
+                allfwhm[i] = 0
+            elif self.params['QUBIC']['convolution_in'] is True : #and self.params['QUBIC']['reconvolution_after_MM'] is False:
+                allfwhm[i] = self.dict_file['fwhm_rec'][i]
+            # elif self.params['QUBIC']['reconvolution_after_MM'] is True:
+            #     if i < self.nrec:
+            #         fwhms = np.array([self.fwhm150[0], self.fwhm220[0]])
+            #         allfwhm[i] = fwhms[i]
+            #     else:
+            #         allfwhm[i] = self.dict_file['fwhm_rec'][i]
+                
         return allfwhm
-
     def compute_auto_spectrum(self, map, fwhm):
         '''
         Function to compute the auto-spectrum of a given map
@@ -119,13 +151,15 @@ class Spectrum:
         '''
 
         power_spectra_array = np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-
+        
         for i in range(self.nfreq):
             for j in range(i, self.nfreq):
                 print(f'====== {self.nus[i]:.0f}x{self.nus[j]:.0f} ======')
                 if i==j :
                     # Compute the auto-spectrum
                     power_spectra_array[i,j] = self.compute_auto_spectrum(maps[i], self.allfwhm[i])
+                    print(power_spectra_array[i,j, :3])
+                    #stop
                 else:
                     # Compute the cross-spectrum
                     power_spectra_array[i,j] = self.compute_cross_spectrum(maps[i], self.allfwhm[i], maps[j], self.allfwhm[j])
@@ -138,7 +172,7 @@ class Spectrum:
             - sky power spectra array (array [nrec/ncomp, nrec/ncomp])
             - noise power spectra array (array [nrec/ncomp, nrec/ncomp])
         '''
-
+        
         sky_power_spectra = self.compute_array_power_spectra(self.sky_maps)
         noise_power_spectra = self.compute_array_power_spectra(self.noise_maps)
         return sky_power_spectra, noise_power_spectra
