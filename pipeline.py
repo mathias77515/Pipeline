@@ -2,7 +2,6 @@ import numpy as np
 import yaml
 import pickle
 import time
-import healpy as hp
 
 from model.models import *
 from likelihood.likelihood import *
@@ -16,9 +15,7 @@ from tools.foldertools import *
 import qubic
 import os
 from fgb.component_model import *
-from qubic import NamasterLib as nam
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
-from pyoperators import MPI
 from tools.cg import pcg
 from spectrum.spectra import Spectrum
 
@@ -47,12 +44,16 @@ class PipelineFrequencyMapMaking:
 
         with open('params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
+            
+        ### Fsub
+        self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
 
         self.file = file
         self.externaldata = PipelineExternalData(file)
-        self.externaldata.run()
+        self.externaldata.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
+
         self.externaldata_noise = PipelineExternalData(file, noise_only=True)
-        self.externaldata_noise.run()
+        self.externaldata_noise.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
         
         if comm.Get_rank() == 0:
             if not os.path.isdir(self.params['path_out'] + 'maps/'):
@@ -64,7 +65,7 @@ class PipelineFrequencyMapMaking:
         self.plots = PlotsMM(self.params)
 
         
-        self.center = qubic.equ2gal(self.params['QUBIC']['RA_center'], self.params['QUBIC']['DEC_center'])
+        self.center = qubic.equ2gal(self.params['SKY']['RA_center'], self.params['SKY']['DEC_center'])
 
         ### MPI common arguments
         self.comm = comm
@@ -76,73 +77,40 @@ class PipelineFrequencyMapMaking:
         self.skyconfig = self._get_sky_config()
         
         ### Joint acquisition
-        self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], 
+        self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['instrument'], 
                                                             self.params['QUBIC']['nrec'], 
-                                                            self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'])
+                                                            self.params['QUBIC']['nsub'])
         self.planck_acquisition143 = acq.PlanckAcquisition(143, self.joint.qubic.scene)
         self.planck_acquisition217 = acq.PlanckAcquisition(217, self.joint.qubic.scene)
         self.nus_Q = self._get_averaged_nus()
 
         ### Joint acquisition for TOD making
-        self.joint_tod = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], 
-                                                                self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'], 
-                                                                self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'],
+        self.joint_tod = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['instrument'], 
+                                                                self.params['QUBIC']['nsub'], 
+                                                                self.params['QUBIC']['nsub'],
                                                                 H=self.joint.qubic.H)
 
         ### Coverage map
         self.coverage = self.joint.qubic.subacqs[0].get_coverage()
         covnorm = self.coverage / self.coverage.max()
-        self.seenpix = covnorm > self.params['QUBIC']['covcut']
+        self.seenpix = covnorm > self.params['SKY']['coverage_cut']
         self.fsky = self.seenpix.astype(float).sum() / self.seenpix.size
         self.coverage_cut = self.coverage.copy()
         self.coverage_cut[~self.seenpix] = 1
 
         self.seenpix_for_plot = covnorm > 0
-        self.mask = np.ones(12*self.params['Sky']['nside']**2)
-        self.mask[self.seenpix] = self.params['QUBIC']['kappa']
-        
-        
+        self.mask = np.ones(12*self.params['SKY']['nside']**2)
+        self.mask[self.seenpix] = self.params['PLANCK']['weight_planck']
+    
         ### Angular resolutions
-        self.targets, self.allfwhm, self.allfwhm_rec = self._get_convolution()
-
-        #if self.params['QUBIC']['convolution']:
-        #    self.fwhm_rec = self.allfwhm[::-1][::self.params['QUBIC']['fsub']][::-1]
-        #else:
-        #    self.fwhm_rec = [0] * self.params['QUBIC']['nrec']
-        
-        self.targets2 = []
-        self.fwhm_rec = []
-        if self.params['QUBIC']['reconvolution_after_MM']:
-            for i in range(self.params['QUBIC']['nrec']):
-                fwhm_i = np.max(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                #print(fwhm_i)
-                if self.params['QUBIC']['convolution']:
-                    self.targets2 += [np.sqrt(fwhm_i**2 - fwhm_min**2)]
-                    self.fwhm_rec += [fwhm_i]
-                    
-                else:
-                    self.targets2 += [fwhm_i]
-                    self.fwhm_rec += [fwhm_i]
-            
-        else:
-            for i in range(self.params['QUBIC']['nrec']):
-                
-                if self.params['QUBIC']['convolution']:
-                    fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                    self.targets2 += [fwhm_min]
-                    self.fwhm_rec += [fwhm_min] 
-                else:
-                    self.targets2 += [0]
-                    self.fwhm_rec += [0]
-        
+        self._get_convolution()
         
         self.external_timeline = ExternalData2Timeline(self.skyconfig, 
                                                        self.joint.qubic.allnus, 
                                                        self.params['QUBIC']['nrec'], 
-                                                       nside=self.params['Sky']['nside'], 
+                                                       nside=self.params['SKY']['nside'], 
                                                        corrected_bandpass=self.params['QUBIC']['bandpass_correction'])
-
+        #stop
         ### Define reconstructed and TOD operator
         self._get_H()
         
@@ -153,17 +121,17 @@ class PipelineFrequencyMapMaking:
         seed_noise_planck = self._get_random_value()
         #print('seed_noise_planck', seed_noise_planck)
         
-        self.noise143 = self.planck_acquisition143.get_noise(seed_noise_planck) * self.params['Data']['level_external_data_noise']
-        self.noise217 = self.planck_acquisition217.get_noise(seed_noise_planck+1) * self.params['Data']['level_external_data_noise']
+        self.noise143 = self.planck_acquisition143.get_noise(seed_noise_planck) * self.params['PLANCK']['level_noise_planck']
+        self.noise217 = self.planck_acquisition217.get_noise(seed_noise_planck+1) * self.params['PLANCK']['level_noise_planck']
 
-        if self.params['QUBIC']['type'] == 'two':
-            qubic_noise = QubicDualBandNoise(self.dict, self.params['QUBIC']['npointings'], self.params['QUBIC']['detector_nep'])
-        elif self.params['QUBIC']['type'] == 'wide':
-            qubic_noise = QubicWideBandNoise(self.dict, self.params['QUBIC']['npointings'], self.params['QUBIC']['detector_nep'])
+        if self.params['QUBIC']['instrument'] == 'DB':
+            qubic_noise = QubicDualBandNoise(self.dict, self.params['QUBIC']['npointings'], self.params['QUBIC']['NOISE']['detector_nep'])
+        elif self.params['QUBIC']['instrument'] == 'UWB':
+            qubic_noise = QubicWideBandNoise(self.dict, self.params['QUBIC']['npointings'], self.params['QUBIC']['NOISE']['detector_nep'])
 
-        self.noiseq = qubic_noise.total_noise(self.params['QUBIC']['ndet'], 
-                                       self.params['QUBIC']['npho150'], 
-                                       self.params['QUBIC']['npho220'],
+        self.noiseq = qubic_noise.total_noise(self.params['QUBIC']['NOISE']['ndet'], 
+                                       self.params['QUBIC']['NOISE']['npho150'], 
+                                       self.params['QUBIC']['NOISE']['npho220'],
                                        seed=seed_noise_planck).ravel()
 
     def _get_random_value(self):
@@ -184,9 +152,16 @@ class PipelineFrequencyMapMaking:
         
         """
         
-        self.H = self.joint.get_operator(fwhm=self.targets)
-        self.Htod = self.joint_tod.get_operator(fwhm=self.allfwhm)
-        self.Hqtod = self.joint_tod.qubic.get_operator(fwhm=self.allfwhm)  
+        ### Pointing matrix for TOD generation
+        self.H_in = self.joint_tod.get_operator(fwhm=self.fwhm_in)
+        
+        ### QUBIC Pointing matrix for TOD generation
+        self.H_in_qubic = self.joint_tod.qubic.get_operator(fwhm=self.fwhm_in) 
+        
+        ### Pointing matrix for reconstruction
+        self.H_out = self.joint.get_operator(fwhm=self.fwhm_out)
+        
+         
     def _get_averaged_nus(self):
         
         """
@@ -197,7 +172,7 @@ class PipelineFrequencyMapMaking:
         
         nus_eff = []
         for i in range(self.params['QUBIC']['nrec']):
-            nus_eff += [np.mean(self.joint.qubic.allnus[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])]
+            nus_eff += [np.mean(self.joint.qubic.allnus[i*self.fsub:(i+1)*self.fsub])]
         
         return np.array(nus_eff)
     def _get_sky_config(self):
@@ -211,32 +186,29 @@ class PipelineFrequencyMapMaking:
         Note that the key denote the emission and the value denote the sky model using PySM convention. For CMB, seed denote the realization.
         
         """
-        sky = {}
-        for ii, i in enumerate(self.params['Sky'].keys()):
-            #print(ii, i)
 
-            if i == 'CMB':
-                if self.params['Sky']['CMB']['cmb']:
-                    if self.params['Sky']['CMB']['cmb'][1] == 0:
-                        if self.rank == 0:
-                            seed = np.random.randint(10000000)
-                        else:
-                            seed = None
-                        seed = self.comm.bcast(seed, root=0)
-                    else:
-                        seed = self.params['Sky']['CMB']['cmb'][1] 
-                    print(f'Seed of the CMB is {seed} for rank {self.rank}')
-                    sky['cmb'] = seed
-                
+        sky = {}
+
+        if self.params['CMB']['cmb']:
+            if self.params['CMB']['seed'] == 0:
+                if self.rank == 0:
+                    seed = np.random.randint(10000000)
+                else:
+                    seed = None
+                seed = self.comm.bcast(seed, root=0)
             else:
-                for jj, j in enumerate(self.params['Sky']['Foregrounds']):
-                    #print(j, self.params['Foregrounds'][j])
-                    if j == 'Dust':
-                        if self.params['Sky']['Foregrounds'][j]:
-                            sky['dust'] = 'd0'
-                    elif j == 'Synchrotron':
-                        if self.params['Sky']['Foregrounds'][j]:
-                            sky['synchrotron'] = 's0'
+                seed = self.params['CMB']['seed'] 
+            print(f'Seed of the CMB is {seed} for rank {self.rank}')
+            sky['cmb'] = seed
+
+        for j in self.params['Foregrounds']:
+            #print(j, self.params['Foregrounds'][j])
+            if j == 'Dust':
+                if self.params['Foregrounds'][j]:
+                    sky['dust'] = 'd0'
+            elif j == 'Synchrotron':
+                if self.params['Foregrounds'][j]:
+                    sky['synchrotron'] = 's0'
 
         return sky
     def get_ultrawideband_config(self):
@@ -265,12 +237,12 @@ class PipelineFrequencyMapMaking:
 
         args = {'npointings':self.params['QUBIC']['npointings'], 
                 'nf_recon':self.params['QUBIC']['nrec'], 
-                'nf_sub':self.params['QUBIC']['fsub'] * self.params['QUBIC']['nrec'], 
-                'nside':self.params['Sky']['nside'], 
+                'nf_sub':self.params['QUBIC']['nsub'], 
+                'nside':self.params['SKY']['nside'], 
                 'MultiBand':True, 
                 'period':1, 
-                'RA_center':self.params['QUBIC']['RA_center'], 
-                'DEC_center':self.params['QUBIC']['DEC_center'],
+                'RA_center':self.params['SKY']['RA_center'], 
+                'DEC_center':self.params['SKY']['DEC_center'],
                 'filter_nu':nu_ave*1e9, 
                 'noiseless':False, 
                 'comm':self.comm, 
@@ -278,7 +250,7 @@ class PipelineFrequencyMapMaking:
                 'nprocs_sampling':1, 
                 'nprocs_instrument':self.size,
                 'photon_noise':True, 
-                'nhwp_angles':self.params['QUBIC']['nhwp_angles'], 
+                'nhwp_angles':3, 
                 'effective_duration':3, 
                 'filter_relative_bandwidth':delta_nu_over_nu, 
                 'type_instrument':'wide', 
@@ -286,8 +258,8 @@ class PipelineFrequencyMapMaking:
                 'TemperatureAtmosphere220':None,
                 'EmissivityAtmosphere150':None, 
                 'EmissivityAtmosphere220':None, 
-                'detector_nep':float(self.params['QUBIC']['detector_nep']), 
-                'synthbeam_kmax':self.params['QUBIC']['synthbeam_kmax']}
+                'detector_nep':float(self.params['QUBIC']['NOISE']['detector_nep']), 
+                'synthbeam_kmax':self.params['QUBIC']['SYNTHBEAM']['synthbeam_kmax']}
         
         args_mono = args.copy()
         args_mono['nf_recon'] = 1
@@ -314,24 +286,43 @@ class PipelineFrequencyMapMaking:
         """
         
         ### Define FWHMs
-        allfwhm_rec = self.joint.qubic.allfwhm
-        if self.params['QUBIC']['convolution']:
-            allfwhm = self.joint.qubic.allfwhm
-            targets = np.array([])
+        
+        self.fwhm_in = None
+        self.fwhm_out = None
+        
+        ### FWHMs during map-making
+        if self.params['QUBIC']['convolution_in']:
+            self.fwhm_in = self.joint.qubic.allfwhm.copy()
+        if self.params['QUBIC']['convolution_out']:
+            self.fwhm_out = np.array([])
             for irec in range(self.params['QUBIC']['nrec']):
-                targets = np.append(targets, np.sqrt(allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]**2 - np.min(allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']])**2))
-                #targets = np.sqrt(allfwhm**2 - np.min(allfwhm)**2)
-            
+                self.fwhm_out = np.append(self.fwhm_out, np.sqrt(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub]**2 - np.min(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub])**2))
+        
+        ### Define reconstructed FWHM depending on the user's choice
+        if self.params['QUBIC']['convolution_in'] and self.params['QUBIC']['convolution_out']:
+            self.fwhm_rec = np.array([])
+            for irec in range(self.params['QUBIC']['nrec']):
+                self.fwhm_rec = np.append(self.fwhm_rec, np.min(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub]))
+                
+        elif self.params['QUBIC']['convolution_in'] and self.params['QUBIC']['convolution_out'] is False:
+            self.fwhm_rec = np.array([])
+            for irec in range(self.params['QUBIC']['nrec']):
+                self.fwhm_rec = np.append(self.fwhm_rec, np.mean(self.joint.qubic.allfwhm[irec*self.fsub:(irec+1)*self.fsub]))
+        
         else:
-            targets = None
-            allfwhm = None
-
-        return targets, allfwhm, allfwhm_rec
+            self.fwhm_rec = np.array([])
+            for irec in range(self.params['QUBIC']['nrec']):
+                self.fwhm_rec = np.append(self.fwhm_rec, 0)
+        
+        if self.rank == 0:
+            print(f'FWHM for TOD generation : {self.fwhm_in}')
+            print(f'FWHM for reconstruction : {self.fwhm_out}')
+            print(f'Final FWHM : {self.fwhm_rec}')           
     def get_input_map(self):
-        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
 
         for i in range(self.params['QUBIC']['nrec']):
-            m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']], axis=0)
+            m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.fsub:(i+1)*self.fsub], axis=0)
         
         return m_nu_in    
     def _get_tod(self, noise=False):
@@ -346,28 +337,28 @@ class PipelineFrequencyMapMaking:
             factor = 0
         else:
             factor = 1
-        if self.params['QUBIC']['type'] == 'wide':
+        if self.params['QUBIC']['instrument'] == 'UWB':
             if self.params['QUBIC']['nrec'] != 1:
-                TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+                TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
                 for irec in range(int(self.params['QUBIC']['nrec']/2)):
-                    if self.params['QUBIC']['convolution']:
-                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
+                    if self.params['QUBIC']['convolution_in']:
+                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
                     else:
                         C = HealpixConvolutionGaussianOperator(fwhm=0)
         
                     TOD_PLANCK[irec] = C(factor * self.external_timeline.maps[irec] + self.noise143)
 
                 for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
-                    if self.params['QUBIC']['convolution']:
-                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
+                    if self.params['QUBIC']['convolution_in']:
+                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
                     else:
                         C = HealpixConvolutionGaussianOperator(fwhm=0)
         
                     TOD_PLANCK[irec] = C(factor * self.external_timeline.maps[irec] + self.noise217)
             else:
-                TOD_PLANCK = np.zeros((2*self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
-                if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=self.allfwhm[-1])
+                TOD_PLANCK = np.zeros((2*self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
+                if self.params['QUBIC']['convolution_in']:
+                    C = HealpixConvolutionGaussianOperator(fwhm=self.fwhm_in[-1])
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
 
@@ -375,23 +366,23 @@ class PipelineFrequencyMapMaking:
                 TOD_PLANCK[1] = C(factor * self.external_timeline.maps[0] + self.noise217)
 
             TOD_PLANCK = TOD_PLANCK.ravel()
-            TOD_QUBIC = self.Hqtod(factor * self.external_timeline.m_nu).ravel() + self.noiseq
+            TOD_QUBIC = self.H_in_qubic(factor * self.external_timeline.m_nu).ravel() + self.noiseq
             TOD = np.r_[TOD_QUBIC, TOD_PLANCK]
 
         else:
 
             sh_q = self.joint.qubic.ndets * self.joint.qubic.nsamples
-            TOD_QUBIC = self.Hqtod(factor * self.external_timeline.m_nu).ravel() + self.noiseq
+            TOD_QUBIC = self.H_in_qubic(factor * self.external_timeline.m_nu).ravel() + self.noiseq
 
             TOD_QUBIC150 = TOD_QUBIC[:sh_q].copy()
             TOD_QUBIC220 = TOD_QUBIC[sh_q:].copy()
 
             TOD = TOD_QUBIC150.copy()
     
-            TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+            TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
             for irec in range(int(self.params['QUBIC']['nrec']/2)):
-                if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
+                if self.params['QUBIC']['convolution_in']:
+                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         
@@ -399,8 +390,8 @@ class PipelineFrequencyMapMaking:
 
             TOD = np.r_[TOD, TOD_QUBIC220.copy()]
             for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
-                if self.params['QUBIC']['convolution']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.allfwhm[irec*self.params['QUBIC']['fsub']:(irec+1)*self.params['QUBIC']['fsub']]))
+                if self.params['QUBIC']['convolution_in']:
+                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
                 else:
                     C = HealpixConvolutionGaussianOperator(fwhm=0)
         
@@ -435,7 +426,7 @@ class PipelineFrequencyMapMaking:
                 print(message)
     def _get_preconditionner(self):
         
-        conditionner = np.ones((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+        conditionner = np.ones((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
             
         for i in range(conditionner.shape[0]):
             for j in range(conditionner.shape[2]):
@@ -453,13 +444,11 @@ class PipelineFrequencyMapMaking:
         '''
 
 
-        A = self.H.T * self.invN * self.H
-        b = self.H.T * self.invN * d
-        #print(self.params)
+        A = self.H_out.T * self.invN * self.H_out
+        b = self.H_out.T * self.invN * d
+
         ### Preconditionning
-        #M = acq.get_preconditioner(np.ones(12*self.params['Sky']['nside']**2))
         M = self._get_preconditionner()
-        #print("PRECONDITIONNER")
 
         ### PCG
         start = time.time()
@@ -468,9 +457,9 @@ class PipelineFrequencyMapMaking:
                                     comm=self.comm,
                                     x0=x0, 
                                     M=M, 
-                                    tol=self.params['PCG']['tol'], 
+                                    tol=self.params['PCG']['tol_pcg'], 
                                     disp=True, 
-                                    maxiter=self.params['PCG']['maxiter'], 
+                                    maxiter=self.params['PCG']['n_iter_pcg'], 
                                     create_gif=False, 
                                     center=self.center, 
                                     reso=self.params['QUBIC']['dtheta'], 
@@ -478,9 +467,6 @@ class PipelineFrequencyMapMaking:
                                     jobid=self.job_id)
 
         self._barrier()
-
-        #if self.params['PCG']['gif']:
-        #    do_gif(f'gif_convergence_{self.job_id}', solution_qubic_planck['nit'], self.job_id)
 
         if self.params['QUBIC']['nrec'] == 1:
             solution_qubic_planck['x']['x'] = np.array([solution_qubic_planck['x']['x']])
@@ -517,36 +503,19 @@ class PipelineFrequencyMapMaking:
         ### Wait for all processes
         self._barrier()
 
-        if self.params['QUBIC']['convolution']:
+        if self.params['QUBIC']['convolution_in']:
             for i in range(self.params['QUBIC']['nrec']):
-                fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                print(fwhm_min)
-                C = HealpixConvolutionGaussianOperator(fwhm=fwhm_min)
+                C = HealpixConvolutionGaussianOperator(fwhm=self.fwhm_rec[i])
                 self.m_nu_in[i] = C(self.m_nu_in[i])
                 
         ### Solve map-making equation
         self.s_hat = self._pcg(self.TOD, x0=self.m_nu_in)
         
-        
         ### Wait for all processes
         self._barrier()
         
-        ### Solve map-making equation for noise only
-        self.s_hat_noise = self._pcg(self.n, x0=self.m_nu_in*0)
-        
-        self.fwhm_ext = []
-        if self.params['QUBIC']['reconvolution_after_MM']:
-            for i in range(self.params['QUBIC']['nrec']):
-                fwhm_min = np.min(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                fwhm_max = np.max(self.allfwhm_rec[i*self.params['QUBIC']['fsub']:(i+1)*self.params['QUBIC']['fsub']])
-                
-                self.print_message(f'Reconvolving map {i+1} from fwhm = {fwhm_min} to fwhm = {fwhm_max} with kernel = {self.targets2[i]}')
-                
-                C2 = HealpixConvolutionGaussianOperator(fwhm=self.targets2[i])
-                self.m_nu_in[i] = C2(self.m_nu_in[i])
-                self.s_hat[i] = C2(self.s_hat[i])
-                self.s_hat_noise[i] = C2(self.s_hat_noise[i])
-                
+        ### n = m_signalnoisy - m_signal
+        self.s_hat_noise = self.s_hat - self.m_nu_in
         
         self.s_hat[:, ~self.seenpix, :] = 0
         self.s_hat_noise[:, ~self.seenpix, :] = 0
@@ -554,25 +523,20 @@ class PipelineFrequencyMapMaking:
         ### Plots and saving
         if self.rank == 0:
             
-            
-            self.externaldata.run(fwhm=self.params['QUBIC']['convolution'], noise=True)
-            
             self.external_maps = self.externaldata.maps.copy()
             self.external_maps[:, ~self.seenpix, :] = 0
             
             self.external_maps_noise = self.externaldata_noise.maps.copy()
             self.external_maps_noise[:, ~self.seenpix, :] = 0
-            
+
             if len(self.externaldata.external_nus) != 0:
-                fwhm_ext = [np.min(self.fwhm_rec)] * len(self.externaldata.external_nus)
-                
+                fwhm_ext = self.externaldata.fwhm_ext.copy()
                 self.s_hat = np.concatenate((self.s_hat, self.external_maps), axis=0)
                 self.s_hat_noise = np.concatenate((self.s_hat_noise, self.external_maps_noise), axis=0)
                 self.nus_Q = np.array(list(self.nus_Q) + list(self.externaldata.external_nus))
                 self.fwhm_rec = np.array(list(self.fwhm_rec) + list(fwhm_ext))
-                
-            
-            
+
+            print(f'Reconstruction done at fwhm = {self.fwhm_rec}')
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, name='signal')
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=1, nsig=3, name='signal')
             self.plots.plot_FMM(self.m_nu_in, self.s_hat, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=2, nsig=3, name='signal')
@@ -582,7 +546,8 @@ class PipelineFrequencyMapMaking:
             self.plots.plot_FMM(self.m_nu_in*0, self.s_hat_noise, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=2, nsig=3, name='noise') 
 
             dict_solution = {'maps':self.s_hat, 'maps_noise':self.s_hat_noise, 'nus':self.nus_Q, 'coverage':self.coverage, 
-                         'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params, 'fwhm_rec':self.fwhm_rec}
+                         'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params, 'fwhm_in':self.fwhm_in, 
+                         'fwhm_out':self.fwhm_out, 'fwhm_rec':self.fwhm_rec}
             
             self.save_data(self.file, dict_solution)
         self._barrier()   
@@ -604,8 +569,8 @@ class PipelineEnd2End:
         self.comm = comm
         self.job_id = os.environ.get('SLURM_JOB_ID')
 
-        self.file = self.params['path_out'] + 'maps/' + self.params['Data']['datafilename'] + f'_{self.job_id}.pkl'
-        self.file_spectrum = self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['Data']['datafilename']+f'_{self.job_id}.pkl'
+        self.file = self.params['path_out'] + 'maps/' + self.params['datafilename'] + f'_{self.job_id}.pkl'
+        self.file_spectrum = self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['datafilename']+f'_{self.job_id}.pkl'
         
         ### Initialization
         if self.params['Pipeline']['mapmaking']:
@@ -626,7 +591,6 @@ class PipelineEnd2End:
                 if self.mapmaking is not None:
                     self.spectrum = Spectrum(self.file)
                 else:
-                    print(specific_file)
                     self.spectrum = Spectrum(specific_file)
                 
                 self.spectrum.run()

@@ -39,10 +39,10 @@ class CMBModel:
 
         """
         power_spectrum = hp.read_cl('data/Cls_Planck2018_lensed_scalar.fits')[:,:4000]
-        if self.params['Sky']['CMB']['Alens'][0] != 1.:
-            power_spectrum *= self.params['Sky']['CMB']['Alens'][0]
-        if self.params['Sky']['CMB']['r'][0]:
-            power_spectrum += self.params['Sky']['CMB']['r'][0] * hp.read_cl('data/Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits')[:,:4000]
+        if self.params['CMB']['Alens'][0] != 1.:
+            power_spectrum *= self.params['CMB']['Alens'][0]
+        if self.params['CMB']['r'][0]:
+            power_spectrum += self.params['CMB']['r'][0] * hp.read_cl('data/Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits')[:,:4000]
         return power_spectrum
     def cl2dl(self, ell, cl):
 
@@ -98,12 +98,12 @@ class ForeGroundModels(CMBModel):
         self.nus = nus
 
     def dust_model(self, ell, fnu1, fnu2):
-        return self.params['Sky']['Foregrounds']['Ad'][0] * self.params['Sky']['Foregrounds']['deltad'][0] * fnu1 * fnu2 * (ell/80)**self.params['Sky']['Foregrounds']['alphad'][0]
+        return self.params['Foregrounds']['Ad'][0] * self.params['Foregrounds']['deltad'][0] * fnu1 * fnu2 * (ell/80)**self.params['Foregrounds']['alphad'][0]
     def sync_model(self, ell, fnu1, fnu2):
-        return self.params['Sky']['Foregrounds']['As'][0] * self.params['Sky']['Foregrounds']['deltas'][0] * fnu1 * fnu2 * (ell/80)**self.params['Sky']['Foregrounds']['alphas'][0]
+        return self.params['Foregrounds']['As'][0] * self.params['Foregrounds']['deltas'][0] * fnu1 * fnu2 * (ell/80)**self.params['Foregrounds']['alphas'][0]
     def dustsync_model(self, ell, fnu1d, fnu2d, fnu1s, fnu2s):
-        m = self.params['Sky']['Foregrounds']['eps'][0] * np.sqrt(abs(self.params['Sky']['Foregrounds']['Ad'][0] * self.params['Sky']['Foregrounds']['As'][0])) * \
-            (fnu1d*fnu2s + fnu1s*fnu2d) * (ell/80)**((self.params['Sky']['Foregrounds']['alphad'][0] + self.params['Sky']['Foregrounds']['alphas'][0])/2)
+        m = self.params['Foregrounds']['eps'][0] * np.sqrt(abs(self.params['Foregrounds']['Ad'][0] * self.params['Foregrounds']['As'][0])) * \
+            (fnu1d*fnu2s + fnu1s*fnu2d) * (ell/80)**((self.params['Foregrounds']['alphad'][0] + self.params['Foregrounds']['alphas'][0])/2)
         return m
     def scale_dust(self, nu, temp=20):
         
@@ -118,7 +118,7 @@ class ForeGroundModels(CMBModel):
         
         """
         
-        comp = c.Dust(nu0=self.params['Sky']['Foregrounds']['nu0_d'], temp=temp, beta_d=self.params['Sky']['Foregrounds']['betad'][0])
+        comp = c.Dust(nu0=self.params['Foregrounds']['nu0_d'], temp=temp, beta_d=self.params['Foregrounds']['betad'][0])
     
         A = mm.MixingMatrix(comp).evaluator(np.array([nu]))()[0]
         return A
@@ -134,7 +134,7 @@ class ForeGroundModels(CMBModel):
             
         """
         
-        comp = c.Synchrotron(nu0=self.params['Sky']['Foregrounds']['nu0_s'], beta_pl=self.params['Sky']['Foregrounds']['betas'][0])
+        comp = c.Synchrotron(nu0=self.params['Foregrounds']['nu0_s'], beta_pl=self.params['Foregrounds']['betas'][0])
     
         A = mm.MixingMatrix(comp).evaluator(np.array([nu]))()[0]
         return A
@@ -156,13 +156,13 @@ class ForeGroundModels(CMBModel):
 
         m = np.zeros(len(ell))
 
-        if self.params['Sky']['Foregrounds']['Dust']:
+        if self.params['Foregrounds']['Dust']:
             m += self.dust_model(ell, fnu1d, fnu2d)
 
-        if self.params['Sky']['Foregrounds']['Synchrotron']:
+        if self.params['Foregrounds']['Synchrotron']:
             m += self.sync_model(ell, fnu1s, fnu2s)
 
-        if self.params['Sky']['Foregrounds']['DustSync']:
+        if self.params['Foregrounds']['DustSync']:
             m += self.dustsync_model(ell, fnu1d, fnu2d, fnu1s, fnu2s)
 
         return m
@@ -296,7 +296,7 @@ class Sky(ForeGroundModels):
         
         """
         
-        Dl_cmb = self.get_Dl_cmb() * int(self.params['Sky']['CMB']['cmb'])
+        Dl_cmb = self.get_Dl_cmb() * int(self.params['CMB']['cmb'])
         Dl_fg = self.get_Dl_fg(self.ell, fnu1d, fnu2d, fnu1s, fnu2s)
 
         return Dl_cmb + Dl_fg
@@ -313,15 +313,15 @@ class Sky(ForeGroundModels):
         fp_latex = []
         k = 0
 
-        for iname, name in enumerate(self.params['Sky'].keys()):
+        for iname, name in enumerate(self.params['SKY'].keys()):
             try:
-                for jname, n in enumerate(self.params['Sky'][name]):
-                    if type(self.params['Sky'][name][n]) is list:
-                        #print(self.params['Sky'][name][n], n)
-                        if self.params['Sky'][name][n][1] == 'f':
-                            fp += [self.params['Sky'][name][n][-1]]
-                            fp_latex += [self.params['Sky'][name][n][2]]
-                            fp_name += [list(self.params['Sky'][name].keys())[k]]
+                for jname, n in enumerate(self.params['SKY'][name]):
+                    if type(self.params['SKY'][name][n]) is list:
+                        #print(self.params['SKY'][name][n], n)
+                        if self.params['SKY'][name][n][1] == 'f':
+                            fp += [self.params['SKY'][name][n][-1]]
+                            fp_latex += [self.params['SKY'][name][n][2]]
+                            fp_name += [list(self.params['SKY'][name].keys())[k]]
                     k += 1
                 k = 0
             except: pass
@@ -339,13 +339,13 @@ class Sky(ForeGroundModels):
             
         """
         k = 0
-        for iname, name in enumerate(self.params['Sky'].keys()):
+        for iname, name in enumerate(self.params['SKY'].keys()):
             try:
-                for jname, n in enumerate(self.params['Sky'][name]):
-                    if type(self.params['Sky'][name][n]) is list:
-                        if self.params['Sky'][name][n][1] == 'f':
+                for jname, n in enumerate(self.params['SKY'][name]):
+                    if type(self.params['SKY'][name][n]) is list:
+                        if self.params['SKY'][name][n][1] == 'f':
 
-                            self.params['Sky'][name][n][0] = new_params[k]
+                            self.params['SKY'][name][n][0] = new_params[k]
                             k+=1
             except: pass
         return self.params

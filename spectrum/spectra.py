@@ -43,12 +43,13 @@ class Spectrum:
         self.nus = self.dict_file['nus']
         self.nfreq = len(self.nus)
         self.nrec = self.params['QUBIC']['nrec']
-        self.fsub = self.params['QUBIC']['fsub']
-        self.nside = self.params['Sky']['nside']
+        self.nsub = self.params['QUBIC']['nsub']
+        self.fsub = int(self.nsub / self.nrec)
+        self.nside = self.params['SKY']['nside']
         self.nsub = int(self.fsub * self.nrec)
 
-        _, nus150, _, _, _, _ = compute_freq(150, Nfreq=self.params['QUBIC']['fsub']-1)
-        _, nus220, _, _, _, _ = compute_freq(220, Nfreq=self.params['QUBIC']['fsub']-1)
+        _, nus150, _, _, _, _ = compute_freq(150, Nfreq=self.fsub-1)
+        _, nus220, _, _, _, _ = compute_freq(220, Nfreq=self.fsub-1)
         
         self.fwhm150 = self._get_fwhm_during_MM(nus150)
         self.fwhm220 = self._get_fwhm_during_MM(nus220)
@@ -66,7 +67,7 @@ class Spectrum:
                                      lmax = self.params['Spectrum']['lmax'],
                                      delta_ell = self.params['Spectrum']['dl'])
 
-        self.ell = self.namaster.get_binning(self.params['Sky']['nside'])[0]
+        self.ell = self.namaster.get_binning(self.params['SKY']['nside'])[0]
         print(self.ell)
         #stop
         self.allfwhm = self._get_allfwhm()

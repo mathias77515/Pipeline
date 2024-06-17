@@ -156,19 +156,19 @@ class PCGAlgorithm(IterativeAlgorithm):
 
         self.dict, self.dict_mono = self.get_dict()
         self.skyconfig = self._get_sky_config()
-        self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['type'], self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
+        self.joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, self.params['QUBIC']['instrument'], self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
         self.fsub = int(self.params['QUBIC']['nsub'] / self.params['QUBIC']['nrec'])
 
         self.external_timeline = ExternalData2Timeline(self.skyconfig, 
                                                        self.joint.qubic.allnus, 
                                                        self.params['QUBIC']['nrec'], 
-                                                       nside=self.params['Sky']['nside'], 
+                                                       nside=self.params['SKY']['nside'], 
                                                        corrected_bandpass=self.params['QUBIC']['bandpass_correction'])     
 
         self.input_map = self.get_input_map()  
 
     def get_input_map(self):
-        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+        m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
 
         for i in range(self.params['QUBIC']['nrec']):
             m_nu_in[i] = np.mean(self.external_timeline.m_nu[i*self.fsub:(i+1)*self.fsub], axis=0)
@@ -201,11 +201,11 @@ class PCGAlgorithm(IterativeAlgorithm):
         args = {'npointings':self.params['QUBIC']['npointings'], 
                 'nf_recon':self.params['QUBIC']['nrec'], 
                 'nf_sub':self.params['QUBIC']['nsub'], 
-                'nside':self.params['Sky']['nside'], 
+                'nside':self.params['SKY']['nside'], 
                 'MultiBand':True, 
                 'period':1, 
-                'RA_center':self.params['QUBIC']['RA_center'], 
-                'DEC_center':self.params['QUBIC']['DEC_center'],
+                'RA_center':self.params['SKY']['RA_center'], 
+                'DEC_center':self.params['SKY']['DEC_center'],
                 'filter_nu':nu_ave*1e9, 
                 'noiseless':False, 
                 'comm':self.comm, 
@@ -213,7 +213,7 @@ class PCGAlgorithm(IterativeAlgorithm):
                 'nprocs_sampling':1, 
                 'nprocs_instrument':self.size,
                 'photon_noise':True, 
-                'nhwp_angles':self.params['QUBIC']['nhwp_angles'], 
+                'nhwp_angles':3, 
                 'effective_duration':3, 
                 'filter_relative_bandwidth':delta_nu_over_nu, 
                 'type_instrument':'wide', 
@@ -221,8 +221,8 @@ class PCGAlgorithm(IterativeAlgorithm):
                 'TemperatureAtmosphere220':None,
                 'EmissivityAtmosphere150':None, 
                 'EmissivityAtmosphere220':None, 
-                'detector_nep':float(self.params['QUBIC']['detector_nep']), 
-                'synthbeam_kmax':self.params['QUBIC']['synthbeam_kmax']}
+                'detector_nep':float(self.params['QUBIC']['NOISE']['detector_nep']), 
+                'synthbeam_kmax':self.params['QUBIC']['SYNTHBEAM']['synthbeam_kmax']}
         
         args_mono = args.copy()
         args_mono['nf_recon'] = 1
@@ -252,32 +252,27 @@ class PCGAlgorithm(IterativeAlgorithm):
         
         """
         sky = {}
-        for ii, i in enumerate(self.params['Sky'].keys()):
-            #print(ii, i)
 
-            if i == 'CMB':
-                if self.params['Sky']['CMB']['cmb']:
-                    if self.params['QUBIC']['seed'] == 0:
-                        if self.rank == 0:
-                            seed = np.random.randint(10000000)
-                        else:
-                            seed = None
-                        seed = self.comm.bcast(seed, root=0)
-                    else:
-                        seed = self.params['QUBIC']['seed']
-                    print(f'Seed of the CMB is {seed} for rank {self.rank}')
-                    #stop
-                    sky['cmb'] = seed
-                
+        if self.params['CMB']['cmb']:
+            if self.params['CMB']['seed'] == 0:
+                if self.rank == 0:
+                    seed = np.random.randint(10000000)
+                else:
+                    seed = None
+                seed = self.comm.bcast(seed, root=0)
             else:
-                for jj, j in enumerate(self.params['Sky']['Foregrounds']):
-                    #print(j, self.params['Foregrounds'][j])
-                    if j == 'Dust':
-                        if self.params['Sky']['Foregrounds'][j]:
-                            sky['dust'] = self.params['QUBIC']['dust_model']
-                    elif j == 'Synchrotron':
-                        if self.params['Sky']['Foregrounds'][j]:
-                            sky['synchrotron'] = self.params['QUBIC']['sync_model']
+                seed = self.params['CMB']['seed'] 
+            print(f'Seed of the CMB is {seed} for rank {self.rank}')
+            sky['cmb'] = seed
+
+        for j in self.params['Foregrounds']:
+            #print(j, self.params['Foregrounds'][j])
+            if j == 'Dust':
+                if self.params['Foregrounds'][j]:
+                    sky['dust'] = 'd0'
+            elif j == 'Synchrotron':
+                if self.params['Foregrounds'][j]:
+                    sky['synchrotron'] = 's0'
 
         return sky
 
