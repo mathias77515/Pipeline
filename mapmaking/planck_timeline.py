@@ -55,12 +55,9 @@ class ExternalData2Timeline:
         mycls = self.give_cl_cmb(r, Alens)
         np.random.seed(seed)
         return hp.synfast(mycls, self.nside, verbose=False, new=True).T
-        
-        
-        
+    
     def _get_fg_1nu(self, nu):
-        return np.array(self.sky_pysm.get_emission(nu * u.GHz, None).T * \
-                        utils.bandpass_unit_conversion(nu * u.GHz, None, u.uK_CMB))
+        return np.array(self.sky_pysm.get_emission(nu * u.GHz, None).T * utils.bandpass_unit_conversion(nu * u.GHz, None, u.uK_CMB)) / 1.5
     
     def _get_fg_allnu(self):
         

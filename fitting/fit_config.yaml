@@ -1,6 +1,11 @@
 data:
-  path : '/pbs/home/t/tlaclave/sps/Pipeline/mytest_to_remove/'
-  n_real : 8
+  #path : '/pbs/home/m/mregnier/sps1/Pipeline/E2E_nrec2/cmbdust_fixAdbicep_DB/'
+  path : '/pbs/home/m/mregnier/sps1/Pipeline/E2E_nrec1/'
+  foldername : 'spectrum'
+  filename : 'baseline_cmbdust_DB_thesis'
+  n_real : 230
+
+nbins: 8
 
 simu: 
   nrec : 2 
@@ -12,9 +17,9 @@ simu:
   corr_dust_sync : False
 
 MCMC:
-  nwalkers : 20
-  mcmc_steps : 100
-  discard : 0
+  nwalkers : 10
+  mcmc_steps : 200
+  discard : 100
   stretch_move_factor : 0.7
   snooker_move_gamma : 1.7
   thin : 15
@@ -26,6 +31,7 @@ fitting:
 
 NUS:
   qubic: [True, 2]
+  
   # Planck
   30GHz: False
   44GHz: False
@@ -36,15 +42,18 @@ NUS:
   353GHz: False
 
 SKY_PARAMETERS:
-  r : [True, 1, 2, -1, 1] 
-  Alens : [1, 0, 1, 0, 10]
-  nu0_d : [353, 0, 1, 0, 1000]
-  Ad : [True, 0, 20, 0, 1000]
-  alphad : [True, 5, 10, -5, 5]
-  betad : [1.54, 0, 1, 1.3, 1.7]
+  r : [True, 0, 0.1, -1, 1] 
+  Alens : [1, 1, 0.2, 0, 10]
+  nu0_d : [353, 0, 10, 0, 1000]
+  Ad : [0, 5, 2, 0, 1000000]
+  alphad : [0, -0.1, 0.3, -1, 1]
+  betad : [1.54, 1.54, 0.2, 0, 10000]
   deltad : [1, 0, 1, 0, 1000]
   nu0_s : [23, 0, 1, 0, 1000]
   As : [0, 0, 0.1, -100000, 10000]
   alphas : [0, 1, 0.1, -100000, 10000]
   betas : [-3, -3, 0.1, -10, 0]
   eps : [0, 0, 0.01, -1, 1]
+
+bandwidth_qubic: 0.25
+bandwidth_planck: 0.000000001
