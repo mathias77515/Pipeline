@@ -64,7 +64,6 @@ class PipelineFrequencyMapMaking:
         ### Initialize plot instance
         self.plots = PlotsMM(self.params)
 
-        
         self.center = qubic.equ2gal(self.params['SKY']['RA_center'], self.params['SKY']['DEC_center'])
 
         ### MPI common arguments
@@ -110,7 +109,7 @@ class PipelineFrequencyMapMaking:
                                                        self.params['QUBIC']['nrec'], 
                                                        nside=self.params['SKY']['nside'], 
                                                        corrected_bandpass=self.params['QUBIC']['bandpass_correction'])
-        #stop
+
         ### Define reconstructed and TOD operator
         self._get_H()
         
