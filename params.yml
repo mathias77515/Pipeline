@@ -52,8 +52,8 @@ PLANCK:
     nsub_planck: 100                            # Number of sub acquisitions for Planck's data
 
 Pipeline:
-    mapmaking: True                             # Run MapMaking Pipeline
-    spectrum: True                              # Compute Power Spectra of the frequency maps
+    mapmaking: True                              # Run MapMaking Pipeline
+    spectrum: False                              # Compute Power Spectra of the frequency maps
 
 PCG:
 
