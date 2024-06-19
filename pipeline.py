@@ -114,7 +114,7 @@ class PipelineFrequencyMapMaking:
         self._get_H()
         
         ### Inverse noise covariance matrix
-        self.invN = self.joint.get_invntt_operator(mask=self.mask)
+        self.invN = self.joint.get_invntt_operator(mask=self.mask, external_data=self.params['PLANCK']['external_data'])
 
         ### Noises
         seed_noise_planck = self._get_random_value()
@@ -152,13 +152,13 @@ class PipelineFrequencyMapMaking:
         """
         
         ### Pointing matrix for TOD generation
-        self.H_in = self.joint_tod.get_operator(fwhm=self.fwhm_in)
+        self.H_in = self.joint_tod.get_operator(fwhm=self.fwhm_in, external_data=self.params['PLANCK']['external_data'])
         
         ### QUBIC Pointing matrix for TOD generation
         self.H_in_qubic = self.joint_tod.qubic.get_operator(fwhm=self.fwhm_in) 
         
         ### Pointing matrix for reconstruction
-        self.H_out = self.joint.get_operator(fwhm=self.fwhm_out)
+        self.H_out = self.joint.get_operator(fwhm=self.fwhm_out, external_data=self.params['PLANCK']['external_data'])
         
          
     def _get_averaged_nus(self):
@@ -372,37 +372,41 @@ class PipelineFrequencyMapMaking:
 
             TOD_PLANCK = TOD_PLANCK.ravel()
             TOD_QUBIC = self.H_in_qubic(factor * self.external_timeline.m_nu).ravel() + self.noiseq
-            TOD = np.r_[TOD_QUBIC, TOD_PLANCK]
+            if self.params['PLANCK']['external_data']:
+                TOD = np.r_[TOD_QUBIC, TOD_PLANCK]
+            else:
+                TOD = TOD_QUBIC
 
         else:
 
             sh_q = self.joint.qubic.ndets * self.joint.qubic.nsamples
             TOD_QUBIC = self.H_in_qubic(factor * self.external_timeline.m_nu).ravel() + self.noiseq
+            if self.params['PLANCK']['external_data']==False:
+                TOD = TOD_QUBIC
+            else:
+                TOD_QUBIC150 = TOD_QUBIC[:sh_q].copy()
+                TOD_QUBIC220 = TOD_QUBIC[sh_q:].copy()
 
-            TOD_QUBIC150 = TOD_QUBIC[:sh_q].copy()
-            TOD_QUBIC220 = TOD_QUBIC[sh_q:].copy()
+                TOD = TOD_QUBIC150.copy()
+                TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
+                for irec in range(int(self.params['QUBIC']['nrec']/2)):
+                    if self.params['QUBIC']['convolution_in']:
+                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
 
-            TOD = TOD_QUBIC150.copy()
-    
-            TOD_PLANCK = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
-            for irec in range(int(self.params['QUBIC']['nrec']/2)):
-                if self.params['QUBIC']['convolution_in']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
+                    else:
+                        C = HealpixConvolutionGaussianOperator(fwhm=0)
+            
+                    TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise143).ravel()]
 
-                else:
-                    C = HealpixConvolutionGaussianOperator(fwhm=0)
-        
-                TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise143).ravel()]
+                TOD = np.r_[TOD, TOD_QUBIC220.copy()]
+                for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
+                    if self.params['QUBIC']['convolution_in']:
+                        C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
 
-            TOD = np.r_[TOD, TOD_QUBIC220.copy()]
-            for irec in range(int(self.params['QUBIC']['nrec']/2), self.params['QUBIC']['nrec']):
-                if self.params['QUBIC']['convolution_in']:
-                    C = HealpixConvolutionGaussianOperator(fwhm=np.min(self.fwhm_in[irec*self.fsub:(irec+1)*self.fsub]))
-
-                else:
-                    C = HealpixConvolutionGaussianOperator(fwhm=0)
-        
-                TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise217).ravel()]
+                    else:
+                        C = HealpixConvolutionGaussianOperator(fwhm=0)
+            
+                    TOD = np.r_[TOD, C(factor * self.external_timeline.maps[irec] + self.noise217).ravel()]
 
         self.m_nu_in = self.get_input_map()
 
@@ -452,6 +456,9 @@ class PipelineFrequencyMapMaking:
 
 
         A = self.H_out.T * self.invN * self.H_out
+        print(self.H_out)
+        print(self.invN)
+        print(d.shape)
         b = self.H_out.T * self.invN * d
 
         ### Preconditionning

@@ -9,24 +9,24 @@ CMB:
 
 Foregrounds:
 
-    Dust: False                              # Thermal Dust emission
+    Dust: True                              # Thermal Dust emission
     Synchrotron: False                      # Synchrotron emission
 
 QUBIC:
 
     ### This section control the parameters related to QUBIC
 
-    instrument: 'UWB'                        # Instrumental design (DB or UWB)
-    npointings: 80                        # Number of time samples
+    instrument: 'DB'                        # Instrumental design (DB or UWB)
+    npointings: 3000                        # Number of time samples
     nsub: 4                                # Number of sub-acquisitions
     nrec: 2                                 # Number of reconstructed frequency maps
     convolution_in: False                   # Angular resolution in the input TOD
     convolution_out: False                  # Angular resolution in the reconstruction
     bandpass_correction: True               # Correction to keep the edges of the integration band constant
     NOISE:                          
-        ndet: 0.1                             # Level of detector noise
-        npho150: 0.1                          # Level of photon noise at 150 GHz
-        npho220: 0.1                          # Level of photon noise at 220 GHz
+        ndet: 1                             # Level of detector noise
+        npho150: 1                          # Level of photon noise at 150 GHz
+        npho220: 1                          # Level of photon noise at 220 GHz
         detector_nep: 4.7e-17                 # NEP of detector noise
     SYNTHBEAM:
         synthbeam_kmax: 1                  # Order of synthesized beam diffraction (synthbeam_kmax = 1 means 9 peaks)
@@ -36,8 +36,8 @@ SKY:
 
     ### This section control the reconstructed sky
 
-    nside: 32                              # Nside of components
-    coverage_cut: 0.2                       # Define a cut where the coverage is too low
+    nside: 256                              # Nside of components
+    coverage_cut: 0.2                      # Define a cut where the coverage is too low
     RA_center: 0                   
     DEC_center: -57
 
@@ -45,7 +45,7 @@ PLANCK:
 
     ### This section define which external data are we using
 
-    external_data: True                         
+    external_data: False                         
     weight_planck: 0                            # Weight of Planck data within the QUBIC patch
     level_noise_planck: 1                       # Noise level for Planck data
     bandwidth_planck: 0.2                       # Multiplicative factor to define the bandwidth of Planck's data
@@ -59,7 +59,7 @@ PCG:
 
     ### This section control PCG parameters
 
-    n_iter_pcg: 4                                   # Number of PCG iterations
+    n_iter_pcg: 100                                   # Number of PCG iterations
     tol_pcg: 1.0e-12                                # Tolerance for PCG
 
 Spectrum:

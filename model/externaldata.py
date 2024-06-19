@@ -142,12 +142,12 @@ class PipelineExternalData:
             print(f'Integrating bandpass from {edges_min} GHz to {edges_max} GHz with {nb} frequencies.')
             mysky += np.array(sky.get_emission(bandpass_frequencies * u.GHz, None) * utils.bandpass_unit_conversion(bandpass_frequencies * u.GHz, None, u.uK_CMB)).T / 1.5
 
-
         if is_cmb:
             cmb = self._get_cmb(self.skyconfig['cmb'])
             mysky += cmb
             
-        return mysky * self.factor   
+        return mysky * self.factor               
+
     def _get_fwhm(self, nu):
         fwhmi = self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
         return fwhmi
