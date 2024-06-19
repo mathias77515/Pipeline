@@ -462,7 +462,7 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
                 imax = (irec+1)*f-1
                 op_sum += [h[(self.allnus >= self.allnus[imin]) * (self.allnus <= self.allnus[imax])].sum(axis=0)]
             
-            if self.kind == 'wide':
+            if self.kind == 'UWB':
                 return BlockRowOperator(op_sum, new_axisin=0)
             else:
                 if self.Nrec > 2:
@@ -477,7 +477,7 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
         
         ### Components Map-Making
         else:
-            if self.kind == 'wide':
+            if self.kind == 'UWB':
                 if gain is None:
                     G = DiagonalOperator(np.ones(self.ndets), broadcast='rightward', shapein=(self.ndets, self.nsamples))
                 else:
@@ -540,7 +540,6 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
             if beta is None:
                 Acomp = IdentityOperator()
             else:
-                
                 Acomp = self.get_components_operator(beta, np.array([self.nu_co]), active=True)
             distribution = self.subacqs[-1].get_distribution_operator()
             temp = self.subacqs[-1].get_unit_conversion_operator()
@@ -791,8 +790,6 @@ class JointAcquisitionFrequencyMapMaking:
         self.kind = kind
         self.d = d
         self.Nrec = Nrec
-        print('nreeeeeec1', Nrec)
-        print('nrec3', self.Nrec)
         self.Nsub = Nsub
 
         self.qubic = QubicFullBandSystematic(self.d, comp=[], Nsub=self.Nsub, Nrec=self.Nrec, kind=self.kind, H=H)
@@ -809,7 +806,7 @@ class JointAcquisitionFrequencyMapMaking:
             H_qubic = self.qubic.get_operator(convolution=convolution, myfwhm=myfwhm)
             R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
             R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
-
+            
             # Create an empty list to hold operators
             full_operator = []
 
@@ -836,29 +833,31 @@ class JointAcquisitionFrequencyMapMaking:
 
             # Get QUBIC operator
             H_qubic = self.qubic.get_operator(angle_hwp=angle_hwp, fwhm=fwhm)
+            print(H_qubic)
+            print(H_qubic.operands[0])
+            print(H_qubic.operands[1])
             R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
             R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
-            print('nrec2', self.Nrec)
             if self.Nrec == 1:
                 operator = [R_qubic(H_qubic), R_planck, R_planck]
                 return BlockColumnOperator(operator, axisout=0)
-            
             else:
                 full_operator = []
-                for irec in range(int(self.Nrec/2)):
+                for irec in range(self.Nrec):
                     operator = [R_qubic(H_qubic.operands[irec])]
-                    for jrec in range(int(self.Nrec/2)):
+                    for jrec in range(self.Nrec):
                         if irec == jrec:
+                            print('a')
                             operator += [R_planck]
                         else:
+                            print('b')
                             operator += [R_planck*0]
-                    print('operator', operator.shape)
+                    print(R_planck*0)
                     full_operator += [BlockColumnOperator(operator, axisout=0)]
                 
                 return BlockRowOperator(full_operator, new_axisin=0)
             
         elif self.kind == 'DB':
-
             # Get QUBIC operator
             if self.Nrec == 2:
                 H_qubic = self.qubic.get_operator(angle_hwp=angle_hwp, fwhm=fwhm).operands[1]

@@ -1,4 +1,4 @@
-path_out: '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/cmbdust_wo_convolution_UWB_nsub=4/'
+path_out: '/home/laclavere/Documents/Thesis/Pipeline/test/'
 datafilename: 'MC'
 
 CMB:
@@ -9,7 +9,7 @@ CMB:
 
 Foregrounds:
 
-    Dust: True                              # Thermal Dust emission
+    Dust: False                              # Thermal Dust emission
     Synchrotron: False                      # Synchrotron emission
 
 QUBIC:
@@ -24,9 +24,9 @@ QUBIC:
     convolution_out: False                  # Angular resolution in the reconstruction
     bandpass_correction: True               # Correction to keep the edges of the integration band constant
     NOISE:                          
-        ndet: 1                             # Level of detector noise
-        npho150: 1                          # Level of photon noise at 150 GHz
-        npho220: 1                          # Level of photon noise at 220 GHz
+        ndet: 0.1                             # Level of detector noise
+        npho150: 0.1                          # Level of photon noise at 150 GHz
+        npho220: 0.1                          # Level of photon noise at 220 GHz
         detector_nep: 4.7e-17                 # NEP of detector noise
     SYNTHBEAM:
         synthbeam_kmax: 1                  # Order of synthesized beam diffraction (synthbeam_kmax = 1 means 9 peaks)
@@ -36,7 +36,7 @@ SKY:
 
     ### This section control the reconstructed sky
 
-    nside: 256                              # Nside of components
+    nside: 32                              # Nside of components
     coverage_cut: 0.2                       # Define a cut where the coverage is too low
     RA_center: 0                   
     DEC_center: -57
