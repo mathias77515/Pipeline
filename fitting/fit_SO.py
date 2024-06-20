@@ -41,7 +41,7 @@ class data:
         
         self.path_repository = self.params['data']['path']
         self.path_spectra = self.path_repository + self.params['data']['foldername']
-        self.path_fit = 'fit' + f"_{self.params['data']['filename']}"
+        self.path_fit = self.path_repository + '/fit/' + f"_{self.params['data']['filename']}"
 
         ### Create fit folder
         if comm.Get_rank() == 0:
