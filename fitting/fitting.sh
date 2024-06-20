@@ -15,4 +15,4 @@
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 module load mpich
-mpirun -np $SLURM_NTASKS python fit_SO.py
+mpirun -np $SLURM_NTASKS python fitting.py

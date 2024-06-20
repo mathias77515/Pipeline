@@ -1,4 +1,4 @@
-path_out: '/home/laclavere/Documents/Thesis/Pipeline/test/'
+path_out: '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/cmbdust_wo_convolution_UWB_nsub=12/'
 datafilename: 'MC'
 
 CMB:
@@ -16,9 +16,9 @@ QUBIC:
 
     ### This section control the parameters related to QUBIC
 
-    instrument: 'DB'                        # Instrumental design (DB or UWB)
-    npointings: 3000                        # Number of time samples
-    nsub: 4                                # Number of sub-acquisitions
+    instrument: 'UWB'                        # Instrumental design (DB or UWB)
+    npointings: 8000                        # Number of time samples
+    nsub: 12                                # Number of sub-acquisitions
     nrec: 2                                 # Number of reconstructed frequency maps
     convolution_in: False                   # Angular resolution in the input TOD
     convolution_out: False                  # Angular resolution in the reconstruction
@@ -45,7 +45,7 @@ PLANCK:
 
     ### This section define which external data are we using
 
-    external_data: False                         
+    external_data: True                         
     weight_planck: 0                            # Weight of Planck data within the QUBIC patch
     level_noise_planck: 1                       # Noise level for Planck data
     bandwidth_planck: 0.2                       # Multiplicative factor to define the bandwidth of Planck's data
@@ -53,13 +53,13 @@ PLANCK:
 
 Pipeline:
     mapmaking: True                              # Run MapMaking Pipeline
-    spectrum: False                              # Compute Power Spectra of the frequency maps
+    spectrum: True                              # Compute Power Spectra of the frequency maps
 
 PCG:
 
     ### This section control PCG parameters
 
-    n_iter_pcg: 100                                   # Number of PCG iterations
+    n_iter_pcg: 400                                   # Number of PCG iterations
     tol_pcg: 1.0e-12                                # Tolerance for PCG
 
 Spectrum:
