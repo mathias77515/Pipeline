@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import *
 from pyoperators import *
 
-sys.path.append('/pbs/home/m/mregnier/sps1/Pipeline')
+sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
 
 
 #### QUBIC packages
@@ -51,9 +51,13 @@ class data:
         ### Read datasets
         self.power_spectra_sky, self.power_spectra_noise, self.simu_parameters, self.coverage, self.nus, self.ell = self.import_power_spectra(self.path_spectra)
         self._f = self.ell * (self.ell + 1) / (2 * np.pi)
-        self.fsub = self.simu_parameters['QUBIC']['fsub']
         self.nrec = self.simu_parameters['QUBIC']['nrec']
-        self.nsub = self.fsub * self.nrec
+        try :
+            self.nsub = self.simu_parameters['QUBIC']['nsub']
+            self.fsub = int(self.nsub / self.nrec)
+        except:
+            self.fsub = self.simu_parameters['QUBIC']['fsub']
+            self.nsub = self.fsub * self.nrec
 
         self.nreal = len(self.power_spectra_sky)
         if comm.Get_rank() == 0:
