@@ -1,4 +1,4 @@
-path_out: '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/cmbdust_wo_convolution_UWB_nsub=12/'
+path_out: '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/cmbdust_convolved_UWB_nsub=20/'
 datafilename: 'MC'
 
 CMB:
@@ -18,9 +18,9 @@ QUBIC:
 
     instrument: 'UWB'                        # Instrumental design (DB or UWB)
     npointings: 8000                        # Number of time samples
-    nsub: 12                                # Number of sub-acquisitions
+    nsub: 20                                # Number of sub-acquisitions
     nrec: 2                                 # Number of reconstructed frequency maps
-    convolution_in: False                   # Angular resolution in the input TOD
+    convolution_in: True                   # Angular resolution in the input TOD
     convolution_out: False                  # Angular resolution in the reconstruction
     bandpass_correction: True               # Correction to keep the edges of the integration band constant
     NOISE:                          

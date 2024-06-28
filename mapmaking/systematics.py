@@ -116,7 +116,6 @@ def mychi2(beta, obj, Hqubic, data, solution, nsamples):
     H_for_beta = obj.get_operator(beta, convolution=False, H_qubic=Hqubic)
     fakedata = H_for_beta(solution)
     fakedata_norm = obj.normalize(fakedata, nsamples)
-    print(beta)
     return np.sum((fakedata_norm - data)**2)
 def fit_beta(tod, nsamples, obj, H_qubic, outputs):
 
@@ -128,7 +127,6 @@ def fill_hwp_position(nsamples, angle):
     ang = np.zeros(nsamples)
     nangle = len(angle)
     x = int(nsamples/nangle)
-    print(x)
     
     for ii, i in enumerate(angle):
         ang[x*ii:x*(ii+1)] = i
@@ -849,12 +847,9 @@ class JointAcquisitionFrequencyMapMaking:
                         operator = [R_qubic(H_qubic.operands[irec])]
                         for jrec in range(self.Nrec):
                             if irec == jrec:
-                                print('a')
                                 operator += [R_planck]
                             else:
-                                print('b')
                                 operator += [R_planck*0]
-                        print(R_planck*0)
                         full_operator += [BlockColumnOperator(operator, axisout=0)]
                     
                     return BlockRowOperator(full_operator, new_axisin=0)
@@ -889,7 +884,6 @@ class JointAcquisitionFrequencyMapMaking:
                 if self.Nrec == 2:
                     h = BlockDiagonalOperator(opefull, new_axisin=0)
                     _r = ReshapeOperator((h.shapeout[0], h.shapeout[1]), (h.shapeout[0]*h.shapeout[1]))
-                    print('fsdf', h.shapeout)
                     return _r * h
                 else:
                     return BlockDiagonalOperator(opefull, axisout=0)

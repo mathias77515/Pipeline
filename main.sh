@@ -8,10 +8,10 @@
 #SBATCH --nodes=1                # c
 #SBATCH --ntasks-per-node=1      # n
 #SBATCH --cpus-per-task=4        # N
-#SBATCH --mem=35G
-#SBATCH --time=1-00:00:00
+#SBATCH --mem=45G
+#SBATCH --time=1-10:00:00
 #SBATCH --output=mulitple_jobs_%j.log
-#SBATCH --array=1-500
+#SBATCH --array=1-300
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 module load mpich

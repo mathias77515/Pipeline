@@ -455,9 +455,6 @@ class PipelineFrequencyMapMaking:
 
 
         A = self.H_out.T * self.invN * self.H_out
-        print(self.H_out)
-        print(self.invN)
-        print(d.shape)
         b = self.H_out.T * self.invN * d
 
         ### Preconditionning
