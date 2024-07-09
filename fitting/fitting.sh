@@ -9,8 +9,8 @@
 #SBATCH --ntasks-per-node=10      # n
 #SBATCH --cpus-per-task=2        # N
 #SBATCH --mem=15G
-#SBATCH --time=0-02:00:00
-#SBATCH --output=UWB_cmbdust_nrec2_HFI_%j.log
+#SBATCH --time=0-05:00:00
+#SBATCH --output=cmbdust_DB_nrec8_HFI_%j.log
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 

@@ -2,7 +2,9 @@
 import numpy as np
 import os
 import yaml
+import scipy
 import pickle
+import time
 import matplotlib.pyplot as plt
 import healpy as hp
 #### QUBIC packages
@@ -11,7 +13,11 @@ from qubic.polyacquisition import compute_freq
 from qubic import NamasterLib as nam
 from qubic.beams import BeamGaussian
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
+from pyoperators import *
+import qubic
+import mapmaking.systematics as acq
 
+comm = MPI.COMM_WORLD
 
 class Spectrum:
     '''
@@ -20,6 +26,8 @@ class Spectrum:
 
     def __init__(self, file, verbose=True):
         
+        self.spectra_time_0 = time.time()
+
         print('\n=========== Power Spectra ===========\n')
  
         filename = os.path.split(file)
@@ -50,11 +58,47 @@ class Spectrum:
 
         _, nus150, _, _, _, _ = compute_freq(150, Nfreq=self.fsub-1)
         _, nus220, _, _, _, _ = compute_freq(220, Nfreq=self.fsub-1)
-
-        
+    
         self.fwhm150 = self._get_fwhm_during_MM(nus150)
         self.fwhm220 = self._get_fwhm_during_MM(nus220)
+
+        self.allfwhm = self._get_allfwhm()  
         
+        ############ Test
+        if self.params['QUBIC']['convolution_in'] and not self.params['QUBIC']['convolution_out']:
+            self.dict, self.dict_mono = self.get_dict()
+            self.Q = acq.QubicFullBandSystematic(self.dict, self.params['QUBIC']['nsub'], self.params['QUBIC']['nrec'], kind='UWB')
+            #joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, 'UWB', self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
+            list_h = self.Q.H
+            h_list = np.empty(len(self.Q.allnus))
+            vec_ones = np.ones(list_h[0].shapein)
+            for freq in range(len(self.Q.allnus)):
+                h_list[freq] = np.mean(list_h[freq](vec_ones))
+
+            fwhm = [self._get_fwhm_during_MM(i) for i in self.Q.allnus]
+
+            def f_beta(nu, nu_0, beta):
+                return (nu/nu_0)**beta * (np.exp(scipy.constants.h*nu*1e9/(scipy.constants.k * 20)) - 1) / (np.exp(scipy.constants.h*nu_0*1e9/(scipy.constants.k * 20)) - 1)
+            
+            corrected_allfwhm = []
+            corrected_allnus = []
+            for i in range(self.nrec):
+                corrected_fwhm = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53) * fwhm[i*self.fsub:(i+1)*self.fsub]) / (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53))))
+                corrected_allfwhm.append(corrected_fwhm)
+                fraction = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53)) / np.sum(h_list[i*self.fsub:(i+1)*self.fsub]))
+                fun = lambda nu: np.abs(fraction - f_beta(nu, 353, 1.53))
+                x0 = self.nus[i]
+                corrected_nu = scipy.optimize.minimize(fun, x0)
+                corrected_allnus.append(corrected_nu['x'])
+ 
+            print('nus', self.nus)
+            print('fwhm', self.allfwhm)     
+            self.nus[:self.nrec] = corrected_allnus
+            self.allfwhm[:self.nrec] = corrected_allfwhm
+            print('corrected nus', self.nus)
+            print('corrected fwhm', self.allfwhm)
+
+              
         self.kernels150 = np.sqrt(self.fwhm150[0]**2 - self.fwhm150[-1]**2)
         self.kernels220 = np.sqrt(self.fwhm220[0]**2 - self.fwhm220[-1]**2)
         self.kernels = np.array([self.kernels150, self.kernels220])
@@ -70,10 +114,72 @@ class Spectrum:
 
         self.ell = self.namaster.get_binning(self.params['SKY']['nside'])[0]
 
-        print(self.ell)
-        #stop
-        self.allfwhm = self._get_allfwhm()
+    def get_ultrawideband_config(self):
+    
+        """
+        
+        Method that pre-compute UWB configuration.
 
+        """
+        
+        nu_up = 247.5
+        nu_down = 131.25
+        nu_ave = np.mean(np.array([nu_up, nu_down]))
+        delta = nu_up - nu_ave
+    
+        return nu_ave, 2*delta/nu_ave
+    def get_dict(self):
+    
+        """
+        
+        Method to modify the qubic dictionary.
+        
+        """
+
+        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
+
+        args = {'npointings':self.params['QUBIC']['npointings'], 
+                'nf_recon':self.params['QUBIC']['nrec'], 
+                'nf_sub':self.params['QUBIC']['nsub'], 
+                'nside':self.params['SKY']['nside'], 
+                'MultiBand':True, 
+                'period':1, 
+                'RA_center':self.params['SKY']['RA_center'], 
+                'DEC_center':self.params['SKY']['DEC_center'],
+                'filter_nu':nu_ave*1e9, 
+                'noiseless':False, 
+                'comm':comm, 
+                'dtheta':self.params['QUBIC']['dtheta'],
+                'nprocs_sampling':1, 
+                'nprocs_instrument': comm.Get_size(),
+                'photon_noise':True, 
+                'nhwp_angles':3, 
+                'effective_duration':3, 
+                'filter_relative_bandwidth':delta_nu_over_nu, 
+                'type_instrument':'wide', 
+                'TemperatureAtmosphere150':None, 
+                'TemperatureAtmosphere220':None,
+                'EmissivityAtmosphere150':None, 
+                'EmissivityAtmosphere220':None, 
+                'detector_nep':float(self.params['QUBIC']['NOISE']['detector_nep']), 
+                'synthbeam_kmax':self.params['QUBIC']['SYNTHBEAM']['synthbeam_kmax']}
+        
+        args_mono = args.copy()
+        args_mono['nf_recon'] = 1
+        args_mono['nf_sub'] = 1
+
+        ### Get the default dictionary
+        dictfilename = 'dicts/pipeline_demo.dict'
+        d = qubic.qubicdict.qubicDict()
+        d.read_from_file(dictfilename)
+        dmono = d.copy()
+        for i in args.keys():
+        
+            d[str(i)] = args[i]
+            dmono[str(i)] = args_mono[i]
+
+    
+        return d, dmono
     def _get_fwhm_during_MM(self, nu):
         return np.deg2rad(0.39268176 * 150 / nu)
     def _get_allfwhm(self):
@@ -182,10 +288,19 @@ class Spectrum:
         self.Dl, self.Nl = self.compute_power_spectra()
         
         print('Power spectra computed !!!')
+
+        spectra_time = time.time() - self.spectra_time_0
+        if comm is None:
+            print(f'Power Spectra computation done in {spectra_time:.3f} s')
+        else:
+            if comm.Get_rank() == 0:
+                print(f'Power Spectra computation done in {spectra_time:.3f} s')
+        
         
         self.save_data(self.path_spectrum + '/' + f'spectrum_{self.jobid}.pkl', {'nus':self.nus,
                               'ell':self.ell,
                               'Dls':self.Dl,
                               'Nl':self.Nl,
                               'coverage': self.coverage,
-                              'parameters': self.params})
+                              'parameters': self.params,
+                              'duration': spectra_time})

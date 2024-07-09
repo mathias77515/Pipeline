@@ -41,6 +41,8 @@ class PipelineFrequencyMapMaking:
     
     def __init__(self, comm, file):
 
+        self.mapmaking_time_0 = time.time()
+
         with open('params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
             
@@ -461,7 +463,6 @@ class PipelineFrequencyMapMaking:
         M = self._get_preconditionner()
 
         ### PCG
-        start = time.time()
         solution_qubic_planck = pcg(A=A, 
                                     b=b, 
                                     comm=self.comm,
@@ -480,9 +481,6 @@ class PipelineFrequencyMapMaking:
 
         if self.params['QUBIC']['nrec'] == 1:
             solution_qubic_planck['x']['x'] = np.array([solution_qubic_planck['x']['x']])
-        end = time.time()
-        execution_time = end - start
-        self.print_message(f'Simulation done in {execution_time:.3f} s')
 
         return solution_qubic_planck['x']['x']
     def save_data(self, name, d):
@@ -554,10 +552,17 @@ class PipelineFrequencyMapMaking:
             self.plots.plot_FMM(self.m_nu_in*0, self.s_hat_noise, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=0, nsig=3, name='noise')
             self.plots.plot_FMM(self.m_nu_in*0, self.s_hat_noise, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=1, nsig=3, name='noise')
             self.plots.plot_FMM(self.m_nu_in*0, self.s_hat_noise, self.center, self.seenpix, self.nus_Q, job_id=self.job_id, istk=2, nsig=3, name='noise') 
+            
+            mapmaking_time = time.time() - self.mapmaking_time_0
+            if self.comm is None:
+                print(f'Map-making done in {mapmaking_time:.3f} s')
+            else:
+                if self.rank == 0:
+                    print(f'Map-making done in {mapmaking_time:.3f} s')
 
             dict_solution = {'maps':self.s_hat, 'maps_noise':self.s_hat_noise, 'nus':self.nus_Q, 'coverage':self.coverage, 
                          'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params, 'fwhm_in':self.fwhm_in, 
-                         'fwhm_out':self.fwhm_out, 'fwhm_rec':self.fwhm_rec}
+                         'fwhm_out':self.fwhm_out, 'fwhm_rec':self.fwhm_rec, 'duration':mapmaking_time}
             
             self.save_data(self.file, dict_solution)
         self._barrier()   

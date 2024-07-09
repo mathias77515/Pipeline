@@ -3,6 +3,7 @@ import pickle
 import os
 import os.path as op
 import sys
+import scipy
 import numpy as np
 import healpy as hp
 import emcee
@@ -15,6 +16,7 @@ from pyoperators import *
 
 sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
 
+import mapmaking.systematics as acq
 
 #### QUBIC packages
 import fgb.component_model as c
@@ -62,6 +64,36 @@ class data:
         self.nreal = len(self.power_spectra_sky)
         if comm.Get_rank() == 0:
             print(f'Number of realizations : {self.nreal}')
+            
+
+        ######## Test
+        # self.dict, self.dict_mono = self.get_dict()
+        # self.Q = acq.QubicFullBandSystematic(self.dict, self.simu_parameters['QUBIC']['nsub'], self.simu_parameters['QUBIC']['nrec'], kind='UWB')
+        # #joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, 'UWB', self.simu_parameters['QUBIC']['nrec'], self.simu_parameters['QUBIC']['nsub'])
+        # list_h = self.Q.H
+        # h_list = np.empty(len(self.Q.allnus))
+        # vec_ones = np.ones(list_h[0].shapein)
+        # for freq in range(len(self.Q.allnus)):
+        #     h_list[freq] = np.mean(list_h[freq](vec_ones))
+        # print('Q.allnus', self.Q.allnus)
+        # print('nus', self.nus)
+        # def f_beta(nu, nu_0, beta):
+        #     return (nu/nu_0)**beta * (np.exp(scipy.constants.h*nu*1e9/(scipy.constants.k * 20)) - 1) / (np.exp(scipy.constants.h*nu_0*1e9/(scipy.constants.k * 20)) - 1)
+
+        # corrected_allnus = []
+        # for i in range(self.simu_parameters['QUBIC']['nrec']):
+        #     fraction = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53)) / np.sum(h_list[i*self.fsub:(i+1)*self.fsub]))
+        #     fun = lambda nu: np.abs(fraction - f_beta(nu, 353, 1.53))
+        #     x0 = self.nus[i]
+        #     corrected_nu = scipy.optimize.minimize(fun, x0)
+        #     corrected_allnus.append(corrected_nu['x'])
+
+        # print('corrected allnus', corrected_allnus)
+        # print('nrec', self.nrec)
+        # print('nus', self.nus)
+        # self.nus[:self.nrec] = corrected_allnus
+        # print('new nus', self.nus)
+        # stop
         
         ### Select bandpowers for fitting
         bp_to_rm = self.select_bandpower()
@@ -104,6 +136,72 @@ class data:
                 
         #print(np.std(self.power_spectra_noise, axis=0)[..., 0])
         #stop      
+    def get_ultrawideband_config(self):
+        
+        """
+        
+        Method that pre-compute UWB configuration.
+
+        """
+        
+        nu_up = 247.5
+        nu_down = 131.25
+        nu_ave = np.mean(np.array([nu_up, nu_down]))
+        delta = nu_up - nu_ave
+    
+        return nu_ave, 2*delta/nu_ave
+    def get_dict(self):
+    
+        """
+        
+        Method to modify the qubic dictionary.
+        
+        """
+
+        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
+
+        args = {'npointings':self.simu_parameters['QUBIC']['npointings'], 
+                'nf_recon':self.simu_parameters['QUBIC']['nrec'], 
+                'nf_sub':self.simu_parameters['QUBIC']['nsub'], 
+                'nside':self.simu_parameters['SKY']['nside'], 
+                'MultiBand':True, 
+                'period':1, 
+                'RA_center':self.simu_parameters['SKY']['RA_center'], 
+                'DEC_center':self.simu_parameters['SKY']['DEC_center'],
+                'filter_nu':nu_ave*1e9, 
+                'noiseless':False, 
+                'comm':comm, 
+                'dtheta':self.simu_parameters['QUBIC']['dtheta'],
+                'nprocs_sampling':1, 
+                'nprocs_instrument': comm.Get_size(),
+                'photon_noise':True, 
+                'nhwp_angles':3, 
+                'effective_duration':3, 
+                'filter_relative_bandwidth':delta_nu_over_nu, 
+                'type_instrument':'wide', 
+                'TemperatureAtmosphere150':None, 
+                'TemperatureAtmosphere220':None,
+                'EmissivityAtmosphere150':None, 
+                'EmissivityAtmosphere220':None, 
+                'detector_nep':float(self.simu_parameters['QUBIC']['NOISE']['detector_nep']), 
+                'synthbeam_kmax':self.simu_parameters['QUBIC']['SYNTHBEAM']['synthbeam_kmax']}
+        
+        args_mono = args.copy()
+        args_mono['nf_recon'] = 1
+        args_mono['nf_sub'] = 1
+
+        ### Get the default dictionary
+        dictfilename = 'dicts/pipeline_demo.dict'
+        d = qubic.qubicdict.qubicDict()
+        d.read_from_file(dictfilename)
+        dmono = d.copy()
+        for i in args.keys():
+        
+            d[str(i)] = args[i]
+            dmono[str(i)] = args_mono[i]
+
+    
+        return d, dmono
     def select_bandpower(self):
         '''
         Function to remove some bamdpowers if they are not selected.
