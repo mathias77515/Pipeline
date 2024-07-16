@@ -5,7 +5,27 @@ import yaml
 import matplotlib.pyplot as plt
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
-
+def _plot_reconstructed_maps(maps, name_file, center, reso=15, figsize=(12, 8)):
+    
+    """
+    
+    Save a PNG with the actual maps at iteration i. It assumes that maps is 3-dimensional
+    
+    """
+    
+    plt.figure(figsize=figsize)
+    
+    _shape = maps.shape
+    
+    k=0
+    for inu in range(_shape[0]):
+        for istk in range(_shape[-1]):
+            hp.gnomview(maps[inu, :, istk], rot=center, reso=reso, cmap='jet', sub=(_shape[0], _shape[-1], k+1),
+                        notext=True)
+            k+=1
+    
+    plt.savefig(name_file)
+    plt.close()
 
 class Plots:
 

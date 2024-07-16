@@ -14,11 +14,11 @@ Sky:
         # Synchrotron emission
         Synchrotron: False
 
-    nside: 64
+    nside: 128
 
 QUBIC:
-    npointings: 1000
-    fsub: 4
+    npointings: 500
+    fsub: 2
     nrec: 2
     iteration: 1
     ndet: 0
@@ -46,11 +46,13 @@ Spectrum:
 PCG:
     maxiter: 100
     tol: 1.0e-20
+    preconditioner: True
+    gif: True
 
 Data:
     datafilename: 'MC'
     planck: True
-    level_external_data_noise: 0.001
+    level_external_data_noise: 1
 
 Pipeline:
     mapmaking: True

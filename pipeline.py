@@ -430,13 +430,18 @@ class PipelineFrequencyMapMaking:
                 print(message)
     def _get_preconditionner(self):
         
-        conditionner = np.ones((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
+        if self.params['PCG']['preconditioner']:
+            conditionner = np.ones((self.params['QUBIC']['nrec'], 12*self.params['Sky']['nside']**2, 3))
             
-        for i in range(conditionner.shape[0]):
-            for j in range(conditionner.shape[2]):
-                conditionner[i, :, j] = 1/self.coverage_cut
-                
-        return get_preconditioner(conditionner)
+            for i in range(conditionner.shape[0]):
+                for j in range(conditionner.shape[2]):
+                    conditionner[i, :, j] = 1/self.coverage_cut
+            
+            M = get_preconditioner(conditionner)
+        else: 
+            M = None
+            
+        return M
     def _pcg(self, d, x0):
 
         '''
@@ -463,8 +468,8 @@ class PipelineFrequencyMapMaking:
                                     M=M, 
                                     tol=self.params['PCG']['tol'], 
                                     disp=True, 
-                                    maxiter=self.params['PCG']['maxiter'], 
-                                    create_gif=False, 
+                                    maxiter=self.params['PCG']['maxiter'],
+                                    create_gif=self.params['PCG']['gif'],
                                     center=self.center, 
                                     reso=self.params['QUBIC']['dtheta'], 
                                     seenpix=self.seenpix,
@@ -513,7 +518,7 @@ class PipelineFrequencyMapMaking:
                 self.m_nu_in[i] = C(self.m_nu_in[i])
                 
         ### Solve map-making equation
-        self.s_hat = self._pcg(self.TOD, x0=self.m_nu_in)
+        self.s_hat = self._pcg(self.TOD, x0=self.m_nu_in*0)
         
         ### Wait for all processes
         self._barrier()
