@@ -1,63 +1,137 @@
-path_out: 'E2E_nrec6/cmbdust_convolved_DB/'
+CMB:
+    cmb: True
+    seed: 1                                    # CMB realization
+    r: 0
+    Alens: 1
+ 
+Foregrounds:
+ 
+    ### This section define the in/out foregrounds contribution
 
-Sky:
-    CMB:
+    fit_spectral_index: False                    # If False, the beta reconstruction is skipped
+    bin_mixing_matrix: 4
+    blind_method: 'minimize'                    # Fit the mixing matrix with different methods when all the components are fitted with blind method: 'PCG', 'alternate' or 'minimize'
 
-        cmb: [True, 1]
-        r: 0
-        Alens: 1
+    # Thermal Dust emission
+    Dust:
+        Dust_in: True
+        Dust_out: True
 
-    Foregrounds:
+        type: 'parametric'                           # Reconstruction method
+        model_d: 'd0'
+        beta_d_init: [1.54, 0]                  # PySM model
+        nside_beta_in: 0                        # Input pixelization for beta_d (in a case of d1 model)
+        nside_beta_out: 0                       # Output pixelization for beta_d (in a case of d1 model)
+        nu0_d: 150                              # Reference frequency (nu0_d)
+        l_corr: 7                              # Decorrelation level (seen only with d6 model)
+        amplification_d: 1                      # Amplification of the dust contribution
+    
+    # Synchrotron emission
+    Synchrotron:
+        Synchrotron_in: False
+        Synchrotron_out: False
 
-        # Thermal Dust emission
-        Dust: True
-        # Synchrotron emission
-        Synchrotron: False
+        type: 'parametric'                      # Reconstruction method
+        model_s: 's0'                           # PySM model
+        beta_s_init: [-3, 0]
+        nu0_s: 150                             # Reference frequency (nu0_s)
+        amplification_s: 1                             # Amplification of the synchrotron contribution
 
-    nside: 128
+    # CO line emission
+    CO:
+        CO_in: False
+        CO_out: False
+        nu0_co: 230.538
+        polarization_fraction: 0.01                     # Polarization fraction
 
 QUBIC:
-    npointings: 500
-    fsub: 2
-    nrec: 2
-    iteration: 1
-    ndet: 0
-    npho150: 0
-    npho220: 0
-    synthbeam_kmax: 1
-    detector_nep: 4.7e-17
-    nhwp_angles: 3
-    dtheta: 15
-    type: 'two'
-    covcut: 0.2
-    kappa: 0
-    convolution_in: False
-    convolution_out: False
-    bandpass_correction: True
-    RA_center: 0
-    DEC_center: -57
 
-Spectrum:
-    dl: 30
-    lmin: 40
-    lmax: 511
-    aposize: 10
+    ### This section control the parameters related to QUBIC
+
+    instrument: 'UWB'                       # Instrumental design (DB or UWB)
+    npointings: 100                       # Number of time samples
+    nsub_in: 4                             # Number of sub-acquisitions
+    nsub_out: 4                            # Number of sub-acquisitions for the reconstruction
+    convolution_in: True                   # Angular resolution in the input TOD
+    convolution_out: False                 # Angular resolution in the reconstruction
+    preconditioner: True
+    NOISE:                          
+        ndet: 1                          # Level of detector noise
+        npho150: 1                       # Level of photon noise at 150 GHz
+        npho220: 1                       # Level of photon noise at 220 GHz
+        detector_nep: 4.7e-17              # NEP of detector noise
+        duration_150: 3                    # Effective duration at 150 GHz
+        duration_220: 3                    # Effective duration at 220 GHz
+    SYNTHBEAM:
+        synthbeam_kmax: 1                  # Order of synthesized beam diffraction (synthbeam_kmax = 1 means 9 peaks)
+        synthbeam_fraction: 1              # Fraction of synthesized beam
+    dtheta: 15                             # Angle for coverage
+    GAIN:
+        sig_gain: 0                        # Standard deviation for input detector gains
+        fit_gain: False                    # Fitting gain detectors
+
+SKY:
+
+    ### This section control the reconstructed sky
+
+    nside: 64                              # Nside of components
+    RA_center: 0                   
+    DEC_center: -45
+
+
+PLANCK:
+
+    ### This section define which external data are we using
+
+    level_noise_planck: 1                         # Noise level for Planck data
+    nintegr_planck: 1                             # Number of integration step for Planck data
+    thr_planck: 0                               # Threashold to remove planck weight within QUBIC patch
+    weight_planck: 0                              # Weight of Planck data within the QUBIC patch
+    fwhm_weight_planck: 0                         # FWHM for apodized QUBIC patch
+    30GHz: False
+    44GHz: False
+    70GHz: False
+    100GHz: False
+    143GHz: False
+    217GHz: False
+    353GHz: True
 
 PCG:
-    maxiter: 100
-    tol: 1.0e-20
-    preconditioner: True
-    gif: True
 
-Data:
-    datafilename: 'MC'
-    planck: True
-    level_external_data_noise: 1
+    ### This section control PCG parameters
 
-Pipeline:
-    mapmaking: True
-    spectrum: False
+    n_iter_pcg: 10                                   # Number of PCG iterations
+    tol_pcg: 1.0e-20                                # Tolerance for PCG
+    n_iter_loop: 2                                  # Number of loop (1 loop is PCG + beta fitting + gain reconstruction)
+    ites_to_converge: 1                            # should be less than k
+    tol_rms: 1.0e-10
+    fix_pixels_outside_patch: True         # Fixing pixels outside QUBIC patch
+    fixI: False                             # Fix the intensity during the map-making
 
-bandwidth_qubic: 0.25
-bandwidth_planck: 0.2
-nb_integration: 100
+INITIAL:
+
+    ### This section control the initialization of the components 
+    
+    fwhm0: 0 #.0078                  # Convolution kernel for the initial guess maps
+    sig_map_noise: 0          # Standard deviation of noise in first guess maps
+    qubic_patch_cmb: 0        # Multiplicative factor of initial CMB within the QUBIC patch
+    qubic_patch_dust: 0       # Multiplicative factor of initial Dust within the QUBIC patch
+    qubic_patch_sync: 1       # Multiplicative factor of initial Sync within the QUBIC patch
+    qubic_patch_co: 1         # Multiplicative factor of initial CO within the QUBIC patch
+
+SPECTRUM:
+    lmin: 10
+    dl: 30
+    aposize: 10
+
+Plots:
+    conv_beta: True           # Plot spectral indices convergence 
+    conv_gain: False          # Plot gain convergence 
+    conv_rms: True            # Plot RMS convergence 
+    maps: True                # Plot maps convergence 
+    thr_plot: 0.2             # Threashold for maps plot
+
+save_iter: 1                                    # Save every 'save_iter' iteration
+foldername: 'test_to_remove_cmm_blind'          # Name of the saved folder
+filename: 'file'                                # Name of the saved file
+lastite: True                                   # Keep only the last iteration 

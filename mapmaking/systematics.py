@@ -116,7 +116,6 @@ def mychi2(beta, obj, Hqubic, data, solution, nsamples):
     H_for_beta = obj.get_operator(beta, convolution=False, H_qubic=Hqubic)
     fakedata = H_for_beta(solution)
     fakedata_norm = obj.normalize(fakedata, nsamples)
-    print(beta)
     return np.sum((fakedata_norm - data)**2)
 def fit_beta(tod, nsamples, obj, H_qubic, outputs):
 
@@ -128,7 +127,6 @@ def fill_hwp_position(nsamples, angle):
     ang = np.zeros(nsamples)
     nangle = len(angle)
     x = int(nsamples/nangle)
-    print(x)
     
     for ii, i in enumerate(angle):
         ang[x*ii:x*(ii+1)] = i
@@ -349,7 +347,7 @@ class PlanckAcquisition:
         return np.mean(m, axis=0)
 class QubicFullBandSystematic(QubicPolyAcquisition):
 
-    def __init__(self, d, Nsub, Nrec=1, comp=[], kind='Two', nu_co=None, H=None):
+    def __init__(self, d, Nsub, Nrec=1, comp=[], kind='DB', nu_co=None, H=None):
         
         #if Nsub % 2 != 0:
         #    raise TypeError('Nsub should not be odd')
@@ -365,11 +363,11 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
         self.nu_co = nu_co
 
         
-        if self.kind == 'Two' and self.Nrec == 1 and len(self.comp) == 0:
+        if self.kind == 'DB' and self.Nrec == 1 and len(self.comp) == 0:
             raise TypeError('Dual band instrument can not reconstruct one band')
 
-        if self.kind == 'Two': self.number_FP = 2
-        elif self.kind == 'Wide': self.number_FP = 1
+        if self.kind == 'DB': self.number_FP = 2
+        elif self.kind == 'UWB': self.number_FP = 1
 
         
         #self.relative_bandwidth = relative_bandwidth
@@ -462,7 +460,7 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
                 imax = (irec+1)*f-1
                 op_sum += [h[(self.allnus >= self.allnus[imin]) * (self.allnus <= self.allnus[imax])].sum(axis=0)]
             
-            if self.kind == 'wide':
+            if self.kind == 'UWB':
                 return BlockRowOperator(op_sum, new_axisin=0)
             else:
                 if self.Nrec > 2:
@@ -477,7 +475,7 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
         
         ### Components Map-Making
         else:
-            if self.kind == 'wide':
+            if self.kind == 'UWB':
                 if gain is None:
                     G = DiagonalOperator(np.ones(self.ndets), broadcast='rightward', shapein=(self.ndets, self.nsamples))
                 else:
@@ -540,7 +538,6 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
             if beta is None:
                 Acomp = IdentityOperator()
             else:
-                
                 Acomp = self.get_components_operator(beta, np.array([self.nu_co]), active=True)
             distribution = self.subacqs[-1].get_distribution_operator()
             temp = self.subacqs[-1].get_unit_conversion_operator()
@@ -586,14 +583,14 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
 
         subacq150 = QubicAcquisition(ins150, self.sampling, self.scene, d150)
         subacq220 = QubicAcquisition(ins220, self.sampling, self.scene, d220)
-        if self.kind == 'two':
+        if self.kind == 'DB':
 
             invn150 = subacq150.get_invntt_operator(det_noise=True, photon_noise=True)
             invn220 = subacq220.get_invntt_operator(det_noise=True, photon_noise=True)
 
             return BlockDiagonalOperator([invn150, invn220], axisout=0)
         
-        elif self.kind == 'wide':
+        elif self.kind == 'UWB':
 
             invn150 = subacq150.get_invntt_operator(det_noise=True, photon_noise=True)
             invn220 = subacq220.get_invntt_operator(det_noise=False, photon_noise=True)
@@ -799,128 +796,131 @@ class JointAcquisitionFrequencyMapMaking:
         self.pl217 = PlanckAcquisition(217, self.scene)
 
 
-    def get_operator(self, angle_hwp=None, fwhm=None):
+    def get_operator(self, angle_hwp=None, fwhm=None, external_data=True):
         
         if self.kind == 'QubicIntegrated':   # Classic intrument
             
             # Get QUBIC operator
             H_qubic = self.qubic.get_operator(convolution=convolution, myfwhm=myfwhm)
             R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
-            R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
-
-            # Create an empty list to hold operators
-            full_operator = []
-
-            if self.Nrec == 1:
-                Operator = [R_qubic(H_qubic), R_planck]
-                return BlockColumnOperator(Operator, axisout=0)
-            
+            if external_data==False:
+                return R_qubic(H_qubic)
             else:
+                R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
                 
-                for irec in range(self.Nrec):
-                    Operator = [R_qubic(H_qubic.operands[irec])]
-                    for jrec in range(self.Nrec):
-                        if irec == jrec:
-                            Operator += [R_planck]
-                        else:
-                            Operator += [R_planck*0]
-                        
-                    full_operator += [BlockColumnOperator(Operator, axisout=0)]
-                
-                return BlockRowOperator(full_operator, new_axisin=0)
+                # Create an empty list to hold operators
+                full_operator = []
 
+                if self.Nrec == 1:
+                    Operator = [R_qubic(H_qubic), R_planck]
+                    return BlockColumnOperator(Operator, axisout=0)
+                
+                else:
+                    
+                    for irec in range(self.Nrec):
+                        Operator = [R_qubic(H_qubic.operands[irec])]
+                        for jrec in range(self.Nrec):
+                            if irec == jrec:
+                                Operator += [R_planck]
+                            else:
+                                Operator += [R_planck*0]
+                            
+                        full_operator += [BlockColumnOperator(Operator, axisout=0)]
+                    
+                    return BlockRowOperator(full_operator, new_axisin=0)
         
-        elif self.kind == 'wide':      # WideBand intrument
+        elif self.kind == 'UWB':      # WideBand intrument
 
             # Get QUBIC operator
             H_qubic = self.qubic.get_operator(angle_hwp=angle_hwp, fwhm=fwhm)
             R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
-            
-            R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
-            
-
-            if self.Nrec == 1:
-                operator = [R_qubic(H_qubic), R_planck, R_planck]
-                return BlockColumnOperator(operator, axisout=0)
-            
+            if external_data==False:
+                return R_qubic(H_qubic)
             else:
-
-                full_operator = []
-                for irec in range(self.Nrec):
-                    operator = [R_qubic(H_qubic.operands[irec])]
-                    for jrec in range(self.Nrec):
-                        if irec == jrec:
-                            operator += [R_planck]
-                        else:
-                            operator += [R_planck*0]
-                    full_operator += [BlockColumnOperator(operator, axisout=0)]
-                
-                return BlockRowOperator(full_operator, new_axisin=0)
+                R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
+                if self.Nrec == 1:
+                    operator = [R_qubic(H_qubic), R_planck, R_planck]
+                    return BlockColumnOperator(operator, axisout=0)
+                else:
+                    full_operator = []
+                    for irec in range(self.Nrec):
+                        operator = [R_qubic(H_qubic.operands[irec])]
+                        for jrec in range(self.Nrec):
+                            if irec == jrec:
+                                operator += [R_planck]
+                            else:
+                                operator += [R_planck*0]
+                        full_operator += [BlockColumnOperator(operator, axisout=0)]
+                    
+                    return BlockRowOperator(full_operator, new_axisin=0)
             
-        elif self.kind == 'two':
-
+        elif self.kind == 'DB':
             # Get QUBIC operator
             if self.Nrec == 2:
                 H_qubic = self.qubic.get_operator(angle_hwp=angle_hwp, fwhm=fwhm).operands[1]
             else:
                 H_qubic = self.qubic.get_operator(angle_hwp=angle_hwp, fwhm=fwhm)
-            R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
-            R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
-            opefull = []
-            for ifp in range(2):
-                ope_per_fp = []
-                for irec in range(int(self.Nrec/2)):
-                    if self.Nrec > 2:
-                        operator = [R_qubic * H_qubic.operands[ifp].operands[irec]]
-                    else:
-                        operator = [R_qubic * H_qubic.operands[ifp]]
-                    for jrec in range(int(self.Nrec/2)):
-                        if irec == jrec:
-                            operator += [R_planck]
-                        else:
-                            operator += [R_planck*0]
-                    ope_per_fp += [BlockColumnOperator(operator, axisout=0)]
-                opefull += [BlockRowOperator(ope_per_fp, new_axisin=0)]
-            if self.Nrec == 2:
-                h = BlockDiagonalOperator(opefull, new_axisin=0)
-                _r = ReshapeOperator((h.shapeout[0], h.shapeout[1]), (h.shapeout[0]*h.shapeout[1]))
-                return _r * h
+            if external_data==False:
+                R_qubic = ReshapeOperator(H_qubic.shapeout, H_qubic.shape[0])
+                return R_qubic * H_qubic
             else:
-                return BlockDiagonalOperator(opefull, axisout=0)
+                R_qubic = ReshapeOperator(H_qubic.operands[0].shapeout, H_qubic.operands[0].shape[0])
+                R_planck = ReshapeOperator((12*self.qubic.scene.nside**2, 3), (12*self.qubic.scene.nside**2*3))
+                opefull = []
+                for ifp in range(2):
+                    ope_per_fp = []
+                    for irec in range(int(self.Nrec/2)):
+                        if self.Nrec > 2:
+                            operator = [R_qubic * H_qubic.operands[ifp].operands[irec]]
+                        else:
+                            operator = [R_qubic * H_qubic.operands[ifp]]
+                        for jrec in range(int(self.Nrec/2)):
+                            if irec == jrec:
+                                operator += [R_planck]
+                            else:
+                                operator += [R_planck*0]
+                        ope_per_fp += [BlockColumnOperator(operator, axisout=0)]
+                    opefull += [BlockRowOperator(ope_per_fp, new_axisin=0)]
+                if self.Nrec == 2:
+                    h = BlockDiagonalOperator(opefull, new_axisin=0)
+                    _r = ReshapeOperator((h.shapeout[0], h.shapeout[1]), (h.shapeout[0]*h.shapeout[1]))
+                    return _r * h
+                else:
+                    return BlockDiagonalOperator(opefull, axisout=0)
 
         else:
             raise TypeError(f'Instrument type {self.kind} is not recognize')
-    def get_invntt_operator(self, weight_planck=1, beam_correction=None, seenpix=None, mask=None):
+    def get_invntt_operator(self, weight_planck=1, beam_correction=None, seenpix=None, mask=None, external_data=True):
         
 
         if beam_correction is None :
                 beam_correction = [0]*self.Nrec
 
-        if self.kind == 'wide':
-
+        if self.kind == 'UWB':
             invn_q = self.qubic.get_invntt_operator()
             R = ReshapeOperator(invn_q.shapeout, invn_q.shape[0])
-            invn_q = [R(invn_q(R.T))]
-
-
-            invntt_planck143 = weight_planck*self.pl143.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
-            invntt_planck217 = weight_planck*self.pl217.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
-            R_planck = ReshapeOperator(invntt_planck143.shapeout, invntt_planck143.shape[0])
-            invN_143 = R_planck(invntt_planck143(R_planck.T))
-            invN_217 = R_planck(invntt_planck217(R_planck.T))
-            if self.Nrec == 1:
-                invNe = [invN_143, invN_217]
+            if external_data==False:
+                return R(invn_q(R.T))
             else:
-                invNe = [invN_143]*int(self.Nrec/2) + [invN_217]*int(self.Nrec/2)
-            invN = invn_q + invNe
-            return BlockDiagonalOperator(invN, axisout=0)
+                invn_q = [R(invn_q(R.T))]
+
+                invntt_planck143 = weight_planck*self.pl143.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
+                invntt_planck217 = weight_planck*self.pl217.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
+                R_planck = ReshapeOperator(invntt_planck143.shapeout, invntt_planck143.shape[0])
+                invN_143 = R_planck(invntt_planck143(R_planck.T))
+                invN_217 = R_planck(invntt_planck217(R_planck.T))
+                if self.Nrec == 1:
+                    invNe = [invN_143, invN_217]
+                else:
+                    invNe = [invN_143]*int(self.Nrec/2) + [invN_217]*int(self.Nrec/2)
+                invN = invn_q + invNe
+                return BlockDiagonalOperator(invN, axisout=0)
         
-        elif self.kind == 'two':
+        elif self.kind == 'DB':
 
             invn_q_150 = self.qubic.get_invntt_operator().operands[0]
             invn_q_220 = self.qubic.get_invntt_operator().operands[1]
             R = ReshapeOperator(invn_q_150.shapeout, invn_q_150.shape[0])
-
 
             invntt_planck143 = weight_planck*self.pl143.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
             invntt_planck217 = weight_planck*self.pl217.get_invntt_operator(beam_correction=beam_correction[0], mask=mask, seenpix=seenpix)
@@ -928,15 +928,16 @@ class JointAcquisitionFrequencyMapMaking:
             invN_143 = R_planck(invntt_planck143(R_planck.T))
             invN_217 = R_planck(invntt_planck217(R_planck.T))
             invN = [R(invn_q_150(R.T))]
-            for i in range(int(self.Nrec/2)):
-                invN += [R_planck(invntt_planck143(R_planck.T))]#, 
-                    #R(invn_q_220(R.T)), R_planck(invntt_planck217(R_planck.T))]
+            if external_data:
+                for i in range(int(self.Nrec/2)):
+                    invN += [R_planck(invntt_planck143(R_planck.T))]#, 
+                        #R(invn_q_220(R.T)), R_planck(invntt_planck217(R_planck.T))]
             
             invN += [R(invn_q_220(R.T))]
-
-            for i in range(int(self.Nrec/2)):
-                invN += [R_planck(invntt_planck217(R_planck.T))]
-            
+            if external_data:
+                for i in range(int(self.Nrec/2)):
+                    invN += [R_planck(invntt_planck217(R_planck.T))]
+                
             return BlockDiagonalOperator(invN, axisout=0)
 
             

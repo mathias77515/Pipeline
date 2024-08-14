@@ -11,6 +11,7 @@ from tools.foldertools import *
 import matplotlib.pyplot as plt
 import healpy as hp
 import yaml
+
 from plots.plotter import _plot_reconstructed_maps
 import mapmaking.systematics as acq
 from mapmaking.planck_timeline import *
@@ -176,6 +177,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
+
         if self.gif:
             if self.comm.Get_rank() == 0:
                 mymap = self.x.copy()

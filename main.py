@@ -1,6 +1,3 @@
-import numpy as np
-import yaml
-
 from pipeline import *
 from pyoperators import *
 import sys
@@ -20,4 +17,3 @@ if __name__ == "__main__":
 
     ### Execution
     pipeline.main(specific_file=file)
-

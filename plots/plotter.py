@@ -1,7 +1,5 @@
 import numpy as np
 import healpy as hp
-from getdist import plots, MCSamples
-import yaml
 import matplotlib.pyplot as plt
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
@@ -155,6 +153,7 @@ class Plots:
         plt.tight_layout()
         plt.savefig(f'allplots_{job_id}/Dl_plot.png')
         plt.close()
+
 class PlotsMM:
 
     def __init__(self, params):
