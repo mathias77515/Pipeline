@@ -35,7 +35,11 @@ class PlotsMM:
             res = m_in[i, :, istk] - m_out[i, :, istk]
             res[~seenpix] = hp.UNSEEN
             
-            hp.gnomview(res, rot=center, reso=15, cmap='jet', min = - nsig * np.std(m_out[0, seenpix, istk]), max = nsig * np.std(m_out[0, seenpix, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2))
+            hp.gnomview(res, rot=center, reso=15, cmap='jet', 
+                        min = - nsig * np.std(m_out[0, seenpix, istk]), 
+                        max = nsig * np.std(m_out[0, seenpix, istk]), 
+                        sub=(self.params['QUBIC']['nrec'], 3, k+2),
+                        title=r'Residual - $\nu$ = '+f'{nus[i]:.0f} GHz')
 
             k+=3
         plt.savefig(f'allplots_{job_id}/frequency_maps_{self.stk[istk]}_{name}.png')
@@ -60,7 +64,8 @@ class PlotsMM:
 
             hp.mollview(C(m_in[i, :, istk]) - C(m_out[i, :, istk]), cmap='jet', 
             min = - nsig * np.std(m_out[0, :, istk]), 
-            max = nsig * np.std(m_out[0, :, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2))
+            max = nsig * np.std(m_out[0, :, istk]), sub=(self.params['QUBIC']['nrec'], 3, k+2),
+            title=r'Output - $\nu$ = '+f'{nus[i]:.0f} GHz')
 
             k+=3
         plt.savefig(f'allplots_{job_id}/frequency_maps_{self.stk[istk]}_moll.png')

@@ -400,9 +400,6 @@ class QubicFullBandSystematic(QubicPolyAcquisition):
         self.allfwhm = np.zeros(len(self.multiinstrument))
         self.H = []
         
-        
-
-        
         for i in range(len(self.multiinstrument)):
             self.allfwhm[i] = self.multiinstrument[i].get_convolution_peak_operator().fwhm
         

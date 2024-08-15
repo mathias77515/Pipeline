@@ -96,16 +96,16 @@ class data:
         # stop
         
         ### Select bandpowers for fitting
-        bp_to_rm = self.select_bandpower()
+        powerspectra_to_remove = self.select_power_spectra()
         self.nfreq = len(self.nus)
         self.nspecs = (self.nfreq * (self.nfreq + 1)) // 2
         self.nspecs_qubic = (self.nrec * (self.nrec + 1)) // 2
     
         ### Remove bandpowers not selected
-        self.power_spectra_sky = np.delete(self.power_spectra_sky, bp_to_rm, 1)
-        self.power_spectra_sky = np.delete(self.power_spectra_sky, bp_to_rm, 2)
-        self.power_spectra_noise = np.delete(self.power_spectra_noise, bp_to_rm, 1)
-        self.power_spectra_noise = np.delete(self.power_spectra_noise, bp_to_rm, 2)
+        self.power_spectra_sky = np.delete(self.power_spectra_sky, powerspectra_to_remove, 1)
+        self.power_spectra_sky = np.delete(self.power_spectra_sky, powerspectra_to_remove, 2)
+        self.power_spectra_noise = np.delete(self.power_spectra_noise, powerspectra_to_remove, 1)
+        self.power_spectra_noise = np.delete(self.power_spectra_noise, powerspectra_to_remove, 2)
 
         ### Average and standard deviation from realizations
         self.mean_ps_sky, self.error_ps_sky = self.compute_mean_std(self.power_spectra_sky)
@@ -202,30 +202,29 @@ class data:
 
     
         return d, dmono
-    def select_bandpower(self):
+    def select_power_spectra(self):
         '''
         Function to remove some bamdpowers if they are not selected.
         
         Return : 
             - list containing the indices for removed bandpowers.
         '''
-        k=0
-        bp_to_rm = []
+        powerspectra_to_remove = []
         for ii, i in enumerate(self.nus):
-            if ii < self.params['simu']['nrec']:
+            if ii < self.simu_parameters['QUBIC']['nrec']:
                 if self.params['NUS']['qubic']:
                     pass
-                    #k += [self.params['NUS']['qubic'][1]
+
                 else:
-                    bp_to_rm += [ii]
-                    k+=1
+                    powerspectra_to_remove += [ii]
                 
             else:
                 if self.params['NUS'][f'{i:.0f}GHz'] is False:
-                    bp_to_rm += [ii]
-        #print(bp_to_rm)
-        self.nus = np.delete(self.nus, bp_to_rm, 0)
-        return bp_to_rm
+                    powerspectra_to_remove += [ii]
+
+        self.nus = np.delete(self.nus, powerspectra_to_remove, 0)
+        return powerspectra_to_remove
+
     def import_power_spectra(self, path):
         '''
         Function to import all the power spectra computed with spectrum.py and store in pickle files

@@ -1,23 +1,23 @@
 data:
-  path : '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec2/cmb_convolved_DB/'
+  path : '/pbs/home/t/tlaclave/sps/FMM_data/E2E_nrec4/cmbdust_convolved_DB_nsub=20/'
   foldername : 'spectrum'
-  filename : 'pyroot_test'
-  n_real : 20
+  filename : 'qubic_only_nsub=20'
+  n_real : -1
 
 nbins: 15
 
 simu: 
-  nrec : 2
+  nrec : 4
   convo : True
   noise : True
   cmb : True
-  dust : False
+  dust : True
   sync : False
   corr_dust_sync : False
 
 MCMC:
-  nwalkers : 10
-  mcmc_steps : 200
+  nwalkers : 50
+  mcmc_steps : 300
   discard : 100
   stretch_move_factor : 0.7
   snooker_move_gamma : 1.7
@@ -44,8 +44,8 @@ SKY_PARAMETERS:
   r : [True, -0.01, 0.02, -1, 1] 
   Alens : [1, 1, 0.2, 0, 10]
   nu0_d : [353, 0, 10, 0, 1000]
-  Ad : [0, 3.5, 1, 0, 10]
-  alphad : [0, -2.3, 0.5, -3, 0]
+  Ad : [True, 3.5, 1, 0, 10]
+  alphad : [True, -2.3, 0.5, -3, 0]
   betad : [1.54, 1.5, 0.2, 0, 10000]
   deltad : [1, 0, 1, 0, 1000]
   nu0_s : [23, 0, 1, 0, 1000]

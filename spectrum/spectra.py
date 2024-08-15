@@ -76,7 +76,7 @@ class Spectrum:
                 h_list[freq] = np.mean(list_h[freq](vec_ones))
 
             fwhm = [self._get_fwhm_during_MM(i) for i in self.Q.allnus]
-
+            
             def f_beta(nu, nu_0, beta):
                 return (nu/nu_0)**beta * (np.exp(scipy.constants.h*nu*1e9/(scipy.constants.k * 20)) - 1) / (np.exp(scipy.constants.h*nu_0*1e9/(scipy.constants.k * 20)) - 1)
             
@@ -92,12 +92,13 @@ class Spectrum:
                 corrected_allnus.append(corrected_nu['x'])
  
             print('nus', self.nus)
-            print('fwhm', self.allfwhm)     
+            print('fwhm', self.allfwhm)   
+            print('bandwith 150', qubic.compute_freq(150, Nfreq = 2))  
+            print('bandwith 220', qubic.compute_freq(220, Nfreq = 2))
             self.nus[:self.nrec] = corrected_allnus
             self.allfwhm[:self.nrec] = corrected_allfwhm
             print('corrected nus', self.nus)
             print('corrected fwhm', self.allfwhm)
-
               
         self.kernels150 = np.sqrt(self.fwhm150[0]**2 - self.fwhm150[-1]**2)
         self.kernels220 = np.sqrt(self.fwhm220[0]**2 - self.fwhm220[-1]**2)
