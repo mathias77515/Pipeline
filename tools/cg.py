@@ -11,6 +11,9 @@ from tools.foldertools import *
 import matplotlib.pyplot as plt
 import healpy as hp
 import yaml
+
+from plots.plotter import _plot_reconstructed_maps
+import mapmaking.systematics as acq
 from mapmaking.planck_timeline import *
 from mapmaking.noise_timeline import *
 
@@ -140,7 +143,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.dot = lambda x, y: _dot(x, y, self.comm)
 
         if self.gif:
-            create_folder_if_not_exists(self.comm, f'gif_convergence_{self.jobid}')
+            create_folder_if_not_exists(self.comm, f'allplots_{self.jobid}/gif_{self.jobid}')
         if M is None:
             M = IdentityOperator()
         self.M = asoperator(M)
@@ -174,6 +177,24 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
+
+        if self.gif:
+            if self.comm.Get_rank() == 0:
+                mymap = self.x.copy()
+                mymap[:, ~self.seenpix, :] = hp.UNSEEN
+                _plot_reconstructed_maps(mymap, f'allplots_{self.jobid}/gif_{self.jobid}/iter_{self.niterations}.png', self.center, reso=self.reso, figsize=(12, 8))   
+                #plt.figure(figsize=self.figsize)
+                #k=1
+                #for i in range(self.x.shape[0]):
+                #    for j in range(self.x.shape[2]):
+                #        mymap = self.x[i, :, j].copy()
+                #        mymap[~self.seenpix] = hp.UNSEEN
+                #        hp.gnomview(mymap, rot=self.center, reso=self.reso, cmap='jet', sub=(self.x.shape[0], self.x.shape[2], k), title='Map', notext=True,
+                #            min=-3*np.std(self.x[0, self.seenpix, j]), max=3*np.std(self.x[0, self.seenpix, j]))
+                #        k+=1
+                #plt.suptitle(f'Iteration : {self.niterations}')
+                #plt.savefig(f'allplots_{self.jobid}/gif_{self.jobid}/maps_{self.niterations}.png')
+                #plt.close()
             
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
