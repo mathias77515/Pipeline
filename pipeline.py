@@ -321,7 +321,7 @@ class PipelineFrequencyMapMaking:
         if self.rank == 0:
             print(f'FWHM for TOD generation : {self.fwhm_in}')
             print(f'FWHM for reconstruction : {self.fwhm_out}')
-            print(f'Final FWHM : {self.fwhm_rec}')           
+            print(f'FWHM final : {self.fwhm_rec}')           
     def get_input_map(self):
         m_nu_in = np.zeros((self.params['QUBIC']['nrec'], 12*self.params['SKY']['nside']**2, 3))
 
