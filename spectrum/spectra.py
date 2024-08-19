@@ -5,13 +5,12 @@ import yaml
 import scipy
 import pickle
 import time
-import matplotlib.pyplot as plt
 import healpy as hp
+
 #### QUBIC packages
 import qubic
 from qubic.polyacquisition import compute_freq
 from qubic import NamasterLib as nam
-from qubic.beams import BeamGaussian
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pyoperators import *
 import qubic
@@ -51,7 +50,7 @@ class Spectrum:
         self.nus = self.dict_file['nus']
         self.nfreq = len(self.nus)
         self.nrec = self.params['QUBIC']['nrec']
-        self.nsub = self.params['QUBIC']['nsub']
+        self.nsub = self.params['QUBIC']['nsub_out']
         self.fsub = int(self.nsub / self.nrec)
         self.nside = self.params['SKY']['nside']
         self.nsub = int(self.fsub * self.nrec)
@@ -65,40 +64,41 @@ class Spectrum:
         self.allfwhm = self._get_allfwhm()  
         
         ############ Test
-        if self.params['QUBIC']['convolution_in'] and not self.params['QUBIC']['convolution_out']:
-            self.dict, self.dict_mono = self.get_dict()
-            self.Q = acq.QubicFullBandSystematic(self.dict, self.params['QUBIC']['nsub'], self.params['QUBIC']['nrec'], kind='UWB')
-            #joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, 'UWB', self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
-            list_h = self.Q.H
-            h_list = np.empty(len(self.Q.allnus))
-            vec_ones = np.ones(list_h[0].shapein)
-            for freq in range(len(self.Q.allnus)):
-                h_list[freq] = np.mean(list_h[freq](vec_ones))
+        # if self.params['QUBIC']['convolution_in'] and not self.params['QUBIC']['convolution_out']:
+        #     self.dict, self.dict_mono = self.get_dict()
+        #     self.Q = acq.QubicFullBandSystematic(self.dict, self.params['QUBIC']['nsub_out'], self.params['QUBIC']['nrec'], kind='DB')
+        #     #joint = acq.JointAcquisitionFrequencyMapMaking(self.dict, 'UWB', self.params['QUBIC']['nrec'], self.params['QUBIC']['nsub'])
+        #     list_h = self.Q.H
+        #     h_list = np.empty(len(self.Q.allnus))
+        #     vec_ones = np.ones(list_h[0].shapein)
+        #     for freq in range(len(self.Q.allnus)):
+        #         h_list[freq] = np.mean(list_h[freq](vec_ones))
 
-            fwhm = [self._get_fwhm_during_MM(i) for i in self.Q.allnus]
+        #     fwhm = [self._get_fwhm_during_MM(i) for i in self.Q.allnus]
             
-            def f_beta(nu, nu_0, beta):
-                return (nu/nu_0)**beta * (np.exp(scipy.constants.h*nu*1e9/(scipy.constants.k * 20)) - 1) / (np.exp(scipy.constants.h*nu_0*1e9/(scipy.constants.k * 20)) - 1)
+        #     def f_beta(nu, nu_0, beta):
+        #         return (nu/nu_0)**beta * (np.exp(scipy.constants.h*nu*1e9/(scipy.constants.k * 20)) - 1) / (np.exp(scipy.constants.h*nu_0*1e9/(scipy.constants.k * 20)) - 1)
             
-            corrected_allfwhm = []
-            corrected_allnus = []
-            for i in range(self.nrec):
-                corrected_fwhm = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53) * fwhm[i*self.fsub:(i+1)*self.fsub]) / (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53))))
-                corrected_allfwhm.append(corrected_fwhm)
-                fraction = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53)) / np.sum(h_list[i*self.fsub:(i+1)*self.fsub]))
-                fun = lambda nu: np.abs(fraction - f_beta(nu, 353, 1.53))
-                x0 = self.nus[i]
-                corrected_nu = scipy.optimize.minimize(fun, x0)
-                corrected_allnus.append(corrected_nu['x'])
+        #     corrected_allfwhm = []
+        #     corrected_allnus = []
+        #     for i in range(self.nrec):
+        #         corrected_fwhm = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53) * fwhm[i*self.fsub:(i+1)*self.fsub]) / (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53))))
+        #         corrected_allfwhm.append(corrected_fwhm)
+        #         fraction = (np.sum(h_list[i*self.fsub:(i+1)*self.fsub] * f_beta(self.Q.allnus[i*self.fsub:(i+1)*self.fsub], 353, 1.53)) / np.sum(h_list[i*self.fsub:(i+1)*self.fsub]))
+        #         fun = lambda nu: np.abs(fraction - f_beta(nu, 353, 1.53))
+        #         x0 = self.nus[i]
+        #         corrected_nu = scipy.optimize.minimize(fun, x0)
+        #         corrected_allnus.append(corrected_nu['x'])
  
-            print('nus', self.nus)
-            print('fwhm', self.allfwhm)   
-            print('bandwith 150', qubic.compute_freq(150, Nfreq = 2))  
-            print('bandwith 220', qubic.compute_freq(220, Nfreq = 2))
-            self.nus[:self.nrec] = corrected_allnus
-            self.allfwhm[:self.nrec] = corrected_allfwhm
-            print('corrected nus', self.nus)
-            print('corrected fwhm', self.allfwhm)
+        #     print('nus', self.nus)
+        #     print('fwhm', self.allfwhm)   
+        #     print('bandwith 150', qubic.compute_freq(150, Nfreq = 2))  
+        #     print('bandwith 220', qubic.compute_freq(220, Nfreq = 2))
+        #     self.nus[:self.nrec] = corrected_allnus
+        #     self.allfwhm[:self.nrec] = corrected_allfwhm
+        #     print('corrected nus', self.nus)
+        #     print('corrected fwhm', self.allfwhm)
+        
               
         self.kernels150 = np.sqrt(self.fwhm150[0]**2 - self.fwhm150[-1]**2)
         self.kernels220 = np.sqrt(self.fwhm220[0]**2 - self.fwhm220[-1]**2)
@@ -141,7 +141,7 @@ class Spectrum:
 
         args = {'npointings':self.params['QUBIC']['npointings'], 
                 'nf_recon':self.params['QUBIC']['nrec'], 
-                'nf_sub':self.params['QUBIC']['nsub'], 
+                'nf_sub':self.params['QUBIC']['nsub_out'], 
                 'nside':self.params['SKY']['nside'], 
                 'MultiBand':True, 
                 'period':1, 
