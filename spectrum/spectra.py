@@ -61,7 +61,7 @@ class Spectrum:
         self.fwhm150 = self._get_fwhm_during_MM(nus150)
         self.fwhm220 = self._get_fwhm_during_MM(nus220)
 
-        self.allfwhm = self._get_allfwhm()  
+        self.allfwhm = self.dict_file['fwhm_rec'] 
         
         ############ Test
         # if self.params['QUBIC']['convolution_in'] and not self.params['QUBIC']['convolution_out']:
