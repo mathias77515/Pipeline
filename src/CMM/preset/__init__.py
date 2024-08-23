@@ -54,13 +54,13 @@ class PresetInitialisation:
         if self.tools.rank == 0:
             if self.tools.params['save_iter'] != 0:
                 self.tools.params['foldername'] = f"{self.tools.params['Foregrounds']['Dust']['type']}_{self.tools.params['Foregrounds']['Dust']['model_d']}_{self.tools.params['QUBIC']['instrument']}_" + self.tools.params['foldername']
-                self.tools.create_folder_if_not_exists(self.tools.params['foldername'])
+                self.tools.create_folder_if_not_exists('CMM/' + self.tools.params['foldername'])
             if self.tools.params['Plots']['maps'] == True or self.tools.params['Plots']['conv_beta'] == True:
-                self.tools.create_folder_if_not_exists(f'jobs/{self.job_id}/I')
-                self.tools.create_folder_if_not_exists(f'jobs/{self.job_id}/Q')
-                self.tools.create_folder_if_not_exists(f'jobs/{self.job_id}/U')
-                self.tools.create_folder_if_not_exists(f'jobs/{self.job_id}/allcomps')
-                self.tools.create_folder_if_not_exists(f'jobs/{self.job_id}/A_iter')
+                self.tools.create_folder_if_not_exists(f'CMM/jobs/{self.job_id}/I')
+                self.tools.create_folder_if_not_exists(f'CMM/jobs/{self.job_id}/Q')
+                self.tools.create_folder_if_not_exists(f'CMM/jobs/{self.job_id}/U')
+                self.tools.create_folder_if_not_exists(f'CMM/jobs/{self.job_id}/allcomps')
+                self.tools.create_folder_if_not_exists(f'CMM/jobs/{self.job_id}/A_iter')
 
         self.tools._print_message('========= External Data =========')
         self.external = PresetExternal(self.tools)

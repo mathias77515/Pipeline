@@ -1,13 +1,12 @@
 from pyoperators import *
 
-import fgb.mixing_matrix as mm
-import fgb.component_model as c
+import Qmixing_matrix as mm
 
-from acquisition.systematics import *
+#from Qacquisition import *
 
-from simtools.mpi_tools import *
-from simtools.noise_timeline import *
-from simtools.foldertools import *
+#from Qmpi_tools import *
+from Qnoise import *
+from Qfoldertools import *
 
 
 def _norm2(x, comm):

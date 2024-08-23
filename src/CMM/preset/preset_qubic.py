@@ -1,9 +1,9 @@
 import numpy as np
 
 import qubic
-from acquisition.Qacquisition import JointAcquisitionComponentsMapMaking
+from Qacquisition import JointAcquisitionComponentsMapMaking
 
-import fgb.component_model as c
+import Qcomponent_model as c
 
 class PresetQubic:
     """

@@ -1,10 +1,7 @@
 import numpy as np
 
-from acquisition.Qacquisition import *
-from simtools.noise_timeline import *
-import matplotlib.pyplot as plt
-import healpy as hp
-
+from Qacquisition import *
+from Qnoise import *
 from pyoperators import DiagonalOperator
 
 class PresetAcquisition:
@@ -129,24 +126,15 @@ class PresetAcquisition:
                 for istk in range(3):
                     precond_ext = 1/(approx_hth_ext[:, :, 0].T @ A_ext[..., icomp]**2)
                     precond_ext[precond_ext == np.inf] = 0
-                    #print(precond_ext.shape)
-                    #stop
-                    preconditioner[icomp, :, istk] = precond_ext #* self.preset_tools.params['PLANCK']['weight_planck']
+                    preconditioner[icomp, :, istk] = precond_ext
                     preconditioner[icomp, seenpix_qubic_0_001, istk] *= self.preset_tools.params['PLANCK']['weight_planck']
 
             # We sum over the frequencies, take the inverse, and only keep the information on the patch.
-            
-            
-            
             for icomp in range(len(self.preset_fg.components_model_out)):
                 for istk in range(3):
                     precond_qubic = 1/(approx_hth[:, :, 0].T @ A_qubic[..., icomp]**2)
                     preconditioner[icomp, seenpix_qubic_0_001, istk] += precond_qubic[seenpix_qubic_0_001]
-                    #precond_qubic[precond_qubic == np.inf] = 0
-            #plt.figure()
-            #hp.mollview(preconditioner[0, :, 0])
-            #plt.show()
-            #stop
+
             M = DiagonalOperator(preconditioner[:, self.preset_sky.seenpix, :])
             return M 
         else:

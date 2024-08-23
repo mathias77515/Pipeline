@@ -1,29 +1,27 @@
+### General packages
 import os
 from functools import partial
-
 import numpy as np
 import healpy as hp
 from scipy.optimize import minimize, fmin_l_bfgs_b
-
 import pickle
 import gc
-from acquisition.Qacquisition import *
-
-from simtools.foldertools import *
-from simtools.mpi_tools import *
-from simtools.noise_timeline import *
-from simtools.analysis import *
- 
 from pyoperators import MPI
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
-import preset
+### Local packages
+from Qacquisition import *
+from Qfoldertools import *
+from Qmap_plotter import *
+from Qcg import pcg
+import Qmixing_matrix as mm
+#from simtools.mpi_tools import *
+from Qnoise import *
+#from simtools.analysis import *
+from .preset import *
+from .costfunc.chi2 import Chi2Parametric, Chi2Parametric_alt, Chi2Blind, Chi2DualBand, Chi2UltraWideBand   
 
-import fgb.mixing_matrix as mm
-from solver.cg import (mypcg)
-from plots.plots import *
-from costfunc.chi2 import Chi2Parametric, Chi2Parametric_alt, Chi2Blind, Chi2DualBand, Chi2UltraWideBand       
-                
+    
 class Pipeline:
     """
     Main instance to create End-2-End pipeline for components reconstruction.
@@ -46,8 +44,8 @@ class Pipeline:
         seed_noise = comm.bcast(seed_noise, root=0)
 
         ### Initialization
-        self.preset = preset.PresetInitialisation(comm, seed, seed_noise).initialize()
-        self.plots = Plots(self.preset, dogif=True)
+        self.preset = PresetInitialisation(comm, seed, seed_noise).initialize()
+        self.plots = PlotsCMM(self.preset, dogif=True)
         if self.preset.fg.params_foregrounds['Dust']['type'] == 'blind' or self.preset.fg.params_foregrounds['Synchrotron']['type'] == 'blind':
            self.chi2 = Chi2Blind(self.preset)
         else:
@@ -168,38 +166,39 @@ class Pipeline:
             maxiter = self.preset.tools.params['PCG']['n_init_iter_pcg']
         else:
             maxiter = max_iterations
-        result = mypcg(self.preset.A, 
-                        self.preset.b, 
+        
+        if self.preset.tools.params['PCG']['do_gif']:
+            gif_folder = f'CMM/jobs/{self.preset.job_id}/iter/'
+        else:
+            gif_folder = None
+            
+        ### PCG
+        result = pcg(
+                        A=self.preset.A,  
+                        b=self.preset.b, 
+                        comm=self.preset.comm,
+                        x0=initial_maps, 
                         M=self.preset.acquisition.M, 
                         tol=self.preset.tools.params['PCG']['tol_pcg'], 
-                        x0=initial_maps, 
+                        disp=True, 
                         maxiter=maxiter, 
-                        disp=True,
-                        create_gif=self.preset.tools.params['PCG']['do_gif'],
-                        center=self.preset.sky.center, 
-                        reso=self.preset.tools.params['PCG']['reso_plot'], 
-                        seenpix=seenpix, 
-                        seenpix_plot=seenpix, 
-                        truth=self.preset.fg.components_out,
-                        reuse_initial_state=False,
-                        jobid=self.preset.job_id,
-                        iter_init=self._steps*self.preset.tools.params['PCG']['n_iter_pcg'])['x']['x'] 
-        
+                        gif_folder=gif_folder,
+                        job_id=self.preset.job_id,
+                        seenpix=seenpix,
+                        seenpix_plot=seenpix,
+                        center=self.preset.sky.center,
+                        reso=self.preset.tools.params['PCG']['reso_plot'],
+                        fwhm_plot=self.preset.tools.params['PCG']['fwhm_plot'],
+                        input=self.preset.fg.components_out,
+        )['x']['x']
+
         ### Update components
-        #if self.preset.tools.params['PCG']['fix_pixels_outside_patch']:
         self.preset.fg.components_iter[:, seenpix, :] = result.copy()
-        #elif self.preset.tools.params['PCG']['fixI']:
-        #    self.preset.fg.components_iter[:, :, 1:] = result
-        #else:
-        #    self.preset.fg.components_iter = result.copy()
-    
-        ### Method to compute an approximation of sigma(r) using Fisher matrix at the end of the PCG
-        #self._fisher_compute_sigma_r()
         
         ### Plot if asked
         if self.preset.tools.rank == 0:
             if self.preset.tools.params['PCG']['do_gif']:
-                do_gif(f'jobs/{self.preset.job_id}/allcomps/', 'iter_', output='animation.gif')
+                do_gif(f'CMM/jobs/{self.preset.job_id}/iter/', 'iter_', output='animation.gif')
             self.plots.display_maps(seenpix, ki=self._steps)
             self.plots._display_allcomponents(seenpix, ki=self._steps, gif=self.preset.tools.params['PCG']['do_gif'], reso=self.preset.tools.params['PCG']['reso_plot'])
             #self.plots._display_allresiduals(self.preset.fg.components_iter[:, self.preset.sky.seenpix, :], self.preset.sky.seenpix, ki=self._steps)  
@@ -623,7 +622,7 @@ class Pipeline:
                 )
                 
                 if self.preset.tools.params['PCG']['do_gif']:
-                    do_gif(f'jobs/{self.preset.job_id}/A_iter/', 'A_iter', output='animation_A_iter.gif')
+                    do_gif(f'CMM/jobs/{self.preset.job_id}/A_iter/', 'A_iter', output='animation_A_iter.gif')
                     #do_gif(f'jobs/{self.preset.job_id}/allcomps/', 'iter_', output='animation.gif')
             del tod_comp
             gc.collect()
@@ -751,9 +750,9 @@ class Pipeline:
                     if self.preset.tools.params['lastite']:
                     
                         if step != 0:
-                            os.remove(self.preset.tools.params['foldername'] + '/' + self.preset.tools.params['filename']+  f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step-1}.pkl")
+                            os.remove('CMM/' + self.preset.tools.params['foldername'] + '/' + self.preset.tools.params['filename']+  f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step-1}.pkl")
                     
-                    with open(self.preset.tools.params['foldername'] + '/' + self.preset.tools.params['filename'] + f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step}.pkl", 'wb') as handle:
+                    with open('CMM/' + self.preset.tools.params['foldername'] + '/' + self.preset.tools.params['filename'] + f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step}.pkl", 'wb') as handle:
                         pickle.dump({'components':self.preset.fg.components_in, 
                                  'components_i':self.preset.fg.components_iter,
                                  'beta':self.preset.acquisition.allbeta,

@@ -2,9 +2,7 @@ import numpy as np
 
 import pysm3
 import pysm3.units as u
-from fgb import MixingMatrix
-from fgb.component_model import _convert_Krj_2_Kcmb
-import matplotlib.pyplot as plt
+from Qmixing_matrix import MixingMatrix
 
 class PresetMixingMatrix:
     """

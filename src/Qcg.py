@@ -184,13 +184,14 @@ class PCGAlgorithm(IterativeAlgorithm):
             if self.comm.Get_rank() == 0:
                 
                 mymap = np.zeros(self.input.shape)
-                nsig = 3
+                nsig = 2
                 min, max = -nsig * np.std(self.input[0, self.seenpix], axis=0), nsig * np.std(self.input[0, self.seenpix], axis=0)
                 
                 mymap[:, self.seenpix, :] = self.x.copy()
                 mymap[:, ~self.seenpix_plot, :] = hp.UNSEEN
                     
-                _plot_reconstructed_maps(mymap, self.input, self.gif + f'iter_{self.niterations}.png', self.center, reso=self.reso, figsize=(12, 8), min=min, max=max, fwhm=self.fwhm)
+                _plot_reconstructed_maps(mymap, self.input, self.gif + f'iter_{self.niterations}.png', self.center, reso=self.reso, figsize=(12, 8), 
+                                         min=min, max=max, fwhm=self.fwhm)
             
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)

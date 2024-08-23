@@ -1,6 +1,6 @@
 import numpy as np
 
-from simtools.mpi_tools import join_data
+from Qmpi_tools import join_data
 
 class PresetGain:
     """
