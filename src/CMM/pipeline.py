@@ -163,15 +163,18 @@ class Pipeline:
         
         ### Run PCG
         if self._steps == 0:
+            num_iter = self.preset.tools.params['PCG']['n_init_iter_pcg']
             maxiter = self.preset.tools.params['PCG']['n_init_iter_pcg']
         else:
+            num_iter = self.preset.tools.params['PCG']['n_iter_pcg']
             maxiter = max_iterations
         
         if self.preset.tools.params['PCG']['do_gif']:
             gif_folder = f'CMM/jobs/{self.preset.job_id}/iter/'
         else:
             gif_folder = None
-            
+    
+        
         ### PCG
         result = pcg(
                         A=self.preset.A,  
@@ -190,6 +193,7 @@ class Pipeline:
                         reso=self.preset.tools.params['PCG']['reso_plot'],
                         fwhm_plot=self.preset.tools.params['PCG']['fwhm_plot'],
                         input=self.preset.fg.components_out,
+                        iter_init=self._steps*num_iter,
         )['x']['x']
 
         ### Update components

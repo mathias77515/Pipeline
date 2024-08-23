@@ -44,6 +44,7 @@ class PCGAlgorithm(IterativeAlgorithm):
         fwhm_plot=0,
         input=None,
         fwhm=0,
+        iter_init=0,
     ):
         """
         Parameters
@@ -87,6 +88,7 @@ class PCGAlgorithm(IterativeAlgorithm):
 
         """
 
+        self.iter_init = iter_init
         self.gif = gif_folder
         self.job_id = job_id
         self.seenpix = seenpix
@@ -179,7 +181,8 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
-
+        _r = self.x - self.input[:, self.seenpix, :]
+        self.rms = np.std(_r, axis=1)
         if self.gif is not None:
             if self.comm.Get_rank() == 0:
                 
@@ -190,7 +193,8 @@ class PCGAlgorithm(IterativeAlgorithm):
                 mymap[:, self.seenpix, :] = self.x.copy()
                 mymap[:, ~self.seenpix_plot, :] = hp.UNSEEN
                     
-                _plot_reconstructed_maps(mymap, self.input, self.gif + f'iter_{self.niterations}.png', self.center, reso=self.reso, figsize=(12, 8), 
+                _plot_reconstructed_maps(mymap, self.input, self.gif + f'iter_{self.niterations+self.iter_init}.png', 
+                                         self.center, reso=self.reso, figsize=(12, 8), 
                                          min=min, max=max, fwhm=self.fwhm)
             
         self.r -= alpha * self.q
@@ -208,7 +212,7 @@ class PCGAlgorithm(IterativeAlgorithm):
     @staticmethod
     def callback(self):
         if self.disp:
-            print(f'{self.niterations:4}: {self.error:.4e} {time.time() - self.t0:.5f}')
+            print(f'{self.niterations+self.iter_init:4}: {self.error:.4e} {time.time() - self.t0:.5f} {self.rms}')
 
 
 def pcg(
@@ -231,6 +235,7 @@ def pcg(
     fwhm_plot=0,
     input=None,
     fwhm=0,
+    iter_init=0,
 ):
     """
     output = pcg(A, b, [x0, tol, maxiter, M, disp, callback,
@@ -299,6 +304,7 @@ def pcg(
         fwhm_plot=fwhm_plot,
         input=input,
         fwhm=fwhm,
+        iter_init=iter_init,
     )
     try:
         output = algo.run()

@@ -96,7 +96,7 @@ class PresetAcquisition:
         approx_hth = np.empty((self.preset_qubic.params_qubic['nsub_out'],) + self.preset_qubic.joint_out.qubic.H[0].shapein)
         vector = np.ones(self.preset_qubic.joint_out.qubic.H[0].shapein)
         for index in range(self.preset_qubic.params_qubic['nsub_out']):
-            approx_hth[index] = self.preset_qubic.joint_out.qubic.H[index].T * self.preset_qubic.joint_out.qubic.invn220 * self.preset_qubic.joint_out.qubic.H[index](vector)
+            approx_hth[index] = self.preset_qubic.joint_out.qubic.H[index].T * self.preset_qubic.joint_out.qubic.invn150 * self.preset_qubic.joint_out.qubic.H[index](vector)
         
         invN_ext = self.preset_qubic.joint_out.external.get_invntt_operator(mask=self.preset_sky.mask)
         

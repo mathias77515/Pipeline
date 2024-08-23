@@ -1722,6 +1722,7 @@ class QubicDualBand(QubicMultiAcquisitions):
         Method to compute the inverse noise covariance matrix in time-domain.
 
         """
+        
         d150 = self.dict.copy()
         d150['filter_nu'] = 150 * 1e9
         d150['effective_duration'] = self.dict['effective_duration150']
@@ -1948,17 +1949,17 @@ class OtherDataParametric:
                 f=fact[inu]
 
             # Get the noise value for the current frequency and upsample to the desired nside
-            sigma = f * hp.ud_grade(self.dataset['noise{}'.format(nu)].T * 1e6, self.nside).T 
-            #print(sigma)
+            sigma = f * hp.ud_grade(self.dataset['noise{}'.format(nu)].T, self.nside).T 
+        
             if mask is not None:
                 sigma /= np.array([mask, mask, mask]).T
 
             # Append the noise value to the list of all sigmas
             allsigma = np.append(allsigma, sigma.ravel())
-        
+
         # Flatten the list of sigmas and create a diagonal operator
         allsigma = allsigma.ravel().copy()
-        invN = DiagonalOperator(1/allsigma, broadcast='leftward', shapein=(3*len(self.nus)*12*self.nside**2))
+        invN = DiagonalOperator(1/allsigma**2, broadcast='leftward', shapein=(3*len(self.nus)*12*self.nside**2))
         
         # Create reshape operator and apply it to the diagonal operator
         R = ReshapeOperator(invN.shapeout, invN.shape[0])
