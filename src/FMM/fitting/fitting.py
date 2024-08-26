@@ -14,13 +14,12 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import *
 from pyoperators import *
 
-sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
-
-import mapmaking.systematics as acq
+#sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
 
 #### QUBIC packages
-import fgb.component_model as c
-import fgb.mixing_matrix as mm
+import lib.Qcomponent_model as c
+import lib.Qmixing_matrix as mm
+from lib.Qspectra_component import CMB, Foreground
 from pyoperators import *
 import qubic
 
@@ -31,6 +30,9 @@ def _Dl2Cl(ell, Dl):
 def _Cl2BK(ell, Cl):
     return 100 * ell * Cl / (2 * np.pi)
 
+__path__ = os.path.dirname(os.path.abspath(__file__))
+print(__path__)
+
 class data:
     '''
     Class to extract of the power spectra computed with spectrum.py and to compute useful things
@@ -38,7 +40,7 @@ class data:
 
     def __init__(self):
 
-        with open('fitting_config.yaml', "r") as stream:
+        with open(__path__ + '/fitting_config.yaml', "r") as stream:
             self.params = yaml.safe_load(stream)
         
         self.path_repository = self.params['data']['path']
@@ -255,7 +257,7 @@ class data:
             power_spectra_noise.append(ps['Nl'][:, :, :self.params['nbins']])
             
             
-        return power_spectra_sky, power_spectra_noise, ps['parameters'], ps['coverage'], ps['nus'], ps['ell'][:self.params['nbins']]
+        return power_spectra_sky, power_spectra_noise, ps['coverage'], ps['nus'], ps['ell'][:self.params['nbins']]
     def compute_mean_std(self, ps):
         '''
         Function to compute the mean ans the std on our power spectra realisations
@@ -285,148 +287,7 @@ class data:
                 mean_data[i, j, :] -= mean_noise[i, j, :]
         return mean_data
 
-class CMB:
-    '''
-    Class to define the CMB model
-    '''
 
-    def __init__(self, ell, nus):
-        
-        self.nus = nus
-        self.ell = ell
-        self.nfreq = len(self.nus)
-    def cl_to_dl(self, cl):
-        '''
-        Function to convert the cls into the dls
-        '''
-
-        dl = np.zeros(self.ell.shape[0])
-        for i in range(self.ell.shape[0]):
-            dl[i] = (self.ell[i]*(self.ell[i]+1)*cl[i])/(2*np.pi)
-        return dl
-    def get_pw_from_planck(self, r, Alens):
-        '''
-        Function to compute the CMB power spectrum from the Planck data
-        '''
-
-        CMB_CL_FILE = op.join('/sps/qubic/Users/TomLaclavere/mypackages/Cls_Planck2018_%s.fits')
-        power_spectrum = hp.read_cl(CMB_CL_FILE%'lensed_scalar')[:,:4000]
-        
-        if Alens != 1.:
-            power_spectrum[2] *= Alens
-        
-        if r:
-            power_spectrum += r * hp.read_cl(CMB_CL_FILE%'unlensed_scalar_and_tensor_r1')[:,:4000]
-        
-        return np.interp(self.ell, np.linspace(1, 4001, 4000), power_spectrum[2])
-    def model_cmb(self, r, Alens):
-        '''
-        Define the CMB model, depending on r and Alens
-        '''
-        models = np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-        for i in range(self.nfreq):
-            for j in range(i, self.nfreq):
-                models[i, j] = self.cl_to_dl(self.get_pw_from_planck(r, Alens))
-        return models
-class Foreground:
-    '''
-    Class to define Dust and Synchrotron models
-    '''
-
-    def __init__(self, ell, nus):
-        
-        self.ell = ell
-        self.nus = nus
-        self.nfreq = len(self.nus)
-
-    def scale_dust(self, nu, nu0_d, betad, temp=20):
-        '''
-        Function to compute the dust mixing matrix element, depending on the frequency
-        '''
-
-        comp = c.Dust(nu0 = nu0_d, temp=temp, beta_d = betad)
-        A = mm.MixingMatrix(comp).evaluator(np.array([nu]))()[0]
-        #print(nu, A)
-        #stop
-        return A
-    def scale_sync(self, nu, nu0_s, betas):
-        '''
-        Function to compute the dust mixing matrix element, depending on the frequency
-        '''
-
-        comp = c.Synchrotron(nu0 = nu0_s, beta_pl = betas)
-        A = mm.MixingMatrix(comp).evaluator(np.array([nu]))()[0]
-
-        return A
-    def model_dust_frequency(self, A, alpha, delta, fnu1, fnu2):
-        '''
-        Function to define the Dust model for two frequencies
-        '''
-
-        return abs(A) * delta * fnu1 * fnu2 * (self.ell/80)**(2 + alpha)
-    def model_sync_frequency(self, A, alpha, fnu1, fnu2):
-        '''
-        Function to define the Dust model for two
-        '''
-
-        return abs(A) * fnu1 * fnu2 * (self.ell/80)**alpha
-    def model_dustsync_corr(self, Ad, As, alphad, alphas, fnu1d, fnu2d, fnu1s, fnu2s, eps):
-        return eps * np.sqrt(abs(As) * abs(Ad)) * (fnu1d * fnu2s + fnu2d * fnu1s) * (self.ell / 80)**((alphad + alphas)/2)
-    def model_dust(self, Ad, alphad, betad, deltad, nu0_d):
-        '''
-        Function defining the Dust model for all frequencies, depending on Ad, alphad, betad, deltad & nu0_d
-        '''
-        
-        models = np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-        for i in range(self.nfreq):
-            for j in range(i, self.nfreq):
-                if i == j:
-                    #fnud = self.scale_dust(self.nus[i], nu0_d, betad)
-                    fnud = self.scale_dust(self.nus[i], nu0_d, betad)
-                    models[i, j] += self.model_dust_frequency(Ad, alphad, deltad, fnud, fnud)
-                else:
-                    #fnu1d = self.scale_dust(self.nus[i], nu0_d, betad)
-                    #fnu2d = self.scale_dust(self.nus[j], nu0_d, betad)
-                    fnu1d = self.scale_dust(self.nus[i], nu0_d, betad)
-                    fnu2d = self.scale_dust(self.nus[j], nu0_d, betad)
-                    models[i, j] += self.model_dust_frequency(Ad, alphad, deltad, fnu1d, fnu2d)
-        
-        return models
-    def model_sync(self, As, alphas, betas, nu0_s):
-        '''
-        Function defining the Synchrotron model for all frequencies
-        '''
-
-        models = np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-        for i in range(self.nfreq):
-            for j in range(self.nfreq):
-                if i == j:
-                    fnus = self.scale_sync(self.nus[i], nu0_s, betas)
-                    models[i, j] += self.model_sync_frequency(As, alphas, fnus, fnus)
-                else:
-                    fnu1s = self.scale_sync(self.nus[i], nu0_s, betas)
-                    fnu2s = self.scale_sync(self.nus[j], nu0_s, betas)
-                    models[i, j] += self.model_sync_frequency(As, alphas, fnu1s, fnu2s)
-        return models 
-    def model_corr_dust_sync(self, Ad, alphad, betad, nu0_d, As, alphas, betas, nu0_s, eps):
-        '''
-        Function defining the correlation model between Dust & Synchrotron for all frequencies
-        '''
-
-        models = np.zeros((self.nfreq, self.nfreq, len(self.ell)))
-        for i in range(self.nfreq):
-            for j in range(i, self.nfreq):
-                if i == j:
-                    fnud = self.scale_dust(self.nus[i], nu0_d, betad)
-                    fnus = self.scale_sync(self.nus[i], nu0_s, betas)
-                    models[i, j] += self.model_dustsync_corr(Ad, As, alphad, alphas, fnud, fnud, fnus, fnus, eps)
-                else:
-                    fnu1d = self.scale_dust(self.nus[i], nu0_d, betad)
-                    fnu2d = self.scale_dust(self.nus[j], nu0_d, betad)
-                    fnu1s = self.scale_sync(self.nus[i], nu0_s, betas)
-                    fnu2s = self.scale_sync(self.nus[j], nu0_s, betas)
-                    models[i, j] += self.model_dustsync_corr(Ad, As, alphad, alphas, fnu1d, fnu2d, fnu1s, fnu2s, eps)
-        return models
 
 class Fitting(data):
     '''
