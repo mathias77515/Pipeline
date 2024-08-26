@@ -4,7 +4,7 @@ import sys
 import os
 
 sys.path.append(os.getcwd())
-CMB_FILE = 'FMM/data/'
+CMB_FILE = 'data/'
 #from qubic.data import PATH
 import pysm3
 import pysm3.units as u

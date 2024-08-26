@@ -16,10 +16,10 @@ QUBIC:
 
     ### This section control the parameters related to QUBIC
 
-    instrument: 'UWB'                        # Instrumental design (DB or UWB)
-    npointings: 2000                        # Number of time samples
-    nsub_in: 8                             # Number of sub-acquisitions
-    nsub_out: 8
+    instrument: 'DB'                        # Instrumental design (DB or UWB)
+    npointings: 500                        # Number of time samples
+    nsub_in: 4                             # Number of sub-acquisitions
+    nsub_out: 4
     nrec: 2                                # Number of reconstructed frequency maps
     convolution_in: False                   # Angular resolution in the input TOD
     convolution_out: False                  # Angular resolution in the reconstruction
@@ -50,22 +50,22 @@ PLANCK:
     weight_planck: 0                            # Weight of Planck data within the QUBIC patch
     level_noise_planck: 1                       # Noise level for Planck data
     bandwidth_planck: 0.2                       # Multiplicative factor to define the bandwidth of Planck's data
-    nsub_planck: 10                            # Number of sub acquisitions for Planck's data
+    nsub_planck: 100                            # Number of sub acquisitions for Planck's data
 
 Pipeline:
     mapmaking: True                              # Run MapMaking Pipeline
-    spectrum: False                              # Compute Power Spectra of the frequency maps
+    spectrum: True                              # Compute Power Spectra of the frequency maps
 
 PCG:
 
     ### This section control PCG parameters
 
-    n_iter_pcg: 100                                   # Number of PCG iterations
+    n_iter_pcg: 2                                   # Number of PCG iterations
     tol_pcg: 1.0e-12                                # Tolerance for PCG
     preconditioner: True
     gif: True
     resolution_plot: 12
-    fwhm_plot: 0 #.005
+    fwhm_plot: 0
 
 Spectrum:
 

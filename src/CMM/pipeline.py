@@ -754,10 +754,10 @@ class Pipeline:
                     if self.preset.tools.params['lastite']:
                     
                         if step != 0:
-                            os.remove('CMM/' + self.preset.tools.params['foldername'] + '/' + self.preset.tools.params['filename']+  f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step-1}.pkl")
+                            os.remove('CMM/' + self.preset.tools.params['foldername'] + '/maps/' + self.preset.tools.params['filename']+  f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step-1}.pkl")
                     
-                    with open('CMM/' + self.preset.tools.params['foldername'] + '/' + self.preset.tools.params['filename'] + f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step}.pkl", 'wb') as handle:
-                        pickle.dump({'components':self.preset.fg.components_in, 
+                    with open('CMM/' + self.preset.tools.params['foldername'] + '/maps/' + self.preset.tools.params['filename'] + f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step}.pkl", 'wb') as handle:
+                        pickle.dump({'components':self.preset.fg.components_in,
                                  'components_i':self.preset.fg.components_iter,
                                  'beta':self.preset.acquisition.allbeta,
                                  'beta_true':self.preset.mixingmatrix.beta_in,
@@ -773,8 +773,12 @@ class Pipeline:
                                  'center':self.preset.sky.center,
                                  'coverage':self.preset.sky.coverage,
                                  'seenpix':self.preset.sky.seenpix,
-                                 'fwhm':self.preset.acquisition.fwhm_tod,
-                                 'acquisition.fwhm_reconstructed':self.preset.acquisition.fwhm_mapmaking}, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                                 'fwhm_in':self.preset.acquisition.fwhm_tod,
+                                 'fwhm_out':self.preset.acquisition.fwhm_mapmaking,
+                                 'fwhm_rec':self.preset.acquisition.fwhm_reconstructed,
+                                 #'fwhm':self.preset.acquisition.fwhm_tod,
+                                 #'acquisition.fwhm_reconstructed':self.preset.acquisition.fwhm_mapmaking
+                        }, handle, protocol=pickle.HIGHEST_PROTOCOL)
     def _compute_map_noise_qubic_patch(self):
         
         """

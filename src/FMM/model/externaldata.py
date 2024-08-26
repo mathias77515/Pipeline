@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import yaml
 #from mapmaking.systematics import give_cl_cmb, arcmin2rad
-from Qacquisition import *
+from lib.Qacquisition import *
 from .models import *
 
 

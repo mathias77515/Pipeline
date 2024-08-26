@@ -1,7 +1,7 @@
 import numpy as np
 
-from Qacquisition import *
-from Qnoise import *
+from lib.Qacquisition import *
+from lib.Qnoise import *
 from pyoperators import DiagonalOperator
 
 class PresetAcquisition:

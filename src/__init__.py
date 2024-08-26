@@ -1,10 +1,4 @@
-from .Qcomponent_model import *
-from .Qmixing_matrix import *
+from .lib import *
+from .FMM import *
+from .CMM import *
 
-from .Qinstrument import *
-from .Qacquisition import *
-from .Qnoise import *
-from .Qfoldertools import *
-from .Qcg import *
-from .Qmap_plotter import *
-from .Qmpi_tools import *

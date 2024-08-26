@@ -8,12 +8,13 @@ import os
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pyoperators import ReshapeOperator, PackOperator
 ### Local packages
-from Qacquisition import *
-from Qnoise import *
-from Qcomponent_model import *
-from Qfoldertools import *
-from Qcg import *
-from Qmap_plotter import *
+from lib.Qacquisition import *
+from lib.Qnoise import *
+from lib.Qcomponent_model import *
+from lib.Qfoldertools import *
+from lib.Qcg import *
+from lib.Qmap_plotter import *
+from lib.Qspectra import *
 
 from .model.models import *
 from .model.externaldata import *
@@ -53,11 +54,11 @@ class PipelineFrequencyMapMaking:
         self.file = file
         self.plot_folder = 'FMM/' + self.params['path_out'] + 'png/'
         
-        #self.externaldata = PipelineExternalData(file, self.params)
-        #self.externaldata.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
+        self.externaldata = PipelineExternalData(file, self.params)
+        self.externaldata.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
 
-        #self.externaldata_noise = PipelineExternalData(file, self.params, noise_only=True)
-        #self.externaldata_noise.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
+        self.externaldata_noise = PipelineExternalData(file, self.params, noise_only=True)
+        self.externaldata_noise.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
         
         if comm.Get_rank() == 0:
             if not os.path.isdir('FMM/' + self.params['path_out'] + 'maps/'):
@@ -265,7 +266,7 @@ class PipelineFrequencyMapMaking:
                 'period':1, 
                 'RA_center':self.params['SKY']['RA_center'], 
                 'DEC_center':self.params['SKY']['DEC_center'],
-                'filter_nu':nu_ave * 1e9, 
+                'filter_nu':150 * 1e9, 
                 'noiseless':False, 
                 'comm':self.comm, 
                 'dtheta':self.params['QUBIC']['dtheta'],
@@ -273,7 +274,9 @@ class PipelineFrequencyMapMaking:
                 'nprocs_instrument':self.size,
                 'photon_noise':True, 
                 'nhwp_angles':3, 
-                'effective_duration':3, 
+                #'effective_duration':3, 
+                'effective_duration150':3, 
+                'effective_duration220':3, 
                 'filter_relative_bandwidth':0.25, 
                 'type_instrument':'wide', 
                 'TemperatureAtmosphere150':None, 
@@ -487,7 +490,7 @@ class PipelineFrequencyMapMaking:
         else: 
             M = None
         return M
-    def _pcg(self, d, x0):
+    def _pcg(self, d, x0, seenpix):
 
         '''
         
@@ -496,16 +499,10 @@ class PipelineFrequencyMapMaking:
         The PCG used for the minimization is intrinsequely parallelized (e.g see PyOperators).
         
         '''
-        
-        seenpix = self.seenpix
 
-        
-        #print(self.H_out.operands)
         ### Update components when pixels outside the patch are fixed (assumed to be 0)
         A = self.H_out.T * self.invN * self.H_out
         
-        #A = self.H_out.T * self.invN * self.H_out
-        #b = self.H_out.T * self.invN * d
         x_planck = self.m_nu_in * (1 - seenpix[None, :, None])
         b = self.H_out.T * self.invN * (d - self.H_out_all_pix(x_planck))
         ### Preconditionning
@@ -543,8 +540,11 @@ class PipelineFrequencyMapMaking:
 
         if self.params['QUBIC']['nrec'] == 1:
             solution_qubic_planck['x']['x'] = np.array([solution_qubic_planck['x']['x']])
+            
+        solution = np.ones(self.m_nu_in.shape) * hp.UNSEEN
+        solution[:, seenpix, :] = solution_qubic_planck['x']['x'].copy()
 
-        return solution_qubic_planck['x']['x']
+        return solution
     def save_data(self, name, d):
 
         """
@@ -581,7 +581,7 @@ class PipelineFrequencyMapMaking:
         x0[:, self.seenpix, :] = 0
         
         ### Solve map-making equation
-        self.s_hat = self._pcg(self.TOD, x0=x0[:, self.seenpix, :])
+        self.s_hat = self._pcg(self.TOD, x0=x0[:, self.seenpix, :], seenpix=self.seenpix)
         
         ### Wait for all processes
         self._barrier()
@@ -589,6 +589,7 @@ class PipelineFrequencyMapMaking:
         ### n = m_signalnoisy - m_signal
         self.s_hat_noise = self.s_hat - self.m_nu_in
         
+        ### Ensure that non seen pixels is 0 for spectrum computation
         self.s_hat[:, ~self.seenpix, :] = 0
         self.s_hat_noise[:, ~self.seenpix, :] = 0
         
@@ -630,7 +631,7 @@ class PipelineFrequencyMapMaking:
                          'center':self.center, 'maps_in':self.m_nu_in, 'parameters':self.params, 'fwhm_in':self.fwhm_in, 
                          'fwhm_out':self.fwhm_out, 'fwhm_rec':self.fwhm_rec, 'duration':mapmaking_time}
             
-            self.save_data(self.file, dict_solution)
+            save_data(self.file, dict_solution)
         self._barrier()   
 
 
@@ -653,28 +654,44 @@ class PipelineEnd2End:
         self.folder = 'FMM/' + self.params['path_out'] + 'maps/'
         self.file = self.folder + self.params['datafilename'] + f'_{self.job_id}.pkl'
         self.file_spectrum = 'FMM/' + self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['datafilename']+f'_{self.job_id}.pkl'
-        
-        ### Initialization
-        if self.params['Pipeline']['mapmaking']:
-            self.mapmaking = PipelineFrequencyMapMaking(self.comm, self.file, self.params)
-        else:
-            self.mapmaking = None
+        self.mapmaking = None
         
     def main(self, specific_file=None):
 
         ### Execute Frequency Map-Making
         if self.params['Pipeline']['mapmaking']:
+            
+            ### Initialization
+            self.mapmaking = PipelineFrequencyMapMaking(self.comm, self.file, self.params)
+            
+            ### Run
             self.mapmaking.run() 
         
         ### Execute spectrum
         if self.params['Pipeline']['spectrum']:
             if self.comm.Get_rank() == 0:
-                if self.mapmaking is not None:
-                    self.spectrum = Spectrum(self.file)
-                else:
-                    self.spectrum = Spectrum(specific_file)
+                create_folder_if_not_exists(self.comm, 'FMM/' + self.params['path_out'] + 'spectrum/')
                 
-                self.spectrum.run()
+                if self.mapmaking is not None:
+                    self.spectrum = Spectra(self.file)
+                else:
+                    self.spectrum = Spectra(specific_file)
+                
+                ### Signal
+                DlBB_maps = self.spectrum.run(maps=self.spectrum.maps)
+                
+                ### noise
+                DlBB_noise = self.spectrum.run(maps=self.spectrum.dictionary['maps_noise'])
+                
+                dict_solution = {
+                                 'nus':self.spectrum.dictionary['nus'],
+                                 'ell':self.spectrum.ell,
+                                 'Dls':DlBB_maps,
+                                 'Nl':DlBB_noise
+                                }
+            
+                save_data(self.file_spectrum, dict_solution)
+                
 
         
 

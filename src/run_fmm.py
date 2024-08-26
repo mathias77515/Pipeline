@@ -5,7 +5,7 @@ import sys
 try:
     file = str(sys.argv[1])
 except IndexError:
-    file = 1
+    file = None
     
 if __name__ == "__main__":
 

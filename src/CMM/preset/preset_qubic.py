@@ -1,9 +1,8 @@
 import numpy as np
 
 import qubic
-from Qacquisition import JointAcquisitionComponentsMapMaking
-
-import Qcomponent_model as c
+from lib.Qacquisition import JointAcquisitionComponentsMapMaking
+import lib.Qcomponent_model as c
 
 class PresetQubic:
     """
