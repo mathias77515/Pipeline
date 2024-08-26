@@ -1,12 +1,7 @@
 from pyoperators import *
 
-import Qmixing_matrix as mm
-
-#from Qacquisition import *
-
-#from Qmpi_tools import *
-from Qnoise import *
-from Qfoldertools import *
+import lib.Qmixing_matrix as mm
+from lib.Qfoldertools import *
 
 
 def _norm2(x, comm):

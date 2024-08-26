@@ -106,7 +106,7 @@ class PresetFG:
         numpy.ndarray: The modified CMB power spectrum.
         """
         # Read the lensed scalar power spectrum from the FITS file
-        power_spectrum = hp.read_cl(os.getcwd() + '/CMM/data/' + 'Cls_Planck2018_lensed_scalar.fits')[:,:4000]
+        power_spectrum = hp.read_cl(os.getcwd() + '/data/' + 'Cls_Planck2018_lensed_scalar.fits')[:,:4000]
         
         # Adjust the lensing amplitude if Alens is not the default value
         if Alens != 1.:
@@ -114,7 +114,7 @@ class PresetFG:
         
         # Add tensor contributions if r is not zero
         if r:
-            power_spectrum += r * hp.read_cl(os.getcwd() + '/CMM/data/' + 'Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits')[:,:4000]
+            power_spectrum += r * hp.read_cl(os.getcwd() + '/data/' + 'Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits')[:,:4000]
         
         return power_spectrum
     def polarized_I(self, m, nside, polarization_fraction=0):
@@ -131,10 +131,10 @@ class PresetFG:
         """
         
         # Read and downgrade the polarization angle map to the desired nside resolution
-        polangle = hp.ud_grade(hp.read_map(os.getcwd() + '/CMM/data/' + 'psimap_dust90_512.fits'), nside)
+        polangle = hp.ud_grade(hp.read_map(os.getcwd() + '/data/' + 'psimap_dust90_512.fits'), nside)
         
         # Read and downgrade the depolarization map to the desired nside resolution
-        depolmap = hp.ud_grade(hp.read_map(os.getcwd() + '/CMM/data/' + 'gmap_dust90_512.fits'), nside)
+        depolmap = hp.ud_grade(hp.read_map(os.getcwd() + '/data/' + 'gmap_dust90_512.fits'), nside)
         
         # Calculate the cosine of twice the polarization angle
         cospolangle = np.cos(2.0 * polangle)

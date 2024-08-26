@@ -10,13 +10,13 @@ from pyoperators import MPI
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
 ### Local packages
-from Qacquisition import *
-from Qfoldertools import *
-from Qmap_plotter import *
-from Qcg import pcg
-import Qmixing_matrix as mm
+from lib.Qacquisition import *
+from lib.Qfoldertools import *
+from lib.Qmap_plotter import *
+from lib.Qcg import pcg
+import lib.Qmixing_matrix as mm
 #from simtools.mpi_tools import *
-from Qnoise import *
+from lib.Qnoise import *
 #from simtools.analysis import *
 from .preset import *
 from .costfunc.chi2 import Chi2Parametric, Chi2Parametric_alt, Chi2Blind, Chi2DualBand, Chi2UltraWideBand   
