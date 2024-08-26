@@ -37,11 +37,11 @@ class CMBModel:
 
 
         """
-        power_spectrum = hp.read_cl('data/Cls_Planck2018_lensed_scalar.fits')[:,:4000]
+        power_spectrum = hp.read_cl('src/data/Cls_Planck2018_lensed_scalar.fits')[:,:4000]
         if self.params['CMB']['Alens'] != 1.:
             power_spectrum *= self.params['CMB']['Alens']
         if self.params['CMB']['r']:
-            power_spectrum += self.params['CMB']['r'] * hp.read_cl('data/Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits')[:,:4000]
+            power_spectrum += self.params['CMB']['r'] * hp.read_cl('src/data/Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits')[:,:4000]
         return power_spectrum
     def cl2dl(self, ell, cl):
 

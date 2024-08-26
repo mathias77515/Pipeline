@@ -20,7 +20,7 @@ class PipelineExternalData:
         
         self.params = params
 
-        with open('FMM/model/noise.yml', "r") as stream:
+        with open('src/FMM/model/noise.yml', "r") as stream:
             self.noise = yaml.safe_load(stream)
         
         self.noise_only = noise_only
@@ -150,7 +150,7 @@ class PipelineExternalData:
             
         return mysky * self.factor               
     def _get_fwhm(self, nu):
-        fwhmi = self.read_pkl(f'data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
+        fwhmi = self.read_pkl(f'src/data/Planck{nu:.0f}GHz.pkl')[f'fwhm{nu:.0f}']
         return fwhmi
     def _get_noise(self, nu):
         
