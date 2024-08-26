@@ -37,7 +37,7 @@ SKY:
 
     ### This section control the reconstructed sky
 
-    nside: 256                              # Nside of components
+    nside: 64                              # Nside of components
     coverage_cut: 0.2                      # Define a cut where the coverage is too low
     RA_center: 0                   
     DEC_center: -57
@@ -71,7 +71,7 @@ Spectrum:
 
     ### This section define the parameters to compute the power spectra
 
-    dl: 30                                      
-    lmin: 40
-    lmax: 511
+    dl: 10                                      
+    lmin: 20
+    lmax: 120
     aposize: 10

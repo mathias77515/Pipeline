@@ -17,9 +17,9 @@ from pyoperators import *
 #sys.path.append('/pbs/home/t/tlaclave/sps/Pipeline')
 
 #### QUBIC packages
-import lib.Qcomponent_model as c
-import lib.Qmixing_matrix as mm
+
 from lib.Qspectra_component import CMB, Foreground
+
 from pyoperators import *
 import qubic
 
@@ -31,7 +31,18 @@ def _Cl2BK(ell, Cl):
     return 100 * ell * Cl / (2 * np.pi)
 
 __path__ = os.path.dirname(os.path.abspath(__file__))
-print(__path__)
+
+
+
+
+
+
+
+stop
+
+        
+
+
 
 class data:
     '''

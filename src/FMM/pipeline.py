@@ -679,7 +679,8 @@ class PipelineEnd2End:
                 
                 ### Signal
                 DlBB_maps = self.spectrum.run(maps=self.spectrum.maps)
-                
+                print(DlBB_maps[..., 0])
+                stop
                 ### noise
                 DlBB_noise = self.spectrum.run(maps=self.spectrum.dictionary['maps_noise'])
                 

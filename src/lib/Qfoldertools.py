@@ -1,6 +1,7 @@
 import os
 import imageio
 import pickle
+import numpy as np
 
 def save_data(name, d):
 
@@ -40,10 +41,6 @@ def create_folder_if_not_exists(comm, folder_name):
                 #print(f"Error creating the folder '{folder_name}': {e}")
         else:
             pass
-
-
-
-
 def do_gif(input_folder, filename, output='animation.gif', duration=0.01):
 
     # Collect all the file paths for the images
@@ -64,3 +61,27 @@ def do_gif(input_folder, filename, output='animation.gif', duration=0.01):
 
     print(f"GIF saved at {os.path.join(input_folder, output)}")
 
+
+class MergeAllFiles:
+    
+    def __init__(self, foldername):
+        
+        self.foldername = foldername
+        
+        self.list_files = os.listdir(self.foldername)
+        self.number_of_realizations = len(self.list_files)
+        
+    def _reads_one_file(self, i, key):
+        
+        d = open_data(self.foldername + self.list_files[i])
+        
+        return d[key]
+    
+    def _reads_all_files(self, key):
+        
+        arr = np.zeros((self.number_of_realizations,) + self._reads_one_file(0, key).shape)
+        
+        for ireal in range(self.number_of_realizations):
+            arr[ireal] = self._reads_one_file(ireal, key)
+            
+        return arr
