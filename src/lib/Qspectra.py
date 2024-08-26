@@ -67,6 +67,9 @@ class Spectra:
                     map1 = C(maps[irec])
                     map2 = maps[jrec]
                 BBspectra[irec, jrec, :] = self._get_BB_spectra(map=map1.T, map2=map2.T, fwhm=fwhm)
+                
+                if irec != jrec:
+                    BBspectra[jrec, irec] = BBspectra[irec, jrec]
         
         return BBspectra
 
