@@ -14,5 +14,7 @@
 #SBATCH --array=1-500
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+
 module load mpich
-mpirun -np $SLURM_NTASKS python main.py $1
+
+mpirun -np $SLURM_NTASKS python run_fmm.py
