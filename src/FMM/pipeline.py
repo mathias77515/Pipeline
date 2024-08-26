@@ -670,7 +670,7 @@ class PipelineEnd2End:
         ### Execute spectrum
         if self.params['Pipeline']['spectrum']:
             if self.comm.Get_rank() == 0:
-                create_folder_if_not_exists(self.comm, 'FMM/' + self.params['path_out'] + 'spectrum/')
+                create_folder_if_not_exists(self.comm, 'src/FMM/' + self.params['path_out'] + 'spectrum/')
                 
                 if self.mapmaking is not None:
                     self.spectrum = Spectra(self.file)
