@@ -52,7 +52,7 @@ class PipelineFrequencyMapMaking:
         self.fsub = int(self.params['QUBIC']['nsub_out'] / self.params['QUBIC']['nrec'])
 
         self.file = file
-        self.plot_folder = 'FMM/' + self.params['path_out'] + 'png/'
+        self.plot_folder = 'src/FMM/' + self.params['path_out'] + 'png/'
         
         self.externaldata = PipelineExternalData(file, self.params)
         self.externaldata.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
@@ -61,10 +61,10 @@ class PipelineFrequencyMapMaking:
         self.externaldata_noise.run(fwhm=self.params['QUBIC']['convolution_in'], noise=True)
         
         if comm.Get_rank() == 0:
-            if not os.path.isdir('FMM/' + self.params['path_out'] + 'maps/'):
-                os.makedirs('FMM/' + self.params['path_out'] + 'maps/')
-            if not os.path.isdir('FMM/' + self.params['path_out'] + 'png/'):
-                os.makedirs('FMM/' + self.params['path_out'] + 'png/')
+            if not os.path.isdir('src/FMM/' + self.params['path_out'] + 'maps/'):
+                os.makedirs('src/FMM/' + self.params['path_out'] + 'maps/')
+            if not os.path.isdir('src/FMM/' + self.params['path_out'] + 'png/'):
+                os.makedirs('src/FMM/' + self.params['path_out'] + 'png/')
                 
         self.job_id = os.environ.get('SLURM_JOB_ID')
         self.center = qubic.equ2gal(self.params['SKY']['RA_center'], self.params['SKY']['DEC_center'])
@@ -645,15 +645,15 @@ class PipelineEnd2End:
 
     def __init__(self, comm):
         
-        with open('FMM/params.yml', "r") as stream:
+        with open('src/FMM/params.yml', "r") as stream:
             self.params = yaml.safe_load(stream)
 
         self.comm = comm
         self.job_id = os.environ.get('SLURM_JOB_ID')
 
-        self.folder = 'FMM/' + self.params['path_out'] + 'maps/'
+        self.folder = 'src/FMM/' + self.params['path_out'] + 'maps/'
         self.file = self.folder + self.params['datafilename'] + f'_{self.job_id}.pkl'
-        self.file_spectrum = 'FMM/' + self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['datafilename']+f'_{self.job_id}.pkl'
+        self.file_spectrum = 'src/FMM/' + self.params['path_out'] + 'spectrum/' + 'spectrum_' + self.params['datafilename']+f'_{self.job_id}.pkl'
         self.mapmaking = None
         
     def main(self, specific_file=None):
