@@ -679,8 +679,7 @@ class PipelineEnd2End:
                 
                 ### Signal
                 DlBB_maps = self.spectrum.run(maps=self.spectrum.maps)
-                print(DlBB_maps[..., 0])
-                stop
+                
                 ### noise
                 DlBB_noise = self.spectrum.run(maps=self.spectrum.dictionary['maps_noise'])
                 
@@ -688,7 +687,8 @@ class PipelineEnd2End:
                                  'nus':self.spectrum.dictionary['nus'],
                                  'ell':self.spectrum.ell,
                                  'Dls':DlBB_maps,
-                                 'Nl':DlBB_noise
+                                 'Nl':DlBB_noise,
+                                 'parameters':self.params,
                                 }
             
                 save_data(self.file_spectrum, dict_solution)

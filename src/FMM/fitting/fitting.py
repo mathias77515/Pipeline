@@ -32,14 +32,6 @@ def _Cl2BK(ell, Cl):
 
 __path__ = os.path.dirname(os.path.abspath(__file__))
 
-
-
-
-
-
-
-stop
-
         
 
 

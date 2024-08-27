@@ -77,8 +77,7 @@ class SkySpectra:
         comp = c.Synchrotron(nu0 = self.nu0_s, beta_pl = betas)
         Async = mm.MixingMatrix(comp).eval(self.nus)[:, 0]
         
-        return Adust[None, :] * Async[:, None] + Adust[:, None] * Async[None, :]
-        
+        return Adust[None, :] * Async[:, None] + Adust[:, None] * Async[None, :] 
     def model(self, r, Alens, Ad, alphad, betad, As, alphas, betas, eps):
         
         Dl_model = np.zeros((self.nfreq, self.nfreq, self.nbins))
