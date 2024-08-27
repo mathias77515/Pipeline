@@ -1,0 +1,61 @@
+cmb:
+  r:
+    fit: True
+    bound_min: -1
+    bound_max: 1
+    init_average: 0.0001
+    init_std: 0.1
+  Alens:
+    fit: 1
+    bound_min: 0
+    bound_max: 2
+    init_average: 1
+    init_std: 0.01
+
+dust:
+  Ad:
+    fit: 0
+    bound_min: 0
+    bound_max: 10
+    init_average: 1
+    init_std: 0.01
+  alphad:
+    fit: 0
+    bound_min: 0
+    bound_max: 10
+    init_average: 1
+    init_std: 0.01
+  betad:
+    fit: 0
+    bound_min: 0
+    bound_max: 10
+    init_average: 1
+    init_std: 0.01
+
+synchrotron:
+  As:
+    fit: 0
+    bound_min: 0
+    bound_max: 10
+    init_average: 1
+    init_std: 0.01
+  alphas:
+    fit: 0
+    bound_min: -1
+    bound_max: 1
+    init_average: 1
+    init_std: 0.01
+  betas:
+    fit: 0
+    bound_min: 0
+    bound_max: 10
+    init_average: 1
+    init_std: 0.01
+
+correlation:
+  eps:
+    fit: 0
+    bound_min: -1
+    bound_max: 1
+    init_average: 0
+    init_std: 0.01
