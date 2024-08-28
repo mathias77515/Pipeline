@@ -274,7 +274,7 @@ class PipelineFrequencyMapMaking:
                 'nprocs_instrument':self.size,
                 'photon_noise':True, 
                 'nhwp_angles':3, 
-                #'effective_duration':3, 
+                #'effective_duration':3,  
                 'effective_duration150':3, 
                 'effective_duration220':3, 
                 'filter_relative_bandwidth':0.25, 
