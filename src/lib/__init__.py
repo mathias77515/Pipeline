@@ -9,3 +9,5 @@ from .Qcg import *
 from .Qmap_plotter import *
 from .Qmpi_tools import *
 from .Qspectra import *
+from .Qfit import *
+from .Qspectra_component import *
