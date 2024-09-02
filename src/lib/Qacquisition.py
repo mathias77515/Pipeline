@@ -6,7 +6,7 @@ import healpy as hp
 import numpy as np
 import pysm3
 import os
-path_to_data = os.getcwd() + '/data/'
+path_to_data = os.getcwd() + '/src/data/'
 
 import pickle
 import warnings

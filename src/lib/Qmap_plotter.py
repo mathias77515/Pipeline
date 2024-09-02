@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 import os
 
-def _plot_reconstructed_maps(maps, m_in, name_file, center, reso=15, figsize=(12, 8), fwhm=0, min=-8, max=8):
+def _plot_reconstructed_maps(maps, m_in, name_file, center, reso=15, figsize=(12, 10), fwhm=0, min=-8, max=8, iter=0):
     
     """
     
@@ -33,7 +33,8 @@ def _plot_reconstructed_maps(maps, m_in, name_file, center, reso=15, figsize=(12
             hp.gnomview(_r[:, istk], rot=center, reso=reso, cmap='jet', sub=(_shape[0], _shape[-1]*2, k+2),
                         notext=True, min=min[istk], max=max[istk], title=f'Residuals - {stk[istk]}')
             k+=2
-    
+    #plt.suptitle(f'Iteration #{iter}', fontsize=15, y=1.01)
+    plt.tight_layout()
     plt.savefig(name_file)
     plt.close()
 
@@ -327,11 +328,11 @@ class PlotsCMM:
             plt.ylim(eps_min, eps_max)
             plt.yscale('log')
             
-            plt.savefig(f'CMM/jobs/{self.job_id}/A_iter/A_iter{ki+1}.png')
+            plt.savefig(f'src/CMM/jobs/{self.job_id}/A_iter/A_iter{ki+1}.png')
 
             if self.preset.tools.rank == 0:
                 if ki > 0 and gif is False:
-                    os.remove(f'CMM/jobs/{self.job_id}/A_iter/A_iter{ki}.png')
+                    os.remove(f'src/CMM/jobs/{self.job_id}/A_iter/A_iter{ki}.png')
                 
             plt.close() 
     def plot_beta_iteration(self, beta, figsize=(8, 6), truth=None, ki=0):
@@ -378,10 +379,10 @@ class PlotsCMM:
                 for i in range(beta.shape[1]):
                     plt.plot(alliter, abs(truth[i] - beta[:, i]), '-k', alpha=0.3)
             plt.yscale('log')
-            plt.savefig(f'CMM/jobs/{self.job_id}/beta_iter{ki+1}.png')
+            plt.savefig(f'src/CMM/jobs/{self.job_id}/beta_iter{ki+1}.png')
 
             if ki > 0:
-                os.remove(f'CMM/jobs/{self.job_id}/beta_iter{ki}.png')
+                os.remove(f'src/CMM/jobs/{self.job_id}/beta_iter{ki}.png')
             plt.close()
     def _display_allresiduals(self, map_i, seenpix, figsize=(14, 10), ki=0):
         """
@@ -415,7 +416,7 @@ class PlotsCMM:
                     k += 1
             
             plt.tight_layout()
-            plt.savefig(f'CMM/jobs/{self.job_id}/allcomps/allres_iter{ki+1}.png')
+            plt.savefig(f'src/CMM/jobs/{self.job_id}/allcomps/allres_iter{ki+1}.png')
             
             #if self.preset.tools.rank == 0:
             #    if ki > 0:
@@ -473,11 +474,11 @@ class PlotsCMM:
                     k += 1
             
             plt.tight_layout()
-            plt.savefig(f'CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki+1}.png')
+            plt.savefig(f'src/CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki+1}.png')
             
             if self.preset.tools.rank == 0:
                 if ki > 0 and gif is False:
-                    os.remove(f'CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki}.png')
+                    os.remove(f'src/CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki}.png')
             plt.close()
     def display_maps(self, seenpix, figsize=(14, 8), nsig=6, ki=0, view='gnomview'):
         """
@@ -547,11 +548,11 @@ class PlotsCMM:
                     k+=3
                     
                 plt.tight_layout()
-                plt.savefig(f'CMM/jobs/{self.job_id}/{s}/maps_iter{ki+1}.png')
+                plt.savefig(f'src/CMM/jobs/{self.job_id}/{s}/maps_iter{ki+1}.png')
                 
                 if self.preset.tools.rank == 0:
                     if ki > 0:
-                        os.remove(f'CMM/jobs/{self.job_id}/{s}/maps_iter{ki}.png')
+                        os.remove(f'src/CMM/jobs/{self.job_id}/{s}/maps_iter{ki}.png')
 
                 plt.close()
             self.preset.acquisition.rms_plot = np.concatenate((self.preset.acquisition.rms_plot, rms_i), axis=0)
@@ -601,11 +602,11 @@ class PlotsCMM:
             plt.xlim(-0.1, 0.1)
             plt.ylim(0, 100)
             plt.axvline(0, ls='--', color='black')
-            plt.savefig(f'CMM/jobs/{self.job_id}/gain_iter{ki+1}.png')
+            plt.savefig(f'src/CMM/jobs/{self.job_id}/gain_iter{ki+1}.png')
 
             if self.preset.tools.rank == 0:
                 if ki > 0:
-                    os.remove(f'CMM/jobs/{self.job_id}/gain_iter{ki}.png')
+                    os.remove(f'src/CMM/jobs/{self.job_id}/gain_iter{ki}.png')
 
             plt.close()
     def plot_rms_iteration(self, rms, figsize=(8, 6), ki=0):
@@ -619,10 +620,10 @@ class PlotsCMM:
             plt.yscale('log')
             
             plt.tight_layout()
-            plt.savefig(f'CMM/jobs/{self.job_id}/rms_iter{ki+1}.png')
+            plt.savefig(f'src/CMM/jobs/{self.job_id}/rms_iter{ki+1}.png')
                 
             if self.preset.tools.rank == 0:
                 if ki > 0:
-                    os.remove(f'CMM/jobs/{self.job_id}/rms_iter{ki}.png')
+                    os.remove(f'src/CMM/jobs/{self.job_id}/rms_iter{ki}.png')
 
             plt.close()

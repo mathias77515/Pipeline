@@ -170,7 +170,7 @@ class Pipeline:
             maxiter = max_iterations
         
         if self.preset.tools.params['PCG']['do_gif']:
-            gif_folder = f'CMM/jobs/{self.preset.job_id}/iter/'
+            gif_folder = f'src/CMM/jobs/{self.preset.job_id}/iter/'
         else:
             gif_folder = None
     
@@ -202,7 +202,7 @@ class Pipeline:
         ### Plot if asked
         if self.preset.tools.rank == 0:
             if self.preset.tools.params['PCG']['do_gif']:
-                do_gif(f'CMM/jobs/{self.preset.job_id}/iter/', 'iter_', output='animation.gif')
+                do_gif(f'src/CMM/jobs/{self.preset.job_id}/iter/', 'iter_', output='animation.gif')
             self.plots.display_maps(seenpix, ki=self._steps)
             self.plots._display_allcomponents(seenpix, ki=self._steps, gif=self.preset.tools.params['PCG']['do_gif'], reso=self.preset.tools.params['PCG']['reso_plot'])
             #self.plots._display_allresiduals(self.preset.fg.components_iter[:, self.preset.sky.seenpix, :], self.preset.sky.seenpix, ki=self._steps)  
@@ -754,9 +754,9 @@ class Pipeline:
                     if self.preset.tools.params['lastite']:
                     
                         if step != 0:
-                            os.remove('CMM/' + self.preset.tools.params['foldername'] + '/maps/' + self.preset.tools.params['filename']+  f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step-1}.pkl")
+                            os.remove('src/CMM/' + self.preset.tools.params['foldername'] + '/maps/' + self.preset.tools.params['filename']+  f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step-1}.pkl")
                     
-                    with open('CMM/' + self.preset.tools.params['foldername'] + '/maps/' + self.preset.tools.params['filename'] + f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step}.pkl", 'wb') as handle:
+                    with open('src/CMM/' + self.preset.tools.params['foldername'] + '/maps/' + self.preset.tools.params['filename'] + f"_seed{str(self.preset.tools.params['CMB']['seed'])}_{str(self.preset.job_id)}_k{step}.pkl", 'wb') as handle:
                         pickle.dump({'components':self.preset.fg.components_in,
                                  'components_i':self.preset.fg.components_iter,
                                  'beta':self.preset.acquisition.allbeta,

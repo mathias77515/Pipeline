@@ -9,7 +9,7 @@ Foregrounds:
     ### This section define the in/out foregrounds contribution
 
     fit_spectral_index: False                    # If False, the beta reconstruction is skipped
-    bin_mixing_matrix: 6
+    bin_mixing_matrix: 8
     blind_method: 'minimize'                    # Fit the mixing matrix with different methods when all the components are fitted with blind method: 'PCG', 'alternate' or 'minimize'
 
     # Thermal Dust emission
@@ -49,9 +49,9 @@ QUBIC:
     ### This section control the parameters related to QUBIC
 
     instrument: 'DB'                       # Instrumental design (DB or UWB)
-    npointings: 500                       # Number of time samples
-    nsub_in: 6                             # Number of sub-acquisitions
-    nsub_out: 6                            # Number of sub-acquisitions for the reconstruction
+    npointings: 4000                       # Number of time samples
+    nsub_in: 8                             # Number of sub-acquisitions
+    nsub_out: 8                            # Number of sub-acquisitions for the reconstruction
     convolution_in: False                  # Angular resolution in the input TOD
     convolution_out: False                 # Angular resolution in the reconstruction
     preconditionner: True
@@ -84,8 +84,8 @@ PLANCK:
 
     level_noise_planck: 1                         # Noise level for Planck data
     nintegr_planck: 1                             # Number of integration step for Planck data
-    thr_planck: 0.1                               # Threashold to remove planck weight within QUBIC patch
-    weight_planck: 1                              # Weight of Planck data within the QUBIC patch
+    thr_planck: 0.2                               # Threashold to remove planck weight within QUBIC patch
+    weight_planck: 0                              # Weight of Planck data within the QUBIC patch
     fwhm_weight_planck: 0                         # FWHM for apodized QUBIC patch
     30GHz: False
     44GHz: False
@@ -99,16 +99,16 @@ PCG:
 
     ### This section control PCG parameters
 
-    n_init_iter_pcg: 5 
-    n_iter_pcg: 5                                     # Number of PCG iterations
+    n_init_iter_pcg: 50 
+    n_iter_pcg: 50                                     # Number of PCG iterations
     tol_pcg: 1.0e-20                                # Tolerance for PCG
     n_iter_loop: 1                                  # Number of loop (1 loop is PCG + beta fitting + gain reconstruction)
     ites_to_converge: 1                            # should be less than k
     tol_rms: 1.0e-10
     #fix_pixels_outside_patch: True         # Fixing pixels outside QUBIC patch
     fixI: False                             # Fix the intensity during the map-making
-    reso_plot: 15
-    fwhm_plot: 0
+    reso_plot: 12
+    fwhm_plot: 0.005
     do_gif: True
 
 INITIAL:
@@ -117,13 +117,13 @@ INITIAL:
     
     fwhm0: 0 #.0078             # Convolution kernel for the initial guess maps
     sig_map_noise: 0            # Standard deviation of noise in first guess maps
-    qubic_patch_I_cmb: 1        # Multiplicative factor of initial CMB within the QUBIC patch
-    qubic_patch_I_dust: 1       # Multiplicative factor of initial Dust within the QUBIC patch
+    qubic_patch_I_cmb: 0        # Multiplicative factor of initial CMB within the QUBIC patch
+    qubic_patch_I_dust: 0       # Multiplicative factor of initial Dust within the QUBIC patch
     qubic_patch_I_sync: 1       # Multiplicative factor of initial Sync within the QUBIC patch
     qubic_patch_I_co: 1         # Multiplicative factor of initial CO within the QUBIC patch
 
     qubic_patch_P_cmb: 0        # Multiplicative factor of initial CMB within the QUBIC patch
-    qubic_patch_P_dust: 1       # Multiplicative factor of initial Dust within the QUBIC patch
+    qubic_patch_P_dust: 0       # Multiplicative factor of initial Dust within the QUBIC patch
     qubic_patch_P_sync: 1       # Multiplicative factor of initial Sync within the QUBIC patch
     qubic_patch_P_co: 1         # Multiplicative factor of initial CO within the QUBIC patch
 

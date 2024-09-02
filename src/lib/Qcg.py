@@ -194,8 +194,8 @@ class PCGAlgorithm(IterativeAlgorithm):
                 mymap[:, ~self.seenpix_plot, :] = hp.UNSEEN
                     
                 _plot_reconstructed_maps(mymap, self.input, self.gif + f'iter_{self.niterations+self.iter_init}.png', 
-                                         self.center, reso=self.reso, figsize=(12, 8), 
-                                         min=min, max=max, fwhm=self.fwhm)
+                                         self.center, reso=self.reso, figsize=(12, 11), 
+                                         min=min, max=max, fwhm=self.fwhm, iter=self.niterations)
             
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
