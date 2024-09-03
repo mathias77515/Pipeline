@@ -23,6 +23,13 @@ from .model.planck_timeline import *
 
 
 def save_pkl(name, d):
+    """
+    Function that create a file called name to save the dictionnary d using pickle
+
+    Args:
+        name (string): file name
+        d (dict): dictionnary saved using pickle
+    """
     with open(name, "wb") as handle:
         pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -84,6 +91,9 @@ class PipelineFrequencyMapMaking:
         self.dict_in, self.dict_mono_in = self.get_dict(key="in")
         self.dict_out, self.dict_mono_out = self.get_dict(key="out")
         self.skyconfig = self._get_sky_config()
+        
+        ### Initial maps
+        self.m_nu_in = self.get_input_map()
 
         ### Joint acquisition for TOD making
         self.joint_tod = JointAcquisitionFrequencyMapMaking(
@@ -144,7 +154,6 @@ class PipelineFrequencyMapMaking:
 
         ### Noises
         seed_noise_planck = self._get_random_value()
-        # print('seed_noise_planck', seed_noise_planck)
 
         self.noise143 = (
             self.planck_acquisition143.get_noise(seed_noise_planck)
@@ -242,13 +251,12 @@ class PipelineFrequencyMapMaking:
 
     def _get_sky_config(self):
         """
-
         Method that read `params.yml` file and create dictionary containing sky emission such as :
 
                     d = {'cmb':seed, 'dust':'d0', 'synchrotron':'s0'}
 
-        Note that the key denote the emission and the value denote the sky model using PySM convention. For CMB, seed denote the realization.
-
+        Note that the key denote the emission and the value denote the sky model using PySM convention. 
+        For CMB, seed denote the realization.
         """
 
         sky = {}
@@ -296,8 +304,6 @@ class PipelineFrequencyMapMaking:
         Method to modify the qubic dictionary.
 
         """
-
-        nu_ave, delta_nu_over_nu = self.get_ultrawideband_config()
 
         args = {
             "npointings": self.params["QUBIC"]["npointings"],
@@ -421,6 +427,12 @@ class PipelineFrequencyMapMaking:
             print(f"Final FWHM : {self.fwhm_rec}")
 
     def get_input_map(self):
+        """
+        Function to get the input maps from PySM3
+
+        Returns:
+            array: Input maps with shape [Nrec, 12*nside, Nstk]
+        """
         m_nu_in = np.zeros(
             (self.params["QUBIC"]["nrec"], 12 * self.params["SKY"]["nside"] ** 2, 3)
         )
@@ -574,8 +586,6 @@ class PipelineFrequencyMapMaking:
                         ).ravel(),
                     ]
 
-        self.m_nu_in = self.get_input_map()
-
         return TOD
 
     def _barrier(self):
@@ -605,9 +615,6 @@ class PipelineFrequencyMapMaking:
     def _get_preconditionner(self):
 
         if self.params["PCG"]["preconditioner"]:
-
-            comps = self._get_components_fgb()
-            A = MixingMatrix(*comps).eval(self.joint.qubic.allnus).sum(axis=1)
 
             approx_hth = np.zeros(
                 (
