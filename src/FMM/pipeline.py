@@ -24,11 +24,14 @@ from .model.planck_timeline import *
 
 def save_pkl(name, d):
     """
-    Function that create a file called name to save the dictionnary d using pickle
+    Function that create a file called "name" to save the dictionary "d" using Pickle package
 
-    Args:
-        name (string): file name
-        d (dict): dictionnary saved using pickle
+    Parameters
+    ----------
+    name : string
+        file name
+    d : dict
+        dictionary saved using Pickle
     """
     with open(name, "wb") as handle:
         pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -39,17 +42,23 @@ __all__ = ["PipelineFrequencyMapMaking", "PipelineEnd2End"]
 
 class PipelineFrequencyMapMaking:
     """
-
     Instance to reconstruct frequency maps using QUBIC abilities.
-
-    Parameters :
-    ------------
-        - comm : MPI communicator
-        - file : str to create folder for data saving
-
     """
 
+
     def __init__(self, comm, file, params):
+        """
+        Initialise PipelineFrequencyMapMaking
+
+        Parameters
+        ----------
+        comm : 
+            MPI communicator
+        file : str
+            used to create the forlder for data saving
+        params : dict   
+            dictionary containing all the simulation parameters
+        """
 
         self.mapmaking_time_0 = time.time()
 
