@@ -1,19 +1,19 @@
 import Qmixing_matrix
+
 print(Qmixing_matrix)
 sto
 
 
+import sys
 
 from pipeline import *
 from pyoperators import *
-import sys
-
 
 try:
     file = str(sys.argv[1])
 except IndexError:
     file = 1
-    
+
 if __name__ == "__main__":
 
     ### Common MPI arguments

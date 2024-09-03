@@ -1,14 +1,15 @@
 import numpy as np
+from pyoperators import DiagonalOperator
 
 from lib.Qacquisition import *
 from lib.Qnoise import *
-from pyoperators import DiagonalOperator
+
 
 class PresetAcquisition:
     """
-    
+
     Instance to initialize the Components Map-Making. It defines the acquisition of data.
-    
+
     Self variables :    - seed_noise: int
                         - params_foregrounds: dict
                         - seed_noise: int
@@ -29,9 +30,20 @@ class PresetAcquisition:
                         - beta_iter: ndarray / if d1 (iter, 12*nside_beta**2, Ncomp-1) / if not (Ncomp-1)
                         - allbeta: ndarray / if d1 (iter, 12*nside_beta**2, Ncomp-1) / if not (iter, Ncomp-1)
                         - Amm_iter: ndarray (Nsub + Nplanck*Nintegr, Ncomp-1)
-    
+
     """
-    def __init__(self, seed_noise, preset_tools, preset_external, preset_qubic, preset_sky, preset_fg, preset_mixing_matrix, preset_gain):
+
+    def __init__(
+        self,
+        seed_noise,
+        preset_tools,
+        preset_external,
+        preset_qubic,
+        preset_sky,
+        preset_fg,
+        preset_mixing_matrix,
+        preset_gain,
+    ):
         """
         Initialize the class with the given presets and seed noise.
 
@@ -55,33 +67,43 @@ class PresetAcquisition:
 
         ### Set noise seed
         self.seed_noise = seed_noise
-        
+
         ### Define tolerance of the rms variations
-        self.rms_tolerance = self.preset_tools.params['PCG']['tol_rms']
-        self.ites_rms_tolerance = self.preset_tools.params['PCG']['ites_to_converge']
+        self.rms_tolerance = self.preset_tools.params["PCG"]["tol_rms"]
+        self.ites_rms_tolerance = self.preset_tools.params["PCG"]["ites_to_converge"]
         self.rms_plot = np.zeros((1, 2))
 
         ### Inverse noise-covariance matrix
-        self.preset_tools._print_message('    => Building inverse noise covariance matrix')
-        self.invN = self.preset_qubic.joint_out.get_invntt_operator(mask=self.preset_sky.mask)
+        self.preset_tools._print_message(
+            "    => Building inverse noise covariance matrix"
+        )
+        self.invN = self.preset_qubic.joint_out.get_invntt_operator(
+            mask=self.preset_sky.mask
+        )
 
         ### Preconditioner
-        self.preset_tools._print_message('    => Creating preconditioner')
-        self.M = self._get_preconditioner(A_qubic=self.preset_mixingmatrix.Amm_in[:self.preset_qubic.params_qubic['nsub_out']],
-                                          A_ext=self.preset_mixingmatrix.Amm_in[self.preset_qubic.params_qubic['nsub_out']:],
-                                          precond=self.preset_qubic.params_qubic['preconditionner'],
-                                          thr=self.preset_tools.params['PLANCK']['thr_planck'])
+        self.preset_tools._print_message("    => Creating preconditioner")
+        self.M = self._get_preconditioner(
+            A_qubic=self.preset_mixingmatrix.Amm_in[
+                : self.preset_qubic.params_qubic["nsub_out"]
+            ],
+            A_ext=self.preset_mixingmatrix.Amm_in[
+                self.preset_qubic.params_qubic["nsub_out"] :
+            ],
+            precond=self.preset_qubic.params_qubic["preconditionner"],
+            thr=self.preset_tools.params["PLANCK"]["thr_planck"],
+        )
 
         ### Get convolution
-        self.preset_tools._print_message('    => Getting convolution')
+        self.preset_tools._print_message("    => Getting convolution")
         self._get_convolution()
 
         ### Get observed data
-        self.preset_tools._print_message('    => Getting observational data')
+        self.preset_tools._print_message("    => Getting observational data")
         self._get_tod()
 
         ### Compute initial guess for PCG
-        self.preset_tools._print_message('    => Initializing starting point')
+        self.preset_tools._print_message("    => Initializing starting point")
         self._get_x0()
 
     def _get_approx_hth(self):
@@ -93,17 +115,34 @@ class PresetAcquisition:
         """
 
         # Approximation of H.T H
-        approx_hth = np.empty((self.preset_qubic.params_qubic['nsub_out'],) + self.preset_qubic.joint_out.qubic.H[0].shapein)
+        approx_hth = np.empty(
+            (self.preset_qubic.params_qubic["nsub_out"],)
+            + self.preset_qubic.joint_out.qubic.H[0].shapein
+        )
         vector = np.ones(self.preset_qubic.joint_out.qubic.H[0].shapein)
-        for index in range(self.preset_qubic.params_qubic['nsub_out']):
-            approx_hth[index] = self.preset_qubic.joint_out.qubic.H[index].T * self.preset_qubic.joint_out.qubic.invn150 * self.preset_qubic.joint_out.qubic.H[index](vector)
-        
-        invN_ext = self.preset_qubic.joint_out.external.get_invntt_operator(mask=self.preset_sky.mask)
-        
-        _r = ReshapeOperator((len(self.preset_qubic.joint_out.external.nus), approx_hth.shape[1], approx_hth.shape[2]), invN_ext.shapein)
+        for index in range(self.preset_qubic.params_qubic["nsub_out"]):
+            approx_hth[index] = (
+                self.preset_qubic.joint_out.qubic.H[index].T
+                * self.preset_qubic.joint_out.qubic.invn150
+                * self.preset_qubic.joint_out.qubic.H[index](vector)
+            )
+
+        invN_ext = self.preset_qubic.joint_out.external.get_invntt_operator(
+            mask=self.preset_sky.mask
+        )
+
+        _r = ReshapeOperator(
+            (
+                len(self.preset_qubic.joint_out.external.nus),
+                approx_hth.shape[1],
+                approx_hth.shape[2],
+            ),
+            invN_ext.shapein,
+        )
         approx_hth_ext = invN_ext(np.ones(invN_ext.shapein))
-        
-        return approx_hth, _r.T(approx_hth_ext) 
+
+        return approx_hth, _r.T(approx_hth_ext)
+
     def _get_preconditioner(self, A_qubic, A_ext, precond=True, thr=0):
         """
         Calculates and returns the preconditioner matrix for the optimization process.
@@ -113,72 +152,106 @@ class PresetAcquisition:
         """
 
         if precond:
-            
-            seenpix_qubic_0_001 = self.preset_sky.coverage/self.preset_sky.max_coverage > thr
-            
+
+            seenpix_qubic_0_001 = (
+                self.preset_sky.coverage / self.preset_sky.max_coverage > thr
+            )
+
             # Calculate the approximate H^T * H matrix
             approx_hth, approx_hth_ext = self._get_approx_hth()
-            
+
             # Create a preconditioner matrix with dimensions (number of components, number of pixels, 3)
-            preconditioner = np.ones((len(self.preset_fg.components_model_out), approx_hth.shape[1], approx_hth.shape[2]))
-                        
+            preconditioner = np.ones(
+                (
+                    len(self.preset_fg.components_model_out),
+                    approx_hth.shape[1],
+                    approx_hth.shape[2],
+                )
+            )
+
             for icomp in range(len(self.preset_fg.components_model_out)):
                 for istk in range(3):
-                    precond_ext = 1/(approx_hth_ext[:, :, 0].T @ A_ext[..., icomp]**2)
+                    precond_ext = 1 / (
+                        approx_hth_ext[:, :, 0].T @ A_ext[..., icomp] ** 2
+                    )
                     precond_ext[precond_ext == np.inf] = 0
                     preconditioner[icomp, :, istk] = precond_ext
-                    preconditioner[icomp, seenpix_qubic_0_001, istk] *= self.preset_tools.params['PLANCK']['weight_planck']
+                    preconditioner[
+                        icomp, seenpix_qubic_0_001, istk
+                    ] *= self.preset_tools.params["PLANCK"]["weight_planck"]
 
             # We sum over the frequencies, take the inverse, and only keep the information on the patch.
             for icomp in range(len(self.preset_fg.components_model_out)):
                 for istk in range(3):
-                    precond_qubic = 1/(approx_hth[:, :, 0].T @ A_qubic[..., icomp]**2)
-                    preconditioner[icomp, seenpix_qubic_0_001, istk] += precond_qubic[seenpix_qubic_0_001]
+                    precond_qubic = 1 / (
+                        approx_hth[:, :, 0].T @ A_qubic[..., icomp] ** 2
+                    )
+                    preconditioner[icomp, seenpix_qubic_0_001, istk] += precond_qubic[
+                        seenpix_qubic_0_001
+                    ]
 
             M = DiagonalOperator(preconditioner[:, self.preset_sky.seenpix, :])
-            return M 
+            return M
         else:
-            return None    
+            return None
+
     def _get_convolution(self):
         """
         Method to define all angular resolutions of the instrument at each frequency.
-        
+
         This method sets the Full Width at Half Maximum (FWHM) for Time-Ordered Data (TOD) and map-making processes.
         `self.fwhm_tod` represents the real angular resolution, and `self.fwhm_mapmaking` represents the beams used for reconstruction.
-        
+
         The method checks the `convolution_in` and `convolution_out` parameters to determine the appropriate FWHM values.
         It also calculates the reconstructed FWHM based on these parameters.
-        
+
         Attributes:
             self.fwhm_tod (array): FWHM for TOD making.
             self.fwhm_mapmaking (array): FWHM for map-making.
             self.fwhm_reconstructed (float): Reconstructed FWHM.
         """
-        
+
         # Initialize FWHM arrays to 0
         self.fwhm_tod = self.preset_qubic.joint_in.qubic.allfwhm * 0
         self.fwhm_mapmaking = self.preset_qubic.joint_in.qubic.allfwhm * 0
-        
+
         # Check if convolution_in is True
-        if self.preset_qubic.params_qubic['convolution_in']:
+        if self.preset_qubic.params_qubic["convolution_in"]:
             self.fwhm_tod = self.preset_qubic.joint_in.qubic.allfwhm
-        
+
         # Check if convolution_out is True
-        if self.preset_qubic.params_qubic['convolution_out']:
-            self.fwhm_mapmaking = np.sqrt(self.preset_qubic.joint_in.qubic.allfwhm**2 - np.min(self.preset_qubic.joint_in.qubic.allfwhm)**2)
-        
+        if self.preset_qubic.params_qubic["convolution_out"]:
+            self.fwhm_mapmaking = np.sqrt(
+                self.preset_qubic.joint_in.qubic.allfwhm**2
+                - np.min(self.preset_qubic.joint_in.qubic.allfwhm) ** 2
+            )
+
         # Calculate the reconstructed FWHM based on convolution parameters
-        if self.preset_qubic.params_qubic['convolution_in'] and self.preset_qubic.params_qubic['convolution_out']:
+        if (
+            self.preset_qubic.params_qubic["convolution_in"]
+            and self.preset_qubic.params_qubic["convolution_out"]
+        ):
             self.fwhm_reconstructed = np.min(self.preset_qubic.joint_in.qubic.allfwhm)
-        elif self.preset_qubic.params_qubic['convolution_in'] and not self.preset_qubic.params_qubic['convolution_out']:
+        elif (
+            self.preset_qubic.params_qubic["convolution_in"]
+            and not self.preset_qubic.params_qubic["convolution_out"]
+        ):
             self.fwhm_reconstructed = np.mean(self.preset_qubic.joint_in.qubic.allfwhm)
-        elif not self.preset_qubic.params_qubic['convolution_in'] and not self.preset_qubic.params_qubic['convolution_out']:
+        elif (
+            not self.preset_qubic.params_qubic["convolution_in"]
+            and not self.preset_qubic.params_qubic["convolution_out"]
+        ):
             self.fwhm_reconstructed = 0
-        
+
         # Print the FWHM values
-        self.preset_tools._print_message(f'FWHM for TOD making : {self.fwhm_tod}')
-        self.preset_tools._print_message(f'FWHM for reconstruction : {self.fwhm_mapmaking}')
-        self.preset_tools._print_message(f'Reconstructed FWHM : {self.fwhm_reconstructed}')
+        self.preset_tools._print_message(f"FWHM for TOD making : {self.fwhm_tod}")
+        self.preset_tools._print_message(
+            f"FWHM for reconstruction : {self.fwhm_mapmaking}"
+        )
+        self.preset_tools._print_message(
+            f"Reconstructed FWHM : {self.fwhm_reconstructed}"
+        )
+
     def _get_noise(self):
         """
         Method to define QUBIC noise, can generate Dual band or Wide Band noise by following:
@@ -193,21 +266,36 @@ class PresetAcquisition:
             numpy.ndarray: The total noise array, flattened.
         """
 
-        if self.preset_qubic.params_qubic['instrument'] == 'UWB':
-            noise = QubicWideBandNoise(self.preset_qubic.dict, 
-                                    self.preset_qubic.params_qubic['npointings'], 
-                                    detector_nep=self.preset_qubic.params_qubic['NOISE']['detector_nep'],
-                                    duration=np.mean([self.preset_qubic.params_qubic['NOISE']['duration_150'], self.preset_qubic.params_qubic['NOISE']['duration_220']]))
+        if self.preset_qubic.params_qubic["instrument"] == "UWB":
+            noise = QubicWideBandNoise(
+                self.preset_qubic.dict,
+                self.preset_qubic.params_qubic["npointings"],
+                detector_nep=self.preset_qubic.params_qubic["NOISE"]["detector_nep"],
+                duration=np.mean(
+                    [
+                        self.preset_qubic.params_qubic["NOISE"]["duration_150"],
+                        self.preset_qubic.params_qubic["NOISE"]["duration_220"],
+                    ]
+                ),
+            )
         else:
-            noise = QubicDualBandNoise(self.preset_qubic.dict, 
-                                    self.preset_qubic.params_qubic['npointings'], 
-                                    detector_nep=self.preset_qubic.params_qubic['NOISE']['detector_nep'],
-                                    duration=[self.preset_qubic.params_qubic['NOISE']['duration_150'], self.preset_qubic.params_qubic['NOISE']['duration_220']])
+            noise = QubicDualBandNoise(
+                self.preset_qubic.dict,
+                self.preset_qubic.params_qubic["npointings"],
+                detector_nep=self.preset_qubic.params_qubic["NOISE"]["detector_nep"],
+                duration=[
+                    self.preset_qubic.params_qubic["NOISE"]["duration_150"],
+                    self.preset_qubic.params_qubic["NOISE"]["duration_220"],
+                ],
+            )
 
-        return noise.total_noise(self.preset_qubic.params_qubic['NOISE']['ndet'], 
-                                self.preset_qubic.params_qubic['NOISE']['npho150'], 
-                                self.preset_qubic.params_qubic['NOISE']['npho220'],
-                                seed_noise=self.seed_noise).ravel()
+        return noise.total_noise(
+            self.preset_qubic.params_qubic["NOISE"]["ndet"],
+            self.preset_qubic.params_qubic["NOISE"]["npho150"],
+            self.preset_qubic.params_qubic["NOISE"]["npho220"],
+            seed_noise=self.seed_noise,
+        ).ravel()
+
     def _get_tod(self):
         """
         Generate fake observational data from QUBIC and external experiments.
@@ -228,7 +316,11 @@ class PresetAcquisition:
             self.TOD_obs (ndarray): The combined observational data from QUBIC and external experiments.
         """
         ### Build joint acquisition operator
-        self.H = self.preset_qubic.joint_in.get_operator(A=self.preset_mixingmatrix.Amm_in, gain=self.preset_gain.gain_in, fwhm=self.fwhm_tod)
+        self.H = self.preset_qubic.joint_in.get_operator(
+            A=self.preset_mixingmatrix.Amm_in,
+            gain=self.preset_gain.gain_in,
+            fwhm=self.fwhm_tod,
+        )
 
         ### Create seed
         if self.preset_tools.rank == 0:
@@ -237,46 +329,69 @@ class PresetAcquisition:
         else:
             seed_pl = None
         seed_pl = self.preset_tools.comm.bcast(seed_pl, root=0)
-        
+
         ### Build noise variables
-        noise_external = self.preset_qubic.joint_in.external.get_noise(seed=seed_pl) * self.preset_tools.params['PLANCK']['level_noise_planck']
+        noise_external = (
+            self.preset_qubic.joint_in.external.get_noise(seed=seed_pl)
+            * self.preset_tools.params["PLANCK"]["level_noise_planck"]
+        )
         noise_qubic = self._get_noise()
 
         ### Create QUBIC TOD
-        self.TOD_qubic = (self.H.operands[0])(self.preset_fg.components_in) + noise_qubic
+        self.TOD_qubic = (self.H.operands[0])(
+            self.preset_fg.components_in
+        ) + noise_qubic
         self.nsampling_x_ndetectors = self.TOD_qubic.shape[0]
 
         ### Create external TOD
-        self.TOD_external = (self.H.operands[1])(self.preset_fg.components_in[:, :, :]) + noise_external
-        
-        _r = ReshapeOperator(self.TOD_external.shape, (len(self.preset_external.external_nus), 12*self.preset_sky.params_sky['nside']**2, 3))
+        self.TOD_external = (self.H.operands[1])(
+            self.preset_fg.components_in[:, :, :]
+        ) + noise_external
+
+        _r = ReshapeOperator(
+            self.TOD_external.shape,
+            (
+                len(self.preset_external.external_nus),
+                12 * self.preset_sky.params_sky["nside"] ** 2,
+                3,
+            ),
+        )
         maps_external = _r(self.TOD_external)
-        
+
         ### Reconvolve Planck data toward QUBIC angular resolution
-        if self.preset_qubic.params_qubic['convolution_in'] or self.preset_qubic.params_qubic['convolution_out']:
-            
-            C = HealpixConvolutionGaussianOperator(fwhm=self.preset_qubic.joint_in.qubic.allfwhm[-1], lmax=3*self.preset_sky.params_sky['nside'])
+        if (
+            self.preset_qubic.params_qubic["convolution_in"]
+            or self.preset_qubic.params_qubic["convolution_out"]
+        ):
+
+            C = HealpixConvolutionGaussianOperator(
+                fwhm=self.preset_qubic.joint_in.qubic.allfwhm[-1],
+                lmax=3 * self.preset_sky.params_sky["nside"],
+            )
             for i in range(maps_external.shape[0]):
                 maps_external[i] = C(maps_external[i])
-            
-        #if self.preset_tools.params['PCG']['fix_pixels_outside_patch']:
-        #maps_external[:, ~self.preset_sky.seenpix_qubic, :] = 0
+
+        # if self.preset_tools.params['PCG']['fix_pixels_outside_patch']:
+        # maps_external[:, ~self.preset_sky.seenpix_qubic, :] = 0
         self.TOD_external = _r.T(maps_external)
-        
-        #self.seenpix_external = np.tile(self.preset_sky.seenpix_qubic, (maps_external.shape[0], 3, 1)).reshape(maps_external.shape)
-        
+
+        # self.seenpix_external = np.tile(self.preset_sky.seenpix_qubic, (maps_external.shape[0], 3, 1)).reshape(maps_external.shape)
+
         ### Planck dataset with 0 outside QUBIC patch (Planck is assumed on the full sky)
         maps_external[:, ~self.preset_sky.seenpix_qubic, :] = 0
         self.TOD_external_zero_outside_patch = _r.T(maps_external)
-        
+
         ### Observed TOD (Planck is assumed on the full sky)
         self.TOD_obs = np.r_[self.TOD_qubic, self.TOD_external]
-        self.TOD_obs_zero_outside = np.r_[self.TOD_qubic, self.TOD_external_zero_outside_patch]    
+        self.TOD_obs_zero_outside = np.r_[
+            self.TOD_qubic, self.TOD_external_zero_outside_patch
+        ]
+
     def _get_x0(self):
         """
         Define starting point of the convergence.
 
-        The argument 'set_comp_to_0' multiplies the pixel values by a given factor. You can decide 
+        The argument 'set_comp_to_0' multiplies the pixel values by a given factor. You can decide
         to convolve the map by a beam with an FWHM in radians.
 
         This method initializes the beta_iter and Amm_iter attributes based on the foreground model parameters.
@@ -294,71 +409,89 @@ class PresetAcquisition:
         np.random.seed(seed)
 
         self.beta_iter, self.Amm_iter = self.preset_mixingmatrix._get_beta_iter()
-        
+
         # Build beta map for spatially varying spectral index
         self.allbeta = np.array([self.beta_iter])
         C1 = HealpixConvolutionGaussianOperator(
-            fwhm=self.fwhm_reconstructed, 
-            lmax=3 * self.preset_tools.params['SKY']['nside']
-            )
+            fwhm=self.fwhm_reconstructed,
+            lmax=3 * self.preset_tools.params["SKY"]["nside"],
+        )
         C2 = HealpixConvolutionGaussianOperator(
-            fwhm=self.preset_tools.params['INITIAL']['fwhm0'], 
-            lmax=3 * self.preset_tools.params['SKY']['nside']
-            )
+            fwhm=self.preset_tools.params["INITIAL"]["fwhm0"],
+            lmax=3 * self.preset_tools.params["SKY"]["nside"],
+        )
         # Constant spectral index -> maps have shape (Ncomp, Npix, Nstk)
-        istk=0
+        istk = 0
         mypix = self.preset_sky.seenpix
         for i in range(len(self.preset_fg.components_model_out)):
-            if self.preset_fg.components_name_out[i] == 'CMB':
-                self.preset_fg.components_iter[i] = C2(C1(self.preset_fg.components_iter[i]))
+            if self.preset_fg.components_name_out[i] == "CMB":
+                self.preset_fg.components_iter[i] = C2(
+                    C1(self.preset_fg.components_iter[i])
+                )
                 for istk in range(3):
                     if istk == 0:
-                        key = 'I'
+                        key = "I"
                     else:
-                        key = 'P'
-                    self.preset_fg.components_iter[i, mypix, istk] *= self.preset_tools.params['INITIAL'][f'qubic_patch_{key}_cmb']
+                        key = "P"
+                    self.preset_fg.components_iter[
+                        i, mypix, istk
+                    ] *= self.preset_tools.params["INITIAL"][f"qubic_patch_{key}_cmb"]
                     self.preset_fg.components_iter[i, mypix, istk] += np.random.normal(
-                        0, 
-                        self.preset_tools.params['INITIAL']['sig_map_noise'], 
-                        self.preset_fg.components_iter[i, mypix, istk].shape
-                        )   
-            elif self.preset_fg.components_name_out[i] == 'Dust':
-                self.preset_fg.components_iter[i] = C2(C1(self.preset_fg.components_iter[i]))
-                for istk in range(3):
-                    if istk == 0:
-                        key = 'I'
-                    else:
-                        key = 'P'
-                    self.preset_fg.components_iter[i, mypix, istk] *= self.preset_tools.params['INITIAL'][f'qubic_patch_{key}_dust']
-                    self.preset_fg.components_iter[i, mypix, istk] += np.random.normal(
-                        0, 
-                        self.preset_tools.params['INITIAL']['sig_map_noise'], 
-                        self.preset_fg.components_iter[i, mypix, istk].shape
-                        )
-            elif self.preset_fg.components_name_out[i] == 'Synchrotron':
-                self.preset_fg.components_iter[i] = C2(C1(self.preset_fg.components_iter[i]))
-                for istk in range(3):
-                    if istk == 0:
-                        key = 'I'
-                    else:
-                        key = 'P'
-                    
-                    self.preset_fg.components_iter[i, mypix, istk] *= self.preset_tools.params['INITIAL'][f'qubic_patch_{key}_sync']
-                    self.preset_fg.components_iter[i, mypix, istk] += np.random.normal(
-                        0, 
-                        self.preset_tools.params['INITIAL']['sig_map_noise'], 
-                        self.preset_fg.components_iter[i, mypix, istk].shape
-                        )
-            elif self.preset_fg.components_name_out[i] == 'CO':
-                self.preset_fg.components_iter[i] = C2(C1(self.preset_fg.components_iter[i]))
-                self.preset_fg.components_iter[i, mypix, :] *= self.preset_tools.params['INITIAL']['qubic_patch_co']
-                self.preset_fg.components_iter[i, mypix, :] += np.random.normal(
-                    0, 
-                    self.preset_tools.params['INITIAL']['sig_map_noise'], 
-                    self.preset_fg.components_iter[i, mypix, :].shape
+                        0,
+                        self.preset_tools.params["INITIAL"]["sig_map_noise"],
+                        self.preset_fg.components_iter[i, mypix, istk].shape,
                     )
+            elif self.preset_fg.components_name_out[i] == "Dust":
+                self.preset_fg.components_iter[i] = C2(
+                    C1(self.preset_fg.components_iter[i])
+                )
+                for istk in range(3):
+                    if istk == 0:
+                        key = "I"
+                    else:
+                        key = "P"
+                    self.preset_fg.components_iter[
+                        i, mypix, istk
+                    ] *= self.preset_tools.params["INITIAL"][f"qubic_patch_{key}_dust"]
+                    self.preset_fg.components_iter[i, mypix, istk] += np.random.normal(
+                        0,
+                        self.preset_tools.params["INITIAL"]["sig_map_noise"],
+                        self.preset_fg.components_iter[i, mypix, istk].shape,
+                    )
+            elif self.preset_fg.components_name_out[i] == "Synchrotron":
+                self.preset_fg.components_iter[i] = C2(
+                    C1(self.preset_fg.components_iter[i])
+                )
+                for istk in range(3):
+                    if istk == 0:
+                        key = "I"
+                    else:
+                        key = "P"
+
+                    self.preset_fg.components_iter[
+                        i, mypix, istk
+                    ] *= self.preset_tools.params["INITIAL"][f"qubic_patch_{key}_sync"]
+                    self.preset_fg.components_iter[i, mypix, istk] += np.random.normal(
+                        0,
+                        self.preset_tools.params["INITIAL"]["sig_map_noise"],
+                        self.preset_fg.components_iter[i, mypix, istk].shape,
+                    )
+            elif self.preset_fg.components_name_out[i] == "CO":
+                self.preset_fg.components_iter[i] = C2(
+                    C1(self.preset_fg.components_iter[i])
+                )
+                self.preset_fg.components_iter[i, mypix, :] *= self.preset_tools.params[
+                    "INITIAL"
+                ]["qubic_patch_co"]
+                self.preset_fg.components_iter[i, mypix, :] += np.random.normal(
+                    0,
+                    self.preset_tools.params["INITIAL"]["sig_map_noise"],
+                    self.preset_fg.components_iter[i, mypix, :].shape,
+                )
             else:
-                raise TypeError(f'{self.preset_fg.components_name_out[i]} not recognized')
+                raise TypeError(
+                    f"{self.preset_fg.components_name_out[i]} not recognized"
+                )
 
         # else:
         #     self.allbeta = np.array([self.beta_iter])
@@ -370,17 +503,17 @@ class PresetAcquisition:
         #             #print(self.preset_fg.components_iter.shape)
         #             self.preset_fg.components_iter[:, :, i] = C2(C1(self.preset_fg.components_iter[:, :, i].T)).T
         #             self.preset_fg.components_iter[1:, self.preset_sky.seenpix, i] *= self.preset_tools.params['INITIAL']['qubic_patch_cmb']
-                    
+
         #         elif self.preset_fg.components_name_out[i] == 'Dust':
-        #             self.preset_fg.components_iter[:, :, i] = C2(C1(self.preset_fg.components_iter[:, :, i].T)).T + np.random.normal(0, self.preset_tools.params['INITIAL']['sig_map_noise'], self.preset_fg.components_iter[:, :, i].T.shape).T 
+        #             self.preset_fg.components_iter[:, :, i] = C2(C1(self.preset_fg.components_iter[:, :, i].T)).T + np.random.normal(0, self.preset_tools.params['INITIAL']['sig_map_noise'], self.preset_fg.components_iter[:, :, i].T.shape).T
         #             self.preset_fg.components_iter[1:, self.preset_sky.seenpix, i] *= self.preset_tools.params['INITIAL']['qubic_patch_dust']
-                    
+
         #         elif self.preset_fg.components_name_out[i] == 'Synchrotron':
         #             self.preset_fg.components_iter[:, :, i] = C2(C1(self.preset_fg.components_iter[:, :, i].T)).T + np.random.normal(0, self.preset_tools.params['INITIAL']['sig_map_noise'], self.preset_fg.components_iter[:, :, i].T.shape).T
         #             self.preset_fg.components_iter[1:, self.preset_sky.seenpix, i] *= self.preset_tools.params['INITIAL']['qubic_patch_sync']
-                    
+
         #         elif self.preset_fg.components_name_out[i] == 'CO':
         #             self.preset_fg.components_iter[:, :, i] = C2(C1(self.preset_fg.components_iter[:, :, i].T)).T + np.random.normal(0, self.preset_tools.params['INITIAL']['sig_map_noise'], self.preset_fg.components_iter[:, :, i].T.shape).T
         #             self.preset_fg.components_iter[1:, self.preset_sky.seenpix, i] *= self.preset_tools.params['INITIAL']['qubic_patch_co']
         #         else:
-        #             raise TypeError(f'{self.preset_fg.components_name_out[i]} not recognize')  
+        #             raise TypeError(f'{self.preset_fg.components_name_out[i]} not recognize')

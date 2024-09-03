@@ -2,18 +2,20 @@ import numpy as np
 
 from lib.Qmpi_tools import join_data
 
+
 class PresetGain:
     """
-    
+
     Instance to initialize the Components Map-Making. It defines the input detectors gain.
 
     Self variables :    - gain_in: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
                         - all_gain_in: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
-                        - gain_iter: ndarray / if DB (Ndet, 2) / if UWB (Ndet) 
+                        - gain_iter: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
                         - all_gain: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
                         - all_gain_iter: ndarray / if DB (1, Ndet, 2) / if UWB (1, Ndet)
 
     """
+
     def __init__(self, preset_tools, preset_qubic):
         """
         Initialize the class with preset tools, qubic settings, and a seed value.
@@ -27,7 +29,7 @@ class PresetGain:
         self.preset_tools = preset_tools
 
         ### Get input detectors gain
-        self.preset_tools._print_message('    => Getting detectors gain')
+        self.preset_tools._print_message("    => Getting detectors gain")
         self._get_input_gain()
 
     def _get_input_gain(self):
@@ -48,20 +50,32 @@ class PresetGain:
         Raises:
             None
         """
-        
+
         np.random.seed(None)
-        if self.preset_qubic.params_qubic['instrument'] == 'UWB':
-            self.gain_in = np.random.normal(1, self.preset_qubic.params_qubic['GAIN']['sig_gain'], self.preset_qubic.joint_in.qubic.ndets)
+        if self.preset_qubic.params_qubic["instrument"] == "UWB":
+            self.gain_in = np.random.normal(
+                1,
+                self.preset_qubic.params_qubic["GAIN"]["sig_gain"],
+                self.preset_qubic.joint_in.qubic.ndets,
+            )
         else:
-            self.gain_in = np.random.normal(1, self.preset_qubic.params_qubic['GAIN']['sig_gain'], (self.preset_qubic.joint_in.qubic.ndets, 2))
+            self.gain_in = np.random.normal(
+                1,
+                self.preset_qubic.params_qubic["GAIN"]["sig_gain"],
+                (self.preset_qubic.joint_in.qubic.ndets, 2),
+            )
 
         self.all_gain_in = join_data(self.preset_tools.comm, self.gain_in)
-        
-        if self.preset_qubic.params_qubic['GAIN']['fit_gain']:
+
+        if self.preset_qubic.params_qubic["GAIN"]["fit_gain"]:
             gain_err = 0.2
-            self.gain_iter = np.random.uniform(self.gain_in - gain_err/2, self.gain_in + gain_err/2, self.gain_in.shape)
+            self.gain_iter = np.random.uniform(
+                self.gain_in - gain_err / 2,
+                self.gain_in + gain_err / 2,
+                self.gain_in.shape,
+            )
         else:
             self.gain_iter = np.ones(self.gain_in.shape)
-            
+
         self.all_gain = join_data(self.preset_tools.comm, self.gain_iter)
         self.all_gain_iter = np.array([self.gain_iter])

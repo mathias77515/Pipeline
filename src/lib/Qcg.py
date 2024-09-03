@@ -1,20 +1,19 @@
-import time
 import os
+import time
 
+import healpy as hp
 import numpy as np
+from pyoperators.core import IdentityOperator, asoperator
+from pyoperators.iterative.core import (AbnormalStopIteration,
+                                        IterativeAlgorithm)
+from pyoperators.iterative.stopconditions import MaxIterationStopCondition
+from pyoperators.memory import empty, zeros
+from pyoperators.utils.mpi import MPI
 
 from lib.Qfoldertools import *
 from lib.Qmap_plotter import _plot_reconstructed_maps
 
-from pyoperators.core import IdentityOperator, asoperator
-from pyoperators.memory import empty, zeros
-from pyoperators.utils.mpi import MPI
-from pyoperators.iterative.core import AbnormalStopIteration, IterativeAlgorithm
-from pyoperators.iterative.stopconditions import MaxIterationStopCondition
-
-import healpy as hp
- 
-__all__ = ['pcg']
+__all__ = ["pcg"]
 
 
 class PCGAlgorithm(IterativeAlgorithm):
@@ -100,15 +99,15 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.fwhm_plot = fwhm_plot
         self.input = input
         self.fwhm = fwhm_plot
-        
+
         if self.gif is not None:
             if not os.path.isdir(self.gif):
                 os.makedirs(self.gif)
-        
+
         dtype = A.dtype or np.dtype(float)
-        if dtype.kind == 'c':
-            raise TypeError('The complex case is not yet implemented.')
-        elif dtype.kind != 'f':
+        if dtype.kind == "c":
+            raise TypeError("The complex case is not yet implemented.")
+        elif dtype.kind != "f":
             dtype = np.dtype(float)
         b = np.array(b, dtype, copy=False)
 
@@ -117,8 +116,8 @@ class PCGAlgorithm(IterativeAlgorithm):
 
         abnormal_stop_condition = MaxIterationStopCondition(
             maxiter,
-            'Solver reached maximum number of iterations without reac'
-            'hing specified tolerance.',
+            "Solver reached maximum number of iterations without reac"
+            "hing specified tolerance.",
         )
 
         IterativeAlgorithm.__init__(
@@ -135,7 +134,7 @@ class PCGAlgorithm(IterativeAlgorithm):
 
         A = asoperator(A)
         if A.shapein is None:
-            raise ValueError('The operator input shape is not explicit.')
+            raise ValueError("The operator input shape is not explicit.")
         if A.shapein != b.shape:
             raise ValueError(
                 f"The operator input shape '{A.shapein}' is incompatible with that of "
@@ -167,15 +166,16 @@ class PCGAlgorithm(IterativeAlgorithm):
             self.error = 0
             self.x[...] = 0
             self.convergence = np.array([])
-            raise StopIteration('RHS is zero.')
+            raise StopIteration("RHS is zero.")
 
         self.r[...] = self.b
         self.r -= self.A(self.x)
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
         if self.error < self.tol:
-            raise StopIteration('Solver reached maximum tolerance.')
+            raise StopIteration("Solver reached maximum tolerance.")
         self.M(self.r, self.d)
         self.delta = self.dot(self.r, self.d)
+
     def iteration(self):
         self.t0 = time.time()
         self.A(self.d, self.q)
@@ -185,23 +185,34 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.rms = np.std(_r, axis=1)
         if self.gif is not None:
             if self.comm.Get_rank() == 0:
-                
+
                 mymap = np.zeros(self.input.shape)
                 nsig = 2
-                min, max = -nsig * np.std(self.input[0, self.seenpix], axis=0), nsig * np.std(self.input[0, self.seenpix], axis=0)
-                
+                min, max = -nsig * np.std(
+                    self.input[0, self.seenpix], axis=0
+                ), nsig * np.std(self.input[0, self.seenpix], axis=0)
+
                 mymap[:, self.seenpix, :] = self.x.copy()
                 mymap[:, ~self.seenpix_plot, :] = hp.UNSEEN
-                    
-                _plot_reconstructed_maps(mymap, self.input, self.gif + f'iter_{self.niterations+self.iter_init}.png', 
-                                         self.center, reso=self.reso, figsize=(12, 11), 
-                                         min=min, max=max, fwhm=self.fwhm, iter=self.niterations)
-            
+
+                _plot_reconstructed_maps(
+                    mymap,
+                    self.input,
+                    self.gif + f"iter_{self.niterations+self.iter_init}.png",
+                    self.center,
+                    reso=self.reso,
+                    figsize=(12, 11),
+                    min=min,
+                    max=max,
+                    fwhm=self.fwhm,
+                    iter=self.niterations,
+                )
+
         self.r -= alpha * self.q
         self.error = np.sqrt(self.norm(self.r) / self.b_norm)
         self.convergence = np.append(self.convergence, self.error)
         if self.error < self.tol:
-            raise StopIteration('Solver reached maximum tolerance.')
+            raise StopIteration("Solver reached maximum tolerance.")
         self.M(self.r, self.s)
         delta_old = self.delta
         self.delta = self.dot(self.r, self.s)
@@ -213,8 +224,10 @@ class PCGAlgorithm(IterativeAlgorithm):
     def callback(self):
         if self.disp:
             if self.niterations == 1:
-                print(' Iter     Tol      time')
-            print(f'{self.niterations+self.iter_init:4}: {self.error:.4e} {time.time() - self.t0:.5f} {self.rms.ravel()}')
+                print(" Iter     Tol      time")
+            print(
+                f"{self.niterations+self.iter_init:4}: {self.error:.4e} {time.time() - self.t0:.5f} {self.rms.ravel()}"
+            )
 
 
 def pcg(
@@ -301,7 +314,7 @@ def pcg(
         job_id=job_id,
         seenpix=seenpix,
         seenpix_plot=seenpix_plot,
-        center=center, 
+        center=center,
         reso=reso,
         fwhm_plot=fwhm_plot,
         input=input,
@@ -311,19 +324,19 @@ def pcg(
     try:
         output = algo.run()
         success = True
-        message = ''
+        message = ""
     except AbnormalStopIteration as e:
         output = algo.finalize()
         success = False
         message = str(e)
     return {
-        'x': output,
-        'success': success,
-        'message': message,
-        'nit': algo.niterations,
-        'error': algo.error,
-        'time': time.time() - time0,
-        'algorithm': algo,
+        "x": output,
+        "success": success,
+        "message": message,
+        "nit": algo.niterations,
+        "error": algo.error,
+        "time": time.time() - time0,
+        "algorithm": algo,
     }
 
 

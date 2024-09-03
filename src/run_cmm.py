@@ -1,6 +1,8 @@
-from CMM.pipeline import Pipeline
-from pyoperators import *
 import sys
+
+from pyoperators import *
+
+from CMM.pipeline import Pipeline
 
 seed_noise = int(sys.argv[1])
 
@@ -8,8 +10,7 @@ seed_noise = int(sys.argv[1])
 comm = MPI.COMM_WORLD
 
 if __name__ == "__main__":
-    
-    pipeline = Pipeline(comm, 1, seed_noise)
-    
-    pipeline.main()
 
+    pipeline = Pipeline(comm, 1, seed_noise)
+
+    pipeline.main()

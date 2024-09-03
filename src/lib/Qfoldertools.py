@@ -1,21 +1,26 @@
 import os
-import imageio
 import pickle
+
+import imageio
 import numpy as np
 
+
 def save_data(name, d):
+    """
+
+    Method to save data using pickle convention.
 
     """
-        
-    Method to save data using pickle convention.
-    
-    """
-        
-    with open(name, 'wb') as handle:
+
+    with open(name, "wb") as handle:
         pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 def open_data(name):
-    with open(name, 'rb') as f:
-        return pickle.load(f)         
+    with open(name, "rb") as f:
+        return pickle.load(f)
+
+
 def create_folder_if_not_exists(comm, folder_name):
     # Check if the folder exists
     if comm is not None:
@@ -24,10 +29,10 @@ def create_folder_if_not_exists(comm, folder_name):
                 try:
                     # Create the folder if it doesn't exist
                     os.makedirs(folder_name)
-                    #print(f"The folder '{folder_name}' has been created.")
+                    # print(f"The folder '{folder_name}' has been created.")
                 except OSError as e:
                     pass
-                    #print(f"Error creating the folder '{folder_name}': {e}")
+                    # print(f"Error creating the folder '{folder_name}': {e}")
             else:
                 pass
     else:
@@ -35,26 +40,32 @@ def create_folder_if_not_exists(comm, folder_name):
             try:
                 # Create the folder if it doesn't exist
                 os.makedirs(folder_name)
-                #print(f"The folder '{folder_name}' has been created.")
+                # print(f"The folder '{folder_name}' has been created.")
             except OSError as e:
                 pass
-                #print(f"Error creating the folder '{folder_name}': {e}")
+                # print(f"Error creating the folder '{folder_name}': {e}")
         else:
             pass
-def do_gif(input_folder, filename, output='animation.gif', duration=0.01):
+
+
+def do_gif(input_folder, filename, output="animation.gif", duration=0.01):
 
     # Collect all the file paths for the images
     file_paths = []
 
     for n in sorted(os.listdir(input_folder)):
-        if n.startswith(filename) and n.endswith('.png'):
+        if n.startswith(filename) and n.endswith(".png"):
             file_paths.append(os.path.join(input_folder, n))
-    
+
     # Ensure the file_paths are sorted by the numerical part of the filenames
-    file_paths = sorted(file_paths, key=lambda x: int(x.split(filename)[-1].split('.png')[0]))
+    file_paths = sorted(
+        file_paths, key=lambda x: int(x.split(filename)[-1].split(".png")[0])
+    )
 
     # Create the GIF
-    with imageio.get_writer(os.path.join(input_folder, output), mode='I', duration=duration) as writer:
+    with imageio.get_writer(
+        os.path.join(input_folder, output), mode="I", duration=duration
+    ) as writer:
         for file_path in file_paths:
             image = imageio.imread(file_path)
             writer.append_data(image)
@@ -63,25 +74,27 @@ def do_gif(input_folder, filename, output='animation.gif', duration=0.01):
 
 
 class MergeAllFiles:
-    
+
     def __init__(self, foldername):
-        
+
         self.foldername = foldername
-        
+
         self.list_files = os.listdir(self.foldername)
         self.number_of_realizations = len(self.list_files)
-        
+
     def _reads_one_file(self, i, key):
-        
+
         d = open_data(self.foldername + self.list_files[i])
-        
+
         return d[key]
-    
+
     def _reads_all_files(self, key):
-        
-        arr = np.zeros((self.number_of_realizations,) + self._reads_one_file(0, key).shape)
-        
+
+        arr = np.zeros(
+            (self.number_of_realizations,) + self._reads_one_file(0, key).shape
+        )
+
         for ireal in range(self.number_of_realizations):
             arr[ireal] = self._reads_one_file(ireal, key)
-            
+
         return arr

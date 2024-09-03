@@ -2,16 +2,16 @@ import numpy as np
 from pyoperators import *
 from pysimulators import *
 
+
 def join_toward_rank(comm, data, target_rank):
-    #print('enter', target_rank)
+    # print('enter', target_rank)
     gathered_data = comm.gather(data, root=target_rank)
-    #print('bis')
+    # print('bis')
     if comm.Get_rank() == target_rank:
-        #print(' bis bis')
-        return np.concatenate(gathered_data)#[0]
+        # print(' bis bis')
+        return np.concatenate(gathered_data)  # [0]
     else:
         return
-    
 
 
 def join_data(comm, data):
@@ -24,10 +24,11 @@ def join_data(comm, data):
         if comm.Get_rank() == 0:
 
             data = np.concatenate(data)
-        
+
         data = comm.bcast(data)
 
     return data
+
 
 def split_data(comm, theta):
     if comm is None:
