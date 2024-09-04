@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lib.Qmixing_matrix module &mdash; QUBIC Simulation Pipelines 0.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=a0e24af7"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            QUBIC Simulation Pipelines
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="CMM.html">CMM package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FMM.html">FMM package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QUBIC Simulation Pipelines</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">lib.Qmixing_matrix module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/lib.Qmixing_matrix.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-lib.Qmixing_matrix">
+<span id="lib-qmixing-matrix-module"></span><h1>lib.Qmixing_matrix module<a class="headerlink" href="#module-lib.Qmixing_matrix" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lib.Qmixing_matrix.</span></span><span class="sig-name descname"><span class="pre">MixingMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">components</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Collection of Components
+The goal is to provide ways to evaluate all the components (or their
+derivatives) with a single call and store them in a matrix (the mixing
+matrix).
+There are two ways:
+- evaluate it using (nu, param_0, param_1, param_2, …)
+- provide A_ev, which takes a single array as argument</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>comp_of_dB</strong></dt><dd></dd>
+<dt><strong>components</strong></dt><dd></dd>
+<dt><strong>defaults</strong></dt><dd></dd>
+<dt><strong>n_param</strong></dt><dd></dd>
+<dt><strong>params</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code>(value, /)</p></td>
+<td><p>Return number of occurrences of value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code>(value[, start, stop])</p></td>
+<td><p>Return first index of value.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>diff</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>diff_diff</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>diff_diff_evaluator</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>diff_evaluator</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>eval</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>evaluator</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.comp_of_dB">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comp_of_dB</span></span><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.comp_of_dB" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.components">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">components</span></span><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.components" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.defaults">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">defaults</span></span><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.defaults" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.diff">
+<span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix.diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.diff" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.diff_diff">
+<span class="sig-name descname"><span class="pre">diff_diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix.diff_diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.diff_diff" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.diff_diff_evaluator">
+<span class="sig-name descname"><span class="pre">diff_diff_evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack=&lt;function</span> <span class="pre">MixingMatrix.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix.diff_diff_evaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.diff_diff_evaluator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.diff_evaluator">
+<span class="sig-name descname"><span class="pre">diff_evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack=&lt;function</span> <span class="pre">MixingMatrix.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix.diff_evaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.diff_evaluator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix.eval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.eval" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.evaluator">
+<span class="sig-name descname"><span class="pre">evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack=&lt;function</span> <span class="pre">MixingMatrix.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Qmixing_matrix.html#MixingMatrix.evaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.evaluator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.n_param">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_param</span></span><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.n_param" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lib.Qmixing_matrix.MixingMatrix.params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#lib.Qmixing_matrix.MixingMatrix.params" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Mathias Regnier &amp; Tom Laclavère.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
