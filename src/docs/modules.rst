@@ -4,10 +4,4 @@ src
 .. toctree::
    :maxdepth: 4
 
-   CMM
-   FMM
-   lib
-   run_cmm
-   run_fit_fmm
-   run_fmm
-   run_spectra_cmm
+   src

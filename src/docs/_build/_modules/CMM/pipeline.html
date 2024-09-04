@@ -104,14 +104,14 @@
 <a class="viewcode-back" href="../../CMM.pipeline.html#CMM.pipeline.Pipeline">[docs]</a>
 <span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Main instance to create End-2-End pipeline for components reconstruction.</span>
+<span class="sd">    Instance to reconstruct component maps using QUBIC abilities.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    comm : MPI communicator</span>
 <span class="sd">        MPI common communicator define by MPI.COMM_WORLD.</span>
 <span class="sd">    seed : int</span>
-<span class="sd">        Seed for random CMB realization</span>
+<span class="sd">        Seed for random CMB realization.</span>
 <span class="sd">    seed_noise : int, optional</span>
 <span class="sd">        Seed for random noise realization, by default None.</span>
 <span class="sd">            </span>
@@ -156,38 +156,45 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rms_noise_qubic_patch_per_ite</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
-    <span class="k">def</span> <span class="nf">_fisher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ell</span><span class="p">,</span> <span class="n">Nl</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Pipeline.fisher">
+<a class="viewcode-back" href="../../CMM.pipeline.html#CMM.pipeline.Pipeline.fisher">[docs]</a>
+    <span class="k">def</span> <span class="nf">fisher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ell</span><span class="p">,</span> <span class="n">Nl</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fisher Method.</span>
+<span class="sd">        </span>
 <span class="sd">        Fisher to compute an estimation of sigma(r) for a given noise power spectrum.</span>
 
 <span class="sd">        Parameters</span>
-<span class="sd">            ----------</span>
-<span class="sd">            ell : array_like</span>
-<span class="sd">                Array containing the multipole values.</span>
-<span class="sd">            Nl : array_like</span>
-<span class="sd">                Array containing the noise power spectrum values.</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ell : array_like</span>
+<span class="sd">            Array containing the multipole values.</span>
+<span class="sd">        Nl : array_like</span>
+<span class="sd">            Array containing the noise power spectrum values.</span>
 
 <span class="sd">        Returns</span>
-<span class="sd">            -------</span>
-<span class="sd">            float</span>
-<span class="sd">                Computed value of sigma(r).</span>
-<span class="sd">                </span>
-<span class="sd">        &quot;&quot;&quot;</span>        
+<span class="sd">        -------</span>
+<span class="sd">        sigma: float</span>
+<span class="sd">            Estimated value of sigma(r).</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>           
 
         <span class="n">Dl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span>
             <span class="n">ell</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4001</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">fg</span><span class="o">.</span><span class="n">give_cl_cmb</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">Alens</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
         <span class="p">)</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
             <span class="p">(</span><span class="n">ell</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">sky</span><span class="o">.</span><span class="n">namaster</span><span class="o">.</span><span class="n">fsky</span>
             <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;SPECTRUM&quot;</span><span class="p">][</span><span class="s2">&quot;dl&quot;</span><span class="p">]</span>
             <span class="o">*</span> <span class="p">(</span><span class="n">Dl</span> <span class="o">/</span> <span class="p">(</span><span class="n">Nl</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">s</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sigma</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_fisher_compute_sigma_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Pipeline.fisher_compute_sigma_r">
+<a class="viewcode-back" href="../../CMM.pipeline.html#CMM.pipeline.Pipeline.fisher_compute_sigma_r">[docs]</a>
+    <span class="k">def</span> <span class="nf">fisher_compute_sigma_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fisher estimation.</span>
+<span class="sd">        </span>
 <span class="sd">        Computes and prints the value of sigma(r) using the Fisher matrix.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>        
@@ -215,13 +222,17 @@
         <span class="n">dl_BB</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">sky</span><span class="o">.</span><span class="n">cl2dl</span>
 
         <span class="c1"># Compute sigma(r) using Fisher matrix</span>
-        <span class="n">sigma_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fisher</span><span class="p">(</span><span class="n">leff</span><span class="p">,</span> <span class="n">dl_BB</span><span class="p">)</span>
+        <span class="n">sigma_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fisher</span><span class="p">(</span><span class="n">leff</span><span class="p">,</span> <span class="n">dl_BB</span><span class="p">)</span>
 
         <span class="c1"># Print the value of sigma(r)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sigma(r) = </span><span class="si">{</span><span class="n">sigma_r</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sigma(r) = </span><span class="si">{</span><span class="n">sigma_r</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_call_pcg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">,</span> <span class="n">seenpix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Pipeline.call_pcg">
+<a class="viewcode-back" href="../../CMM.pipeline.html#CMM.pipeline.Pipeline.call_pcg">[docs]</a>
+    <span class="k">def</span> <span class="nf">call_pcg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">,</span> <span class="n">seenpix</span><span class="p">):</span>    
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Precontionned Conjugate Gradiant algorithm.</span>
+<span class="sd">        </span>
 <span class="sd">        Method to call the PCG from PyOperators package.</span>
 
 <span class="sd">        Parameters</span>
@@ -305,14 +316,17 @@
             <span class="c1"># self.plots._display_allresiduals(self.preset.fg.components_iter[:, self.preset.sky.seenpix, :], self.preset.sky.seenpix, ki=self._steps)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">plot_rms_iteration</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">acquisition</span><span class="o">.</span><span class="n">rms_plot</span><span class="p">,</span> <span class="n">ki</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_steps</span>
-            <span class="p">)</span>
+            <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_update_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seenpix</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Pipeline.update_components">
+<a class="viewcode-back" href="../../CMM.pipeline.html#CMM.pipeline.Pipeline.update_components">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seenpix</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method that solves the map-making equation ..math:: ( H^T \dot N^{-1} \dot H ) \dot \vect{c} = H^T \dot N^{-1} \dot \vect{TOD} using OpenMP / MPI solver.</span>
+<span class="sd">        Method that solves the map-making equation :math:`(H^T . N^{-1} . H) . x = H^T . N^{-1} . d`, using OpenMP / MPI solver.</span>
 
 <span class="sd">        This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver. </span>
-<span class="sd">        The equation is of the form ( H.T * invN * H ) * components = H.T * invN * TOD, where H_i is the operator obtained from the preset, </span>
+<span class="sd">        The equation is of the form :math:`(H^T . N^{-1} . H) . \vec{c} = H^T . N^{-1} . \vec{TOD}`, where H_i is the operator obtained from the preset, </span>
 <span class="sd">        U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.</span>
 
 
@@ -378,7 +392,8 @@
         <span class="c1"># self.preset.b = H_i.T * self.preset.acquisition.invN * self.preset.acquisition.TOD_obs</span>
 
         <span class="c1">### Run PCG</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_call_pcg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;PCG&quot;</span><span class="p">][</span><span class="s2">&quot;n_iter_pcg&quot;</span><span class="p">],</span> <span class="n">seenpix</span><span class="o">=</span><span class="n">seenpix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_pcg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;PCG&quot;</span><span class="p">][</span><span class="s2">&quot;n_iter_pcg&quot;</span><span class="p">],</span> <span class="n">seenpix</span><span class="o">=</span><span class="n">seenpix</span><span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_get_tod_comp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1322,13 +1337,13 @@
                 <span class="p">)</span>
 
                 <span class="c1">### Update components last time with converged parameters</span>
-                <span class="c1"># self._update_components(maxiter=100)</span>
+                <span class="c1"># self.update_components(maxiter=100)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_info</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_steps</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;PCG&quot;</span><span class="p">][</span><span class="s2">&quot;n_iter_loop&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
 
             <span class="c1">### Update components last time with converged parameters</span>
-            <span class="c1"># self._update_components(maxiter=100)</span>
+            <span class="c1"># self.update_components(maxiter=100)</span>
 
             <span class="c1">### Wait for all processes and save data inside pickle file</span>
             <span class="c1"># self.preset.tools.comm.Barrier()</span>
@@ -1364,7 +1379,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_display_iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_steps</span><span class="p">)</span>
 
             <span class="c1">### Update self.fg.components_iter^{k} -&gt; self.fg.components_iter^{k+1}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_update_components</span><span class="p">(</span><span class="n">seenpix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">sky</span><span class="o">.</span><span class="n">seenpix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_components</span><span class="p">(</span><span class="n">seenpix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">sky</span><span class="o">.</span><span class="n">seenpix</span><span class="p">)</span>
 
             <span class="c1">### Update self.preset.acquisition.beta_iter^{k} -&gt; self.preset.acquisition.beta_iter^{k+1}</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset</span><span class="o">.</span><span class="n">fg</span><span class="o">.</span><span class="n">params_foregrounds</span><span class="p">[</span><span class="s2">&quot;fit_spectral_index&quot;</span><span class="p">]:</span>

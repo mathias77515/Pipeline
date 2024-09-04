@@ -920,7 +920,8 @@
 <div class="viewcode-block" id="PipelineFrequencyMapMaking.run">
 <a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.run">[docs]</a>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the FMM Pipeline. </span>
+<span class="sd">        </span>
 <span class="sd">        Method to run the whole pipeline from TOD generation from sky reconstruction by reading `params.yml` file.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1024,7 +1025,8 @@
 <div class="viewcode-block" id="PipelineEnd2End">
 <a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineEnd2End">[docs]</a>
 <span class="k">class</span> <span class="nc">PipelineEnd2End</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;FMM Pipeline.</span>
+<span class="sd">    </span>
 <span class="sd">    Wrapper for End-2-End pipeline. It added class one after the others by running method.run().</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1092,7 +1094,7 @@
                     <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                 <span class="p">}</span>
 
-                <span class="n">_save_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_spectrum</span><span class="p">,</span> <span class="n">dict_solution</span><span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_save_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_spectrum</span><span class="p">,</span> <span class="n">dict_solution</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

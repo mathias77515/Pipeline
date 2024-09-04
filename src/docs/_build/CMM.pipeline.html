@@ -18,6 +18,7 @@
         <script src="_static/documentation_options.js?v=a0e24af7"></script>
         <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -91,12 +92,12 @@
 <dt class="sig sig-object py" id="CMM.pipeline.Pipeline">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CMM.pipeline.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Main instance to create End-2-End pipeline for components reconstruction.</p>
+<p>Instance to reconstruct component maps using QUBIC abilities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>comm</strong> (<em>MPI communicator</em>) – MPI common communicator define by MPI.COMM_WORLD.</p></li>
-<li><p><strong>seed</strong> (<em>int</em>) – Seed for random CMB realization</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Seed for random CMB realization.</p></li>
 <li><p><strong>seed_noise</strong> (<em>int</em><em>, </em><em>optional</em>) – Seed for random noise realization, by default None.</p></li>
 </ul>
 </dd>
@@ -104,11 +105,66 @@
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.main" title="CMM.pipeline.Pipeline.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.call_pcg" title="CMM.pipeline.Pipeline.call_pcg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call_pcg</span></code></a>(max_iterations, seenpix)</p></td>
+<td><p>Precontionned Conjugate Gradiant algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.fisher" title="CMM.pipeline.Pipeline.fisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher</span></code></a>(ell, Nl)</p></td>
+<td><p>Fisher Method.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.fisher_compute_sigma_r" title="CMM.pipeline.Pipeline.fisher_compute_sigma_r"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher_compute_sigma_r</span></code></a>()</p></td>
+<td><p>Fisher estimation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.main" title="CMM.pipeline.Pipeline.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
 <td><p>Method to run the pipeline by following :</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.update_components" title="CMM.pipeline.Pipeline.update_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_components</span></code></a>(seenpix)</p></td>
+<td><p>Method that solves the map-making equation <span class="math notranslate nohighlight">\((H^T . N^{-1} . H) . x = H^T . N^{-1} . d\)</span>, using OpenMP / MPI solver.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.call_pcg">
+<span class="sig-name descname"><span class="pre">call_pcg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seenpix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.call_pcg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.call_pcg" title="Link to this definition"></a></dt>
+<dd><p>Precontionned Conjugate Gradiant algorithm.</p>
+<p>Method to call the PCG from PyOperators package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_iterations</strong> (<em>int</em>) – Maximum number of iterations for the PCG algorithm.</p></li>
+<li><p><strong>seenpix</strong> (<em>array_like</em>) – Boolean array that define the pixels observed by QUBIC.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.fisher">
+<span class="sig-name descname"><span class="pre">fisher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nl</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.fisher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.fisher" title="Link to this definition"></a></dt>
+<dd><p>Fisher Method.</p>
+<p>Fisher to compute an estimation of sigma(r) for a given noise power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ell</strong> (<em>array_like</em>) – Array containing the multipole values.</p></li>
+<li><p><strong>Nl</strong> (<em>array_like</em>) – Array containing the noise power spectrum values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sigma</strong> – Estimated value of sigma(r).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.fisher_compute_sigma_r">
+<span class="sig-name descname"><span class="pre">fisher_compute_sigma_r</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.fisher_compute_sigma_r"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.fisher_compute_sigma_r" title="Link to this definition"></a></dt>
+<dd><p>Fisher estimation.</p>
+<p>Computes and prints the value of sigma(r) using the Fisher matrix.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="CMM.pipeline.Pipeline.main">
 <span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.main" title="Link to this definition"></a></dt>
@@ -122,6 +178,29 @@
 <li><p>Repeat 2), 3) and 4) until convergence.</p></li>
 </ol>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.update_components">
+<span class="sig-name descname"><span class="pre">update_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seenpix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.update_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.update_components" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Method that solves the map-making equation <span class="math notranslate nohighlight">\((H^T . N^{-1} . H) . x = H^T . N^{-1} . d\)</span>, using OpenMP / MPI solver.</p>
+<p>This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver.
+The equation is of the form :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>(H^T . N^{-1} . H) .</p>
+</div></blockquote>
+<p>ec{c} = H^T . N^{-1} .
+ec{TOD}`, where H_i is the operator obtained from the preset,</p>
+<blockquote>
+<div><p>U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>seenpix</strong><span class="classifier">array_like</span></dt><dd><p>Boolean array that define the pixels observed by QUBIC.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

@@ -809,7 +809,8 @@ class PipelineFrequencyMapMaking:
             pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def run(self):
-        """
+        """Run the FMM Pipeline. 
+        
         Method to run the whole pipeline from TOD generation from sky reconstruction by reading `params.yml` file.
 
         """
@@ -909,7 +910,8 @@ class PipelineFrequencyMapMaking:
 
 
 class PipelineEnd2End:
-    """
+    """FMM Pipeline.
+    
     Wrapper for End-2-End pipeline. It added class one after the others by running method.run().
 
     """
@@ -975,4 +977,4 @@ class PipelineEnd2End:
                     "parameters": self.params,
                 }
 
-                _save_data(self.file_spectrum, dict_solution)
+                self._save_data(self.file_spectrum, dict_solution)
