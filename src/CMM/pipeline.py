@@ -1,6 +1,7 @@
 ### General packages
 import gc
 import os
+import sys
 import pickle
 from functools import partial
 
@@ -28,15 +29,23 @@ from .preset import *
 class Pipeline:
     """
     Main instance to create End-2-End pipeline for components reconstruction.
-
-    Arguments :
-    -----------
-        - comm    : MPI common communicator (define by MPI.COMM_WORLD).
-        - seed    : Int number for CMB realizations.
-        - it      : Int number for noise realizations.
+    
+    Parameters
+    ----------
+    comm : MPI communicator
+        MPI common communicator define by MPI.COMM_WORLD.
+    seed : int
+        Seed for random CMB realization
+    seed_noise : int, optional
+        Seed for random noise realization, by default None.
+            
     """
 
     def __init__(self, comm, seed, seed_noise=None):
+        """
+        Initialize Pipeline instance.
+        
+        """
 
         ### Creating noise seed
         if seed_noise == -1:
@@ -71,60 +80,23 @@ class Pipeline:
         )
         self._rms_noise_qubic_patch_per_ite[:] = np.nan
 
-    def main(self):
-        """
-        Method to run the pipeline by following :
-
-            1) Initialize simulation using `PresetSims` instance reading `params.yml`.
-
-            2) Solve map-making equation knowing spectral index and gains.
-
-            3) Fit spectral index knowing components and gains.
-
-            4) Fit gains knowing components and sepctral index.
-
-            5) Repeat 2), 3) and 4) until convergence.
-        """
-
-        self._info = True
-        self._steps = 0
-        # print(self.preset.acquisition.beta_iter)
-        while self._info:
-            ### Display iteration
-            self.preset.tools._display_iter(self._steps)
-
-            ### Update self.fg.components_iter^{k} -> self.fg.components_iter^{k+1}
-            self._update_components(seenpix=self.preset.sky.seenpix)
-
-            ### Update self.preset.acquisition.beta_iter^{k} -> self.preset.acquisition.beta_iter^{k+1}
-            if self.preset.fg.params_foregrounds["fit_spectral_index"]:
-                self._update_spectral_index()
-
-            ### Update self.gain.gain_iter^{k} -> self.gain.gain_iter^{k+1}
-            if self.preset.qubic.params_qubic["GAIN"]["fit_gain"]:
-                self._update_gain()
-
-            ### Wait for all processes and save data inside pickle file
-            self.preset.tools.comm.Barrier()
-            self._save_data(self._steps)
-
-            ### Compute the rms of the noise per iteration to later analyze its convergence in _stop_condition
-            # self._compute_maxrms_array()
-
-            ### Stop the loop when self._steps > k
-            self._stop_condition()
-
     def _fisher(self, ell, Nl):
         """
         Fisher to compute an estimation of sigma(r) for a given noise power spectrum.
 
-        Parameters:
-        ell (array-like): Array of multipole values.
-        Nl (array-like): Array of noise power spectrum values.
+        Parameters
+            ----------
+            ell : array_like
+                Array containing the multipole values.
+            Nl : array_like
+                Array containing the noise power spectrum values.
 
-        Returns:
-        float: The computed value of sigma(r).
-        """
+        Returns
+            -------
+            float
+                Computed value of sigma(r).
+                
+        """        
 
         Dl = np.interp(
             ell, np.arange(1, 4001, 1), self.preset.fg.give_cl_cmb(r=1, Alens=0)[2]
@@ -140,11 +112,10 @@ class Pipeline:
 
     def _fisher_compute_sigma_r(self):
         """
-        Computes the value of sigma(r) using the Fisher matrix.
+        Computes and prints the value of sigma(r) using the Fisher matrix.
+        
+        """        
 
-        Returns:
-            float: The value of sigma(r).
-        """
         # Apply Gaussian beam convolution
         C = HealpixConvolutionGaussianOperator(
             fwhm=self.preset.acquisition.fwhm_reconstructed
@@ -175,11 +146,16 @@ class Pipeline:
 
     def _call_pcg(self, max_iterations, seenpix):
         """
-        Method that calls the PCG in PyOperators.
+        Method to call the PCG from PyOperators package.
 
-        Args:
-            max_iterations (int): Maximum number of iterations for the PCG algorithm.
-        """
+        Parameters
+        ----------
+        max_iterations : int
+            Maximum number of iterations for the PCG algorithm.
+        seenpix : array_like
+            Boolean array that define the pixels observed by QUBIC.
+            
+        """        
 
         if self._steps == 0:
             self.plots._display_allcomponents(seenpix, ki=-1)
@@ -257,16 +233,19 @@ class Pipeline:
 
     def _update_components(self, seenpix):
         """
-        Method that solves the map-making equation ( H.T * invN * H ) * components = H.T * invN * TOD using OpenMP / MPI solver.
+        Method that solves the map-making equation ..math:: ( H^T \dot N^{-1} \dot H ) \dot \vect{c} = H^T \dot N^{-1} \dot \vect{TOD} using OpenMP / MPI solver.
 
-        This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver. The equation is of the form ( H.T * invN * H ) * components = H.T * invN * TOD, where H_i is the operator obtained from the preset, U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.
+        This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver. 
+        The equation is of the form ( H.T * invN * H ) * components = H.T * invN * TOD, where H_i is the operator obtained from the preset, 
+        U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.
 
-        Parameters:
-        - self: The instance of the class.
 
-        Returns:
-        - None
-        """
+        Parameters
+        ----------
+        seenpix : array_like
+            Boolean array that define the pixels observed by QUBIC.
+            
+        """        
 
         H_i = self.preset.qubic.joint_out.get_operator(
             A=self.preset.acquisition.Amm_iter,
@@ -1238,7 +1217,6 @@ class Pipeline:
 
     def _stop_condition(self):
         """
-
         Method that stop the convergence if there are more than k steps.
 
         """
@@ -1283,3 +1261,47 @@ class Pipeline:
             self._info = False
 
         self._steps += 1
+        
+    def main(self):        
+        """
+        Method to run the pipeline by following :
+
+            1) Initialize simulation using `PresetSims` instance reading `params.yml`.
+
+            2) Solve map-making equation knowing spectral index and gains.
+
+            3) Fit spectral index knowing components and gains.
+
+            4) Fit gains knowing components and sepctral index.
+
+            5) Repeat 2), 3) and 4) until convergence.
+            
+        """
+
+        self._info = True
+        self._steps = 0
+        # print(self.preset.acquisition.beta_iter)
+        while self._info:
+            ### Display iteration
+            self.preset.tools._display_iter(self._steps)
+
+            ### Update self.fg.components_iter^{k} -> self.fg.components_iter^{k+1}
+            self._update_components(seenpix=self.preset.sky.seenpix)
+
+            ### Update self.preset.acquisition.beta_iter^{k} -> self.preset.acquisition.beta_iter^{k+1}
+            if self.preset.fg.params_foregrounds["fit_spectral_index"]:
+                self._update_spectral_index()
+
+            ### Update self.gain.gain_iter^{k} -> self.gain.gain_iter^{k+1}
+            if self.preset.qubic.params_qubic["GAIN"]["fit_gain"]:
+                self._update_gain()
+
+            ### Wait for all processes and save data inside pickle file
+            self.preset.tools.comm.Barrier()
+            self._save_data(self._steps)
+
+            ### Compute the rms of the noise per iteration to later analyze its convergence in _stop_condition
+            # self._compute_maxrms_array()
+
+            ### Stop the loop when self._steps > k
+            self._stop_condition()

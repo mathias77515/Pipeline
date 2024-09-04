@@ -1,6 +1,11 @@
 CMM package
 ===========
 
+.. automodule:: CMM
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -12,18 +17,7 @@ Subpackages
 Submodules
 ----------
 
-CMM.pipeline module
--------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: CMM.pipeline
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: CMM
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   CMM.pipeline
