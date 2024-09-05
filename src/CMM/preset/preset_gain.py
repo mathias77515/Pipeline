@@ -4,25 +4,23 @@ from lib.Qmpi_tools import join_data
 
 
 class PresetGain:
-    """
+    """Preset Detectors Gain.
 
-    Instance to initialize the Components Map-Making. It defines the input detectors gain.
+    Instance to initialize the Components Map-Making. It defines the input detectors gain variables and methodes.
 
-    Self variables :    - gain_in: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
-                        - all_gain_in: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
-                        - gain_iter: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
-                        - all_gain: ndarray / if DB (Ndet, 2) / if UWB (Ndet)
-                        - all_gain_iter: ndarray / if DB (1, Ndet, 2) / if UWB (1, Ndet)
+    Parameters
+    ----------
+    preset_tools : object
+        Class containing tools and simulation parameters.
+    preset_qubic : object
+        Class containing qubic operator and variables and methods.
 
     """
 
     def __init__(self, preset_tools, preset_qubic):
         """
-        Initialize the class with preset tools, qubic settings, and a seed value.
+        Initialize.
 
-        Args:
-            preset_tools: Class containing tools and simulation parameters.
-            preset_qubic: Object containing qubic operator and variables.
         """
         ### Import preset QUBIC & tools
         self.preset_qubic = preset_qubic
@@ -30,25 +28,17 @@ class PresetGain:
 
         ### Get input detectors gain
         self.preset_tools._print_message("    => Getting detectors gain")
-        self._get_input_gain()
+        self.get_input_gain()
 
-    def _get_input_gain(self):
-        """
+    def get_input_gain(self):
+        """Input gains.
+        
         Generates and processes input gain values for the instrument based on preset parameters.
 
         This method sets the `gain_in`, `all_gain_in`, `gain_iter`, `all_gain`, and `all_gain_iter`
         attributes of the instance. The gain values are generated using a normal distribution and may be
         adjusted based on the instrument type and preset parameters.
 
-        Attributes:
-            gain_in (numpy.ndarray): The generated gain values for the instrument.
-            all_gain_in (numpy.ndarray): The combined gain input values across all processes.
-            gain_iter (numpy.ndarray): The gain values adjusted for iteration, if fitting is enabled.
-            all_gain (numpy.ndarray): The combined gain iteration values across all processes.
-            all_gain_iter (numpy.ndarray): An array containing the gain iteration values.
-
-        Raises:
-            None
         """
 
         np.random.seed(None)

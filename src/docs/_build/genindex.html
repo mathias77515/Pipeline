@@ -81,29 +81,28 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
- | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
- | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
- | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
- | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.AnalyticComponent">AnalyticComponent (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.allbeta">allbeta (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.arcmin2rad">arcmin2rad() (in module lib.Qacquisition)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.Amm_in">Amm_in (CMM.preset.preset_mixingmatrix.PresetMixingMatrix attribute)</a>, <a href="CMM.preset.preset_mixingmatrix.html#id2">[1]</a>
+</li>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.Amm_iter">Amm_iter (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -111,7 +110,11 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated.bandpass_correction">bandpass_correction() (lib.Qacquisition.QubicIntegrated method)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.beta_in">beta_in (CMM.preset.preset_mixingmatrix.PresetMixingMatrix attribute)</a>, <a href="CMM.preset.preset_mixingmatrix.html#id3">[1]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.beta_iter">beta_iter (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -121,9 +124,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.call_pcg">call_pcg() (CMM.pipeline.Pipeline method)</a>
 </li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra.cl_to_dl">cl_to_dl() (lib.Qspectra_component.SkySpectra method)</a>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.callback">callback() (CMM.pipeline.Pipeline method)</a>
 </li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.CMB">CMB (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.center">center (CMM.preset.preset_sky.PresetSky attribute)</a>
+</li>
+      <li><a href="CMM.preset.preset_tools.html#CMM.preset.preset_tools.PresetTools.check_for_errors">check_for_errors() (CMM.preset.preset_tools.PresetTools method)</a>
+</li>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.cl2dl">cl2dl (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
       <li>
     CMM
@@ -154,19 +161,21 @@
 </li>
       </ul></li>
       <li>
+    CMM.preset.preset_components
+
+      <ul>
+        <li><a href="CMM.preset.preset_components.html#module-CMM.preset.preset_components">module</a>
+</li>
+      </ul></li>
+      <li>
     CMM.preset.preset_external_data
 
       <ul>
         <li><a href="CMM.preset.preset_external_data.html#module-CMM.preset.preset_external_data">module</a>
 </li>
       </ul></li>
-      <li>
-    CMM.preset.preset_foregrounds
-
-      <ul>
-        <li><a href="CMM.preset.preset_foregrounds.html#module-CMM.preset.preset_foregrounds">module</a>
-</li>
-      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     CMM.preset.preset_gain
 
@@ -174,8 +183,6 @@
         <li><a href="CMM.preset.preset_gain.html#module-CMM.preset.preset_gain">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     CMM.preset.preset_mixingmatrix
 
@@ -204,75 +211,31 @@
         <li><a href="CMM.preset.preset_tools.html#module-CMM.preset.preset_tools">module</a>
 </li>
       </ul></li>
-      <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.comp_of_dB">comp_of_dB (lib.Qmixing_matrix.MixingMatrix property)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.components">components (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component">Component (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.components_convolved">components_convolved (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.components">components (lib.Qmixing_matrix.MixingMatrix property)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.components_iter">components_iter (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.compute_array_power_spectra">compute_array_power_spectra() (lib.Qspectra.Spectrumold method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.components_model">components_model (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.compute_auto_spectrum">compute_auto_spectrum() (lib.Qspectra.Spectrumold method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.components_name">components_name (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.compute_cross_spectrum">compute_cross_spectrum() (lib.Qspectra.Spectrumold method)</a>
-</li>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.compute_power_spectra">compute_power_spectra() (lib.Qspectra.Spectrumold method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.create_array">create_array() (in module lib.Qacquisition)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.coverage">coverage (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
       <li><a href="CMM.preset.preset_tools.html#CMM.preset.preset_tools.PresetTools.create_folder_if_not_exists">create_folder_if_not_exists() (CMM.preset.preset_tools.PresetTools method)</a>
-
-      <ul>
-        <li><a href="lib.Qfoldertools.html#lib.Qfoldertools.create_folder_if_not_exists">(in module lib.Qfoldertools)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component.defaults">defaults (lib.Qcomponent_model.Component property)</a>
-
-      <ul>
-        <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.defaults">(lib.Qmixing_matrix.MixingMatrix property)</a>
+      <li><a href="CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.dict">dict (CMM.preset.preset_qubic.PresetQubic attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="lib.Qnoise.html#lib.Qnoise.QubicNoise.detector_noise">detector_noise() (lib.Qnoise.QubicNoise method)</a>
-</li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.detector_subset">detector_subset() (lib.Qinstrument.QubicInstrument method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicMultibandInstrument.detector_subset">(lib.Qinstrument.QubicMultibandInstrument method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component.diff">diff() (lib.Qcomponent_model.Component method)</a>
-
-      <ul>
-        <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.diff">(lib.Qmixing_matrix.MixingMatrix method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component.diff_diff">diff_diff() (lib.Qcomponent_model.Component method)</a>
-
-      <ul>
-        <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.diff_diff">(lib.Qmixing_matrix.MixingMatrix method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.diff_diff_evaluator">diff_diff_evaluator() (lib.Qmixing_matrix.MixingMatrix method)</a>
-</li>
-      <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.diff_evaluator">diff_evaluator() (lib.Qmixing_matrix.MixingMatrix method)</a>
-</li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicMultibandInstrument.direct_convolution">direct_convolution() (lib.Qinstrument.QubicMultibandInstrument method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsCMM.display_maps">display_maps() (lib.Qmap_plotter.PlotsCMM method)</a>
-</li>
       <li><a href="CMM.preset.preset_tools.html#CMM.preset.preset_tools.PresetTools.display_simulation_configuration">display_simulation_configuration() (CMM.preset.preset_tools.PresetTools method)</a>
-</li>
-      <li><a href="lib.Qfoldertools.html#lib.Qfoldertools.do_gif">do_gif() (in module lib.Qfoldertools)</a>
-</li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Dust">Dust (class in lib.Qcomponent_model)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -280,15 +243,11 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component.eval">eval() (lib.Qcomponent_model.Component method)</a>
-
-      <ul>
-        <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.eval">(lib.Qmixing_matrix.MixingMatrix method)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.ell">ell (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.evaluator">evaluator() (lib.Qmixing_matrix.MixingMatrix method)</a>
+      <li><a href="CMM.preset.preset_external_data.html#CMM.preset.preset_external_data.PresetExternal.external_nus">external_nus (CMM.preset.preset_external_data.PresetExternal attribute)</a>
 </li>
       <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.extra_sed">extra_sed() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
 </li>
@@ -301,8 +260,6 @@
       <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.fisher">fisher() (CMM.pipeline.Pipeline method)</a>
 </li>
       <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.fisher_compute_sigma_r">fisher_compute_sigma_r() (CMM.pipeline.Pipeline method)</a>
-</li>
-      <li><a href="lib.Qfit.html#lib.Qfit.FitEllSpace">FitEllSpace (class in lib.Qfit)</a>
 </li>
       <li>
     FMM
@@ -320,7 +277,7 @@
         <li><a href="FMM.pipeline.html#module-FMM.pipeline">module</a>
 </li>
       </ul></li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.FreeFree">FreeFree (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.fwhm_rec">fwhm_rec (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -328,203 +285,93 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_add_grids_operator">get_add_grids_operator() (lib.Qacquisition.QubicAcquisition method)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.get_approx_hth">get_approx_hth() (CMM.preset.preset_acquisition.PresetAcquisition method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_aperture_integration_operator">get_aperture_integration_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_aperture_integration_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
       <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_averaged_nus">get_averaged_nus() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_components_fgb">get_components_fgb() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.get_beta_input">get_beta_input() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic.get_components_operator">get_components_operator() (lib.Qacquisition.QubicFullBandSystematic method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.get_components">get_components() (CMM.preset.preset_components.PresetComponents method)</a>
 </li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.Plots.get_convergence">get_convergence() (lib.Qmap_plotter.Plots method)</a>
-</li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_convolution">get_convolution() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_convolution_peak_operator">get_convolution_peak_operator() (lib.Qacquisition.QubicAcquisition method)</a>
+      <li><a href="CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.get_components_fgb">get_components_fgb() (CMM.preset.preset_qubic.PresetQubic method)</a>
 
       <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_convolution_peak_operator">(lib.Qinstrument.QubicInstrument method)</a>
+        <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_components_fgb">(FMM.pipeline.PipelineFrequencyMapMaking method)</a>
+</li>
+      </ul></li>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.get_constrains">get_constrains() (CMM.pipeline.Pipeline method)</a>
+</li>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.get_convolution">get_convolution() (CMM.preset.preset_acquisition.PresetAcquisition method)</a>
+
+      <ul>
+        <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_convolution">(FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
       </ul></li>
       <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.get_coverage">get_coverage() (CMM.preset.preset_sky.PresetSky method)</a>
+</li>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.get_decorrelated_mixing_matrix">get_decorrelated_mixing_matrix() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
+</li>
+      <li><a href="CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.get_dict">get_dict() (CMM.preset.preset_qubic.PresetQubic method)</a>
 
       <ul>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_coverage">(lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated.get_coverage">(lib.Qacquisition.QubicIntegrated method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.get_coverage">(lib.Qacquisition.QubicPolyAcquisition method)</a>
+        <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_dict">(FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
       </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.get_coverage_mask">get_coverage_mask() (lib.Qacquisition.QubicPolyAcquisition method)</a>
+      <li><a href="CMM.preset.preset_external_data.html#CMM.preset.preset_external_data.PresetExternal.get_external_nus">get_external_nus() (CMM.preset.preset_external_data.PresetExternal method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_detector_integration_operator">get_detector_integration_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_detector_integration_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_detector_response_operator">get_detector_response_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_detector_response_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_diag_invntt_operator">get_diag_invntt_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_dict">get_dict() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-
-      <ul>
-        <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.get_dict">(lib.Qspectra.Spectrumold method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_distribution_operator">get_distribution_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.Plots.get_Dl_plot">get_Dl_plot() (lib.Qmap_plotter.Plots method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_filter_operator">get_filter_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_filter_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
       <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_H">get_H() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_hitmap">get_hitmap() (lib.Qacquisition.QubicAcquisition method)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.get_index_seenpix_beta">get_index_seenpix_beta() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_hwp_operator">get_hwp_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic.get_hwp_operator">(lib.Qacquisition.QubicFullBandSystematic method)</a>
-</li>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_hwp_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_input_map">get_input_map() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.JointAcquisitionComponentsMapMaking.get_invntt_operator">get_invntt_operator() (lib.Qacquisition.JointAcquisitionComponentsMapMaking method)</a>
-
-      <ul>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.JointAcquisitionFrequencyMapMaking.get_invntt_operator">(lib.Qacquisition.JointAcquisitionFrequencyMapMaking method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.OtherDataParametric.get_invntt_operator">(lib.Qacquisition.OtherDataParametric method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.PlanckAcquisition.get_invntt_operator">(lib.Qacquisition.PlanckAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_invntt_operator">(lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicDualBand.get_invntt_operator">(lib.Qacquisition.QubicDualBand method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic.get_invntt_operator">(lib.Qacquisition.QubicFullBandSystematic method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated.get_invntt_operator">(lib.Qacquisition.QubicIntegrated method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.get_invntt_operator">(lib.Qacquisition.QubicPolyAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicUltraWideBand.get_invntt_operator">(lib.Qacquisition.QubicUltraWideBand method)</a>
-</li>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_invntt_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.PlanckAcquisition.get_map">get_map() (lib.Qacquisition.PlanckAcquisition method)</a>
+      <li><a href="CMM.preset.preset_gain.html#CMM.preset.preset_gain.PresetGain.get_input_gain">get_input_gain() (CMM.preset.preset_gain.PresetGain method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.OtherDataParametric.get_noise">get_noise() (lib.Qacquisition.OtherDataParametric method)</a>
+      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_input_map">get_input_map() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
+</li>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.get_mixingmatrix">get_mixingmatrix() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
+</li>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.get_noise">get_noise() (CMM.preset.preset_acquisition.PresetAcquisition method)</a>
+</li>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.get_preconditioner">get_preconditioner() (CMM.preset.preset_acquisition.PresetAcquisition method)</a>
 
       <ul>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.PlanckAcquisition.get_noise">(lib.Qacquisition.PlanckAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_noise">(lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated.get_noise">(lib.Qacquisition.QubicIntegrated method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.get_noise">(lib.Qacquisition.QubicPolyAcquisition method)</a>
-</li>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_noise">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-        <li><a href="lib.Qnoise.html#lib.Qnoise.QubicNoise.get_noise">(lib.Qnoise.QubicNoise method)</a>
+        <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_preconditioner">(FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
       </ul></li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_noise_detector">get_noise_detector() (lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_noise_photon">get_noise_photon() (lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_observation">get_observation() (lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.JointAcquisitionComponentsMapMaking.get_operator">get_operator() (lib.Qacquisition.JointAcquisitionComponentsMapMaking method)</a>
-
-      <ul>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.JointAcquisitionFrequencyMapMaking.get_operator">(lib.Qacquisition.JointAcquisitionFrequencyMapMaking method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.OtherDataParametric.get_operator">(lib.Qacquisition.OtherDataParametric method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.PlanckAcquisition.get_operator">(lib.Qacquisition.PlanckAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_operator">(lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicDualBand.get_operator">(lib.Qacquisition.QubicDualBand method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic.get_operator">(lib.Qacquisition.QubicFullBandSystematic method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated.get_operator">(lib.Qacquisition.QubicIntegrated method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.get_operator">(lib.Qacquisition.QubicPolyAcquisition method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicUltraWideBand.get_operator">(lib.Qacquisition.QubicUltraWideBand method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.get_operator_to_make_TOD">get_operator_to_make_TOD() (lib.Qacquisition.QubicPolyAcquisition method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_polarizer_operator">get_polarizer_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_polarizer_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_preconditioner">get_preconditioner() (lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_preconditionner">get_preconditionner() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_projection_operator">get_projection_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_projection_operator">(lib.Qinstrument.QubicInstrument method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic.get_PySM_maps">get_PySM_maps() (lib.Qacquisition.QubicFullBandSystematic method)</a>
-</li>
       <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_random_value">get_random_value() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_sky_config">get_sky_config() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_subtract_grids_operator">get_subtract_grids_operator() (lib.Qacquisition.QubicAcquisition method)</a>
-</li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_synthbeam">get_synthbeam() (lib.Qinstrument.QubicInstrument method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.get_sky_config">get_sky_config() (CMM.preset.preset_components.PresetComponents method)</a>
 
       <ul>
-        <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicMultibandInstrument.get_synthbeam">(lib.Qinstrument.QubicMultibandInstrument method)</a>
+        <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_sky_config">(FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
       </ul></li>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_tod">get_tod() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.get_spectra_namaster_informations">get_spectra_namaster_informations() (CMM.preset.preset_sky.PresetSky method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated.get_TOD">get_TOD() (lib.Qacquisition.QubicIntegrated method)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.get_tod">get_tod() (CMM.preset.preset_acquisition.PresetAcquisition method)</a>
+
+      <ul>
+        <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_tod">(FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument.get_transmission_operator">get_transmission_operator() (lib.Qinstrument.QubicInstrument method)</a>
+      </ul></li>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.get_tod_comp">get_tod_comp() (CMM.pipeline.Pipeline method)</a>
 </li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.Plots.get_triangle">get_triangle() (lib.Qmap_plotter.Plots method)</a>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.get_tod_comp_superpixel">get_tod_comp_superpixel() (CMM.pipeline.Pipeline method)</a>
 </li>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.get_ultrawideband_config">get_ultrawideband_config() (lib.Qspectra.Spectrumold method)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.get_x0">get_x0() (CMM.preset.preset_acquisition.PresetAcquisition method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition.get_unit_conversion_operator">get_unit_conversion_operator() (lib.Qacquisition.QubicAcquisition method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.give_cl_cmb">give_cl_cmb() (CMM.preset.preset_components.PresetComponents method)</a>
 </li>
-      <li><a href="CMM.preset.preset_foregrounds.html#CMM.preset.preset_foregrounds.PresetFG.give_cl_cmb">give_cl_cmb() (CMM.preset.preset_foregrounds.PresetFG method)</a>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.give_intercal">give_intercal() (CMM.pipeline.Pipeline method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.H">H (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>, <a href="CMM.preset.preset_acquisition.html#id0">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -535,123 +382,22 @@
       <li><a href="CMM.preset.html#CMM.preset.PresetInitialisation.initialize">initialize() (CMM.preset.PresetInitialisation method)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.invN">invN (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
+</li>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.ites_to_converge">ites_to_converge (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qmpi_tools.html#lib.Qmpi_tools.join_data">join_data() (in module lib.Qmpi_tools)</a>
-</li>
-      <li><a href="lib.Qmpi_tools.html#lib.Qmpi_tools.join_toward_rank">join_toward_rank() (in module lib.Qmpi_tools)</a>
+      <li><a href="CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.joint_in">joint_in (CMM.preset.preset_qubic.PresetQubic attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.JointAcquisitionComponentsMapMaking">JointAcquisitionComponentsMapMaking (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.JointAcquisitionFrequencyMapMaking">JointAcquisitionFrequencyMapMaking (class in lib.Qacquisition)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="L">L</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    lib
-
-      <ul>
-        <li><a href="lib.html#module-lib">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qacquisition
-
-      <ul>
-        <li><a href="lib.Qacquisition.html#module-lib.Qacquisition">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qcg
-
-      <ul>
-        <li><a href="lib.Qcg.html#module-lib.Qcg">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qcomponent_model
-
-      <ul>
-        <li><a href="lib.Qcomponent_model.html#module-lib.Qcomponent_model">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qfit
-
-      <ul>
-        <li><a href="lib.Qfit.html#module-lib.Qfit">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qfoldertools
-
-      <ul>
-        <li><a href="lib.Qfoldertools.html#module-lib.Qfoldertools">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qinstrument
-
-      <ul>
-        <li><a href="lib.Qinstrument.html#module-lib.Qinstrument">module</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    lib.Qmap_plotter
-
-      <ul>
-        <li><a href="lib.Qmap_plotter.html#module-lib.Qmap_plotter">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qmixing_matrix
-
-      <ul>
-        <li><a href="lib.Qmixing_matrix.html#module-lib.Qmixing_matrix">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qmpi_tools
-
-      <ul>
-        <li><a href="lib.Qmpi_tools.html#module-lib.Qmpi_tools">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qnoise
-
-      <ul>
-        <li><a href="lib.Qnoise.html#module-lib.Qnoise">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qspectra
-
-      <ul>
-        <li><a href="lib.Qspectra.html#module-lib.Qspectra">module</a>
-</li>
-      </ul></li>
-      <li>
-    lib.Qspectra_component
-
-      <ul>
-        <li><a href="lib.Qspectra_component.html#module-lib.Qspectra_component">module</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qfit.html#lib.Qfit.FitEllSpace.log_prior">log_prior() (lib.Qfit.FitEllSpace method)</a>
-</li>
-      <li><a href="lib.Qfit.html#lib.Qfit.FitEllSpace.loglikelihood">loglikelihood() (lib.Qfit.FitEllSpace method)</a>
+      <li><a href="CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.joint_out">joint_out (CMM.preset.preset_qubic.PresetQubic attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -659,23 +405,15 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.M">M (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
+</li>
       <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.main">main() (CMM.pipeline.Pipeline method)</a>
 
       <ul>
         <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineEnd2End.main">(FMM.pipeline.PipelineEnd2End method)</a>
 </li>
       </ul></li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.Plots.make_list_free_parameter">make_list_free_parameter() (lib.Qmap_plotter.Plots method)</a>
-</li>
-      <li><a href="lib.Qfoldertools.html#lib.Qfoldertools.MergeAllFiles">MergeAllFiles (class in lib.Qfoldertools)</a>
-</li>
-      <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix">MixingMatrix (class in lib.Qmixing_matrix)</a>
-</li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra.model">model() (lib.Qspectra_component.SkySpectra method)</a>
-</li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra.model_cmb">model_cmb() (lib.Qspectra_component.SkySpectra method)</a>
-</li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.ModifiedBlackBody">ModifiedBlackBody (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.max_coverage">max_coverage (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
       <li>
     module
@@ -689,9 +427,9 @@
 </li>
         <li><a href="CMM.preset.preset_acquisition.html#module-CMM.preset.preset_acquisition">CMM.preset.preset_acquisition</a>
 </li>
-        <li><a href="CMM.preset.preset_external_data.html#module-CMM.preset.preset_external_data">CMM.preset.preset_external_data</a>
+        <li><a href="CMM.preset.preset_components.html#module-CMM.preset.preset_components">CMM.preset.preset_components</a>
 </li>
-        <li><a href="CMM.preset.preset_foregrounds.html#module-CMM.preset.preset_foregrounds">CMM.preset.preset_foregrounds</a>
+        <li><a href="CMM.preset.preset_external_data.html#module-CMM.preset.preset_external_data">CMM.preset.preset_external_data</a>
 </li>
         <li><a href="CMM.preset.preset_gain.html#module-CMM.preset.preset_gain">CMM.preset.preset_gain</a>
 </li>
@@ -707,36 +445,6 @@
 </li>
         <li><a href="FMM.pipeline.html#module-FMM.pipeline">FMM.pipeline</a>
 </li>
-        <li><a href="lib.html#module-lib">lib</a>
-</li>
-        <li><a href="lib.Qacquisition.html#module-lib.Qacquisition">lib.Qacquisition</a>
-</li>
-        <li><a href="lib.Qcg.html#module-lib.Qcg">lib.Qcg</a>
-</li>
-        <li><a href="lib.Qcomponent_model.html#module-lib.Qcomponent_model">lib.Qcomponent_model</a>
-</li>
-        <li><a href="lib.Qfit.html#module-lib.Qfit">lib.Qfit</a>
-</li>
-        <li><a href="lib.Qfoldertools.html#module-lib.Qfoldertools">lib.Qfoldertools</a>
-</li>
-        <li><a href="lib.Qinstrument.html#module-lib.Qinstrument">lib.Qinstrument</a>
-</li>
-        <li><a href="lib.Qmap_plotter.html#module-lib.Qmap_plotter">lib.Qmap_plotter</a>
-</li>
-        <li><a href="lib.Qmixing_matrix.html#module-lib.Qmixing_matrix">lib.Qmixing_matrix</a>
-</li>
-        <li><a href="lib.Qmpi_tools.html#module-lib.Qmpi_tools">lib.Qmpi_tools</a>
-</li>
-        <li><a href="lib.Qnoise.html#module-lib.Qnoise">lib.Qnoise</a>
-</li>
-        <li><a href="lib.Qspectra.html#module-lib.Qspectra">lib.Qspectra</a>
-</li>
-        <li><a href="lib.Qspectra_component.html#module-lib.Qspectra_component">lib.Qspectra_component</a>
-</li>
-        <li><a href="run_fmm.html#module-run_fmm">run_fmm</a>
-</li>
-        <li><a href="run_spectra_cmm.html#module-run_spectra_cmm">run_spectra_cmm</a>
-</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -744,25 +452,17 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component.n_param">n_param (lib.Qcomponent_model.Component property)</a>
-
-      <ul>
-        <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.n_param">(lib.Qmixing_matrix.MixingMatrix property)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.namaster">namaster (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="O">O</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qfoldertools.html#lib.Qfoldertools.open_data">open_data() (in module lib.Qfoldertools)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.nsampling_x_ndetectors">nsampling_x_ndetectors (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectra.open_file">open_file() (lib.Qspectra.Spectra method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.nu_co">nu_co (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.OtherDataParametric">OtherDataParametric (class in lib.Qacquisition)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.nus_eff_in">nus_eff_in (CMM.preset.preset_mixingmatrix.PresetMixingMatrix attribute)</a>, <a href="CMM.preset.preset_mixingmatrix.html#id0">[1]</a>
+</li>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.nus_eff_out">nus_eff_out (CMM.preset.preset_mixingmatrix.PresetMixingMatrix attribute)</a>, <a href="CMM.preset.preset_mixingmatrix.html#id1">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -770,19 +470,17 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Component.params">params (lib.Qcomponent_model.Component property)</a>
+      <li><a href="CMM.preset.preset_tools.html#CMM.preset.preset_tools.PresetTools.params">params (CMM.preset.preset_tools.PresetTools attribute)</a>
+</li>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.params_cmb">params_cmb (CMM.preset.preset_components.PresetComponents attribute)</a>
+</li>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.params_foregrounds">params_foregrounds (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 
       <ul>
-        <li><a href="lib.Qmixing_matrix.html#lib.Qmixing_matrix.MixingMatrix.params">(lib.Qmixing_matrix.MixingMatrix property)</a>
+        <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.params_foregrounds">(CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
       </ul></li>
       <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.pcg">pcg() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-
-      <ul>
-        <li><a href="lib.Qcg.html#lib.Qcg.pcg">(in module lib.Qcg)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qnoise.html#lib.Qnoise.QubicNoise.photon_noise">photon_noise() (lib.Qnoise.QubicNoise method)</a>
 </li>
       <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline">Pipeline (class in CMM.pipeline)</a>
 </li>
@@ -790,39 +488,15 @@
 </li>
       <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking">PipelineFrequencyMapMaking (class in FMM.pipeline)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.PlanckAcquisition">PlanckAcquisition (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsCMM.plot_beta_iteration">plot_beta_iteration() (lib.Qmap_plotter.PlotsCMM method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsFMM.plot_FMM_mollview">plot_FMM_mollview() (lib.Qmap_plotter.PlotsFMM method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsFMM.plot_FMM_old">plot_FMM_old() (lib.Qmap_plotter.PlotsFMM method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsFMM.plot_frequency_maps">plot_frequency_maps() (lib.Qmap_plotter.PlotsFMM method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsCMM.plot_gain_iteration">plot_gain_iteration() (lib.Qmap_plotter.PlotsCMM method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsCMM.plot_rms_iteration">plot_rms_iteration() (lib.Qmap_plotter.PlotsCMM method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.polarized_I">polarized_I() (CMM.preset.preset_components.PresetComponents method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsCMM.plot_sed">plot_sed() (lib.Qmap_plotter.PlotsCMM method)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.Plots">Plots (class in lib.Qmap_plotter)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsCMM">PlotsCMM (class in lib.Qmap_plotter)</a>
-</li>
-      <li><a href="lib.Qmap_plotter.html#lib.Qmap_plotter.PlotsFMM">PlotsFMM (class in lib.Qmap_plotter)</a>
-</li>
-      <li><a href="CMM.preset.preset_foregrounds.html#CMM.preset.preset_foregrounds.PresetFG.polarized_I">polarized_I() (CMM.preset.preset_foregrounds.PresetFG method)</a>
-</li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.PowerLaw">PowerLaw (class in lib.Qcomponent_model)</a>
-</li>
       <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition">PresetAcquisition (class in CMM.preset.preset_acquisition)</a>
 </li>
-      <li><a href="CMM.preset.preset_external_data.html#CMM.preset.preset_external_data.PresetExternal">PresetExternal (class in CMM.preset.preset_external_data)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents">PresetComponents (class in CMM.preset.preset_components)</a>
 </li>
-      <li><a href="CMM.preset.preset_foregrounds.html#CMM.preset.preset_foregrounds.PresetFG">PresetFG (class in CMM.preset.preset_foregrounds)</a>
+      <li><a href="CMM.preset.preset_external_data.html#CMM.preset.preset_external_data.PresetExternal">PresetExternal (class in CMM.preset.preset_external_data)</a>
 </li>
       <li><a href="CMM.preset.preset_gain.html#CMM.preset.preset_gain.PresetGain">PresetGain (class in CMM.preset.preset_gain)</a>
 </li>
@@ -839,104 +513,38 @@
   </ul></td>
 </tr></table>
 
-<h2 id="Q">Q</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicAcquisition">QubicAcquisition (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicDualBand">QubicDualBand (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qnoise.html#lib.Qnoise.QubicDualBandNoise">QubicDualBandNoise (class in lib.Qnoise)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic">QubicFullBandSystematic (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicInstrument">QubicInstrument (class in lib.Qinstrument)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicIntegrated">QubicIntegrated (class in lib.Qacquisition)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicMultiAcquisitions">QubicMultiAcquisitions (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qinstrument.html#lib.Qinstrument.QubicMultibandInstrument">QubicMultibandInstrument (class in lib.Qinstrument)</a>
-</li>
-      <li><a href="lib.Qnoise.html#lib.Qnoise.QubicNoise">QubicNoise (class in lib.Qnoise)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition">QubicPolyAcquisition (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicUltraWideBand">QubicUltraWideBand (class in lib.Qacquisition)</a>
-</li>
-      <li><a href="lib.Qnoise.html#lib.Qnoise.QubicWideBandNoise">QubicWideBandNoise (class in lib.Qnoise)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.run">run() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
-
-      <ul>
-        <li><a href="lib.Qfit.html#lib.Qfit.FitEllSpace.run">(lib.Qfit.FitEllSpace method)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.rms_tolerance">rms_tolerance (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
-        <li><a href="lib.Qspectra.html#lib.Qspectra.Spectra.run">(lib.Qspectra.Spectra method)</a>
-</li>
-        <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.run">(lib.Qspectra.Spectrumold method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    run_fmm
-
-      <ul>
-        <li><a href="run_fmm.html#module-run_fmm">module</a>
+      <li><a href="FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.run">run() (FMM.pipeline.PipelineFrequencyMapMaking method)</a>
 </li>
-      </ul></li>
-      <li>
-    run_spectra_cmm
-
-      <ul>
-        <li><a href="run_spectra_cmm.html#module-run_spectra_cmm">module</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qfoldertools.html#lib.Qfoldertools.save_data">save_data() (in module lib.Qfoldertools)</a>
-
-      <ul>
-        <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold.save_data">(lib.Qspectra.Spectrumold method)</a>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.save_data">save_data() (CMM.pipeline.Pipeline method)</a>
 </li>
-      </ul></li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra.scale_dust">scale_dust() (lib.Qspectra_component.SkySpectra method)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.seed">seed (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra.scale_dustsync">scale_dustsync() (lib.Qspectra_component.SkySpectra method)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.seed_noise">seed_noise (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>
 </li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra.scale_sync">scale_sync() (lib.Qspectra_component.SkySpectra method)</a>
-</li>
-      <li><a href="lib.Qspectra_component.html#lib.Qspectra_component.SkySpectra">SkySpectra (class in lib.Qspectra_component)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.seenpix">seenpix (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectra">Spectra (class in lib.Qspectra)</a>
+      <li><a href="CMM.preset.preset_sky.html#CMM.preset.preset_sky.PresetSky.seenpix_qubic">seenpix_qubic (CMM.preset.preset_sky.PresetSky attribute)</a>
 </li>
-      <li><a href="lib.Qspectra.html#lib.Qspectra.Spectrumold">Spectrumold (class in lib.Qspectra)</a>
+      <li><a href="CMM.preset.preset_components.html#CMM.preset.preset_components.PresetComponents.skyconfig">skyconfig (CMM.preset.preset_components.PresetComponents attribute)</a>
 </li>
-      <li><a href="lib.Qmpi_tools.html#lib.Qmpi_tools.split_data">split_data() (in module lib.Qmpi_tools)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.spectral_index_modifiedblackbody">spectral_index_modifiedblackbody() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
 </li>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicDualBand.sum_over_band">sum_over_band() (lib.Qacquisition.QubicDualBand method)</a>
-
-      <ul>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicFullBandSystematic.sum_over_band">(lib.Qacquisition.QubicFullBandSystematic method)</a>
-</li>
-        <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicUltraWideBand.sum_over_band">(lib.Qacquisition.QubicUltraWideBand method)</a>
-</li>
-      </ul></li>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.Synchrotron">Synchrotron (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_mixingmatrix.html#CMM.preset.preset_mixingmatrix.PresetMixingMatrix.spectral_index_powerlaw">spectral_index_powerlaw() (CMM.preset.preset_mixingmatrix.PresetMixingMatrix method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -944,16 +552,14 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qcomponent_model.html#lib.Qcomponent_model.ThermalSZ">ThermalSZ (class in lib.Qcomponent_model)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.TOD_external">TOD_external (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>, <a href="CMM.preset.preset_acquisition.html#id2">[1]</a>
 </li>
-      <li><a href="lib.Qnoise.html#lib.Qnoise.QubicDualBandNoise.total_noise">total_noise() (lib.Qnoise.QubicDualBandNoise method)</a>
-
-      <ul>
-        <li><a href="lib.Qnoise.html#lib.Qnoise.QubicNoise.total_noise">(lib.Qnoise.QubicNoise method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.TOD_obs">TOD_obs (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>, <a href="CMM.preset.preset_acquisition.html#id3">[1]</a>
 </li>
-        <li><a href="lib.Qnoise.html#lib.Qnoise.QubicWideBandNoise.total_noise">(lib.Qnoise.QubicWideBandNoise method)</a>
+      <li><a href="CMM.preset.preset_acquisition.html#CMM.preset.preset_acquisition.PresetAcquisition.TOD_qubic">TOD_qubic (CMM.preset.preset_acquisition.PresetAcquisition attribute)</a>, <a href="CMM.preset.preset_acquisition.html#id1">[1]</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -962,13 +568,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.update_components">update_components() (CMM.pipeline.Pipeline method)</a>
 </li>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.update_gain">update_gain() (CMM.pipeline.Pipeline method)</a>
+</li>
   </ul></td>
-</tr></table>
-
-<h2 id="W">W</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lib.Qacquisition.html#lib.Qacquisition.QubicPolyAcquisition.warnings">warnings() (lib.Qacquisition.QubicPolyAcquisition method)</a>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.update_mixing_matrix">update_mixing_matrix() (CMM.pipeline.Pipeline method)</a>
+</li>
+      <li><a href="CMM.pipeline.html#CMM.pipeline.Pipeline.update_spectral_index">update_spectral_index() (CMM.pipeline.Pipeline method)</a>
 </li>
   </ul></td>
 </tr></table>

@@ -83,24 +83,30 @@
 <div class="viewcode-block" id="PresetQubic">
 <a class="viewcode-back" href="../../../CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic">[docs]</a>
 <span class="k">class</span> <span class="nc">PresetQubic</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preset QUBIC.</span>
 
-<span class="sd">    Instance to initialize the Components Map-Making. It defines QUBIC operator.</span>
-
-<span class="sd">    Self variables :    - dict : dictionnary</span>
-<span class="sd">                        - joint_in : class</span>
-<span class="sd">                        - joint_out : class</span>
+<span class="sd">    Instance to initialize the Components Map-Making. It defines QUBIC variables and methods.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    preset_tools : object</span>
+<span class="sd">        Class containing tools and simulation parameters.</span>
+<span class="sd">    preset_external : object</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------  </span>
+<span class="sd">    dict: dict</span>
+<span class="sd">        Dictionary defining QUBIC caracteristics.</span>
+<span class="sd">    joint_in: object</span>
+<span class="sd">        Class defining the QUBIC intrument to build the intial TOD.</span>
+<span class="sd">    joint_out: object</span>
+<span class="sd">        Class defining the QUBIC intrument to reconstruct the sky map.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preset_tools</span><span class="p">,</span> <span class="n">preset_external</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize.</span>
 
-<span class="sd">        Initialize the class with preset tools and external.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            preset_tools: Class containing tools and simulation parameters.</span>
-<span class="sd">            preset_external: Class containing external frequencies.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">### Import preset tools</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preset_tools</span> <span class="o">=</span> <span class="n">preset_tools</span>
@@ -116,11 +122,11 @@
 
         <span class="c1">### QUBIC dictionary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preset_tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;    =&gt; Reading QUBIC dictionary&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dict</span><span class="p">()</span>
 
         <span class="c1">### Define model for reconstruction</span>
-        <span class="n">components_fgb_in</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_components_fgb</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-        <span class="n">components_fgb_out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_components_fgb</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">)</span>
+        <span class="n">components_fgb_in</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_components_fgb</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
+        <span class="n">components_fgb_out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_components_fgb</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset_tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Foregrounds&quot;</span><span class="p">][</span><span class="s2">&quot;CO&quot;</span><span class="p">][</span><span class="s2">&quot;CO_in&quot;</span><span class="p">]:</span>
             <span class="n">nu_co</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset_tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Foregrounds&quot;</span><span class="p">][</span><span class="s2">&quot;CO&quot;</span><span class="p">][</span><span class="s2">&quot;nu0_co&quot;</span><span class="p">]</span>
@@ -162,41 +168,26 @@
                 <span class="n">H</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_ultrawideband_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method to define Ultra Wide Band configuration.</span>
+<div class="viewcode-block" id="PresetQubic.get_dict">
+<a class="viewcode-back" href="../../../CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.get_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;QUBIC dictionary.</span>
+<span class="sd">        </span>
+<span class="sd">        Method to modify the qubic dictionary.</span>
 
-<span class="sd">        This method calculates the average frequency (average_frequency) and the normalized</span>
-<span class="sd">        frequency deviation (2*difference_frequency/average_frequency) for the Ultra Wide Band.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str, optional</span>
+<span class="sd">            Can be &quot;in&quot; or &quot;out&quot;. </span>
+<span class="sd">            It is used to build respectively the instances to generate the TODs or to reconstruct the sky maps, </span>
+<span class="sd">            by default &quot;in&quot;.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            tuple: A tuple containing:</span>
-<span class="sd">                - average_frequency (float): The average frequency.</span>
-<span class="sd">                - normalized_deviation (float): The normalized frequency deviation.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">maximum_frequency</span> <span class="o">=</span> <span class="mf">247.5</span>
-        <span class="n">minimum_frequency</span> <span class="o">=</span> <span class="mf">131.25</span>
-        <span class="n">average_frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">maximum_frequency</span><span class="p">,</span> <span class="n">minimum_frequency</span><span class="p">]))</span>
-        <span class="n">difference_frequency</span> <span class="o">=</span> <span class="n">maximum_frequency</span> <span class="o">-</span> <span class="n">average_frequency</span>
-
-        <span class="k">return</span> <span class="n">average_frequency</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">difference_frequency</span> <span class="o">/</span> <span class="n">average_frequency</span>
-
-    <span class="k">def</span> <span class="nf">_get_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method to define and modify the QUBIC dictionary.</span>
-
-<span class="sd">        This method retrieves the ultrawideband configuration and constructs a dictionary</span>
-<span class="sd">        with various parameters required for the QUBIC pipeline. It then reads a default</span>
-<span class="sd">        dictionary from a file and updates it with the constructed parameters.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            qubic.qubicdict.qubicDict: The modified QUBIC dictionary.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1">### Retrieve ultrawideband configuration</span>
-        <span class="n">average_frequency</span><span class="p">,</span> <span class="n">difference_frequency_nu_over_nu</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_get_ultrawideband_config</span><span class="p">()</span>
-        <span class="p">)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict_qubic: dict</span>
+<span class="sd">            Modified QUBIC dictionary.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>     
 
         <span class="c1">### Construct the arguments dictionary with required parameters</span>
         <span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
@@ -208,7 +199,7 @@
             <span class="s2">&quot;period&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
             <span class="s2">&quot;RA_center&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset_tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;SKY&quot;</span><span class="p">][</span><span class="s2">&quot;RA_center&quot;</span><span class="p">],</span>
             <span class="s2">&quot;DEC_center&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">preset_tools</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;SKY&quot;</span><span class="p">][</span><span class="s2">&quot;DEC_center&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;filter_nu&quot;</span><span class="p">:</span> <span class="n">average_frequency</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">,</span>
+            <span class="s2">&quot;filter_nu&quot;</span><span class="p">:</span> <span class="mi">150</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">,</span>
             <span class="s2">&quot;noiseless&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="s2">&quot;comm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">comm</span><span class="p">,</span>
             <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;IQU&quot;</span><span class="p">,</span>
@@ -242,19 +233,22 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">d</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">d</span>
+        <span class="k">return</span> <span class="n">d</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_components_fgb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method to define sky model taken from FGBuster code. Note that we add `COLine` instance to define monochromatic description.</span>
 
-<span class="sd">        Parameters:</span>
-<span class="sd">        key (str): The key to identify specific components in the preset parameters.</span>
+<div class="viewcode-block" id="PresetQubic.get_components_fgb">
+<a class="viewcode-back" href="../../../CMM.preset.preset_qubic.html#CMM.preset.preset_qubic.PresetQubic.get_components_fgb">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_components_fgb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Components FGbuster</span>
+<span class="sd">        </span>
+<span class="sd">        Method to build a dictionary containing all the wanted components to generate sky maps.</span>
+<span class="sd">        Based on FGBuster.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">        tuple: A tuple containing two lists:</span>
-<span class="sd">            - components (list): List of component instances.</span>
-<span class="sd">            - components_name (list): List of component names corresponding to the instances.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict_comps: dict</span>
+<span class="sd">            Dictionary containing the component instances.</span>
+<span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
@@ -292,6 +286,7 @@
             <span class="n">components_name</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;CO&quot;</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">components</span><span class="p">,</span> <span class="n">components_name</span></div>
+</div>
 
 </pre></div>
 

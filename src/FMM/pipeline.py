@@ -479,14 +479,14 @@ class PipelineFrequencyMapMaking:
         return fwhm_in, fwhm_out, fwhm_rec
 
     def get_input_map(self):
-        """Input maps.
+        r"""Input maps.
 
         Function to get the input maps from PySM3.
         
         Returns
         -------
         maps_in: array_like
-            Input maps :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.
+            Input maps :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
             
         """        
 
@@ -502,7 +502,7 @@ class PipelineFrequencyMapMaking:
         return m_nu_in
 
     def get_tod(self, noise=False):
-        """Simulated TOD.
+        r"""Simulated TOD.
         
         Method that compute observed TODs with :math:`\vec{TOD} = H \cdot \vec{s} + \vec{n}`, with H the QUBIC operator, :math:`\vec{s}` the sky signal and :math:`\vec{n}` the instrumental noise`.
 
@@ -514,7 +514,7 @@ class PipelineFrequencyMapMaking:
         Returns
         -------
         TOD: array_like
-            Simulated TOD :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.
+            Simulated TOD :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
             
         """        
 
@@ -677,15 +677,15 @@ class PipelineFrequencyMapMaking:
             if self.rank == 0:
                 print(message)
 
-    def get_preconditionner(self):
-        """PCG Preconditionner.
+    def get_preconditioner(self):
+        """PCG Preconditioner.
         
         Computed using the formula: To be added. 
 
         Returns
         -------
         M: DiagonalOperator
-            Preconditionner for PCG algorithm.
+            Preconditioner for PCG algorithm.
         """        
 
         if self.params["PCG"]["preconditioner"]:
@@ -697,7 +697,7 @@ class PipelineFrequencyMapMaking:
                     3,
                 )
             )
-            conditionner = np.zeros(
+            conditioner = np.zeros(
                 (self.params["QUBIC"]["nrec"], 12 * self.params["SKY"]["nside"] ** 2, 3)
             )
             vec = np.ones(self.joint.qubic.H[0].shapein)
@@ -714,19 +714,19 @@ class PipelineFrequencyMapMaking:
                 imin = irec * self.fsub
                 imax = (irec + 1) * self.fsub
                 for istk in range(3):
-                    conditionner[irec, self.seenpix, istk] = 1 / (
+                    conditioner[irec, self.seenpix, istk] = 1 / (
                         np.sum(approx_hth[imin:imax, self.seenpix, 0], axis=0)
                     )
 
-            conditionner[conditionner == np.inf] = 1
+            conditioner[conditioner == np.inf] = 1
 
-            M = DiagonalOperator(conditionner[:, self.seenpix, :])
+            M = DiagonalOperator(conditioner[:, self.seenpix, :])
         else:
             M = None
         return M
 
     def pcg(self, d, x0, seenpix):
-        """Preconditionned Conjugate Gradiant algorithm.
+        r"""Preconditioned Conjugate Gradiant algorithm.
         
         Solve the map-making equation iteratively : :math:`(H^T . N^{-1} . H) . x = H^T . N^{-1} . d`.
 
@@ -735,21 +735,18 @@ class PipelineFrequencyMapMaking:
         Parameters
         ----------
         d : array_like
-            Array containing the TODs generated previously :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.
+            Array containing the TODs generated previously :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
         x0 : array_like
-            Starting point of the PCG algorithm :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.
+            Starting point of the PCG algorithm :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
         seenpix : array_like
-            Boolean array to define the pixels seen by QUBIC :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.
+            Boolean array to define the pixels seen by QUBIC :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
 
         Returns
         -------
         solution: array_like
-            Reconstructed maps :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.
-        """        
-        """
+            Reconstructed maps :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
         
-
-        """
+        """        
 
         ### Update components when pixels outside the patch are fixed (assumed to be 0)
         A = self.H_out.T * self.invN * self.H_out
@@ -757,7 +754,7 @@ class PipelineFrequencyMapMaking:
         x_planck = self.m_nu_in * (1 - seenpix[None, :, None])
         b = self.H_out.T * self.invN * (d - self.H_out_all_pix(x_planck))
         ### Preconditionning
-        M = self.get_preconditionner()
+        M = self.get_preconditioner()
 
         if self.params["PCG"]["gif"]:
             gif_folder = self.plot_folder + f"{self.job_id}/iter/"

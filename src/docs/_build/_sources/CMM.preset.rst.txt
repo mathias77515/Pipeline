@@ -14,8 +14,8 @@ Submodules
 
    CMM.preset.preset_
    CMM.preset.preset_acquisition
+   CMM.preset.preset_components
    CMM.preset.preset_external_data
-   CMM.preset.preset_foregrounds
    CMM.preset.preset_gain
    CMM.preset.preset_mixingmatrix
    CMM.preset.preset_qubic

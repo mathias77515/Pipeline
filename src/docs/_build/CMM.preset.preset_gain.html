@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="CMM.preset.preset_mixingmatrix module" href="CMM.preset.preset_mixingmatrix.html" />
-    <link rel="prev" title="CMM.preset.preset_foregrounds module" href="CMM.preset.preset_foregrounds.html" /> 
+    <link rel="prev" title="CMM.preset.preset_external_data module" href="CMM.preset.preset_external_data.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -93,16 +93,34 @@
 <dt class="sig sig-object py" id="CMM.preset.preset_gain.PresetGain">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CMM.preset.preset_gain.</span></span><span class="sig-name descname"><span class="pre">PresetGain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preset_tools</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preset_qubic</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/preset/preset_gain.html#PresetGain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.preset.preset_gain.PresetGain" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Instance to initialize the Components Map-Making. It defines the input detectors gain.</p>
-<dl class="simple">
-<dt>Self variables<span class="classifier">- gain_in: ndarray / if DB (Ndet, 2) / if UWB (Ndet)</span></dt><dd><ul class="simple">
-<li><p>all_gain_in: ndarray / if DB (Ndet, 2) / if UWB (Ndet)</p></li>
-<li><p>gain_iter: ndarray / if DB (Ndet, 2) / if UWB (Ndet)</p></li>
-<li><p>all_gain: ndarray / if DB (Ndet, 2) / if UWB (Ndet)</p></li>
-<li><p>all_gain_iter: ndarray / if DB (1, Ndet, 2) / if UWB (1, Ndet)</p></li>
+<p>Preset Detectors Gain.</p>
+<p>Instance to initialize the Components Map-Making. It defines the input detectors gain variables and methodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>preset_tools</strong> (<em>object</em>) – Class containing tools and simulation parameters.</p></li>
+<li><p><strong>preset_qubic</strong> (<em>object</em>) – Class containing qubic operator and variables and methods.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.preset.preset_gain.PresetGain.get_input_gain" title="CMM.preset.preset_gain.PresetGain.get_input_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_input_gain</span></code></a>()</p></td>
+<td><p>Input gains.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.preset.preset_gain.PresetGain.get_input_gain">
+<span class="sig-name descname"><span class="pre">get_input_gain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/preset/preset_gain.html#PresetGain.get_input_gain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.preset.preset_gain.PresetGain.get_input_gain" title="Link to this definition"></a></dt>
+<dd><p>Input gains.</p>
+<p>Generates and processes input gain values for the instrument based on preset parameters.</p>
+<p>This method sets the <cite>gain_in</cite>, <cite>all_gain_in</cite>, <cite>gain_iter</cite>, <cite>all_gain</cite>, and <cite>all_gain_iter</cite>
+attributes of the instance. The gain values are generated using a normal distribution and may be
+adjusted based on the instrument type and preset parameters.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -111,7 +129,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="CMM.preset.preset_foregrounds.html" class="btn btn-neutral float-left" title="CMM.preset.preset_foregrounds module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="CMM.preset.preset_external_data.html" class="btn btn-neutral float-left" title="CMM.preset.preset_external_data module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="CMM.preset.preset_mixingmatrix.html" class="btn btn-neutral float-right" title="CMM.preset.preset_mixingmatrix module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

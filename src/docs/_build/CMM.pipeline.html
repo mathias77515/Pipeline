@@ -106,26 +106,57 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.call_pcg" title="CMM.pipeline.Pipeline.call_pcg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call_pcg</span></code></a>(max_iterations, seenpix)</p></td>
-<td><p>Precontionned Conjugate Gradiant algorithm.</p></td>
+<td><p>Precontioned Conjugate Gradiant algorithm.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.fisher" title="CMM.pipeline.Pipeline.fisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher</span></code></a>(ell, Nl)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.callback" title="CMM.pipeline.Pipeline.callback"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callback</span></code></a>(x)</p></td>
+<td><p>Callback for scipy.minimize.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.fisher" title="CMM.pipeline.Pipeline.fisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher</span></code></a>(ell, Nl)</p></td>
 <td><p>Fisher Method.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.fisher_compute_sigma_r" title="CMM.pipeline.Pipeline.fisher_compute_sigma_r"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher_compute_sigma_r</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.fisher_compute_sigma_r" title="CMM.pipeline.Pipeline.fisher_compute_sigma_r"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fisher_compute_sigma_r</span></code></a>()</p></td>
 <td><p>Fisher estimation.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.get_constrains" title="CMM.pipeline.Pipeline.get_constrains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constrains</span></code></a>()</p></td>
+<td><p>Constraints for scipy.minimize.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.get_tod_comp" title="CMM.pipeline.Pipeline.get_tod_comp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_tod_comp</span></code></a>()</p></td>
+<td><p>Component TOD.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.give_intercal" title="CMM.pipeline.Pipeline.give_intercal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">give_intercal</span></code></a>(D, d, _invn)</p></td>
+<td><p>Detectors intercalibration.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.main" title="CMM.pipeline.Pipeline.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
-<td><p>Method to run the pipeline by following :</p></td>
+<td><p>Pipeline.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.update_components" title="CMM.pipeline.Pipeline.update_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_components</span></code></a>(seenpix)</p></td>
-<td><p>Method that solves the map-making equation <span class="math notranslate nohighlight">\((H^T . N^{-1} . H) . x = H^T . N^{-1} . d\)</span>, using OpenMP / MPI solver.</p></td>
+<td><p>Method that solves the map-making equation :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>(H^T .</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.update_gain" title="CMM.pipeline.Pipeline.update_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_gain</span></code></a>()</p></td>
+<td><p>Update detectors gain.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.update_mixing_matrix" title="CMM.pipeline.Pipeline.update_mixing_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_mixing_matrix</span></code></a>(beta, ...)</p></td>
+<td><p>Update Mixing Matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CMM.pipeline.Pipeline.update_spectral_index" title="CMM.pipeline.Pipeline.update_spectral_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_spectral_index</span></code></a>()</p></td>
+<td><p>Update spectral index.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_tod_comp_superpixel</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>save_data</strong></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="CMM.pipeline.Pipeline.call_pcg">
 <span class="sig-name descname"><span class="pre">call_pcg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seenpix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.call_pcg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.call_pcg" title="Link to this definition"></a></dt>
-<dd><p>Precontionned Conjugate Gradiant algorithm.</p>
+<dd><p>Precontioned Conjugate Gradiant algorithm.</p>
 <p>Method to call the PCG from PyOperators package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -133,6 +164,31 @@
 <li><p><strong>max_iterations</strong> (<em>int</em>) – Maximum number of iterations for the PCG algorithm.</p></li>
 <li><p><strong>seenpix</strong> (<em>array_like</em>) – Boolean array that define the pixels observed by QUBIC.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.callback">
+<span class="sig-name descname"><span class="pre">callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.callback" title="Link to this definition"></a></dt>
+<dd><p>Callback for scipy.minimize.</p>
+<p>Method to make callback function readable by <cite>scipy.optimize.minimize</cite>.</p>
+<p>This method is intended to be used as a callback function during the optimization
+process. It is called by the optimizer at each iteration.</p>
+<p>The method performs the following actions:
+1. Synchronizes all processes using a barrier to ensure that all processes reach this point before proceeding.
+2. If the current process is the root process (rank 0), it performs the following:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Every 5 iterations (when <cite>self.nfev</cite> is a multiple of 5), it prints the current iteration number and the parameter values rounded to 5 decimal places.</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Increments the iteration counter <cite>self.nfev</cite> by 1.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>array_like</em>) – The current parameter values at the current iteration of the optimization.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -166,9 +222,73 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.get_constrains">
+<span class="sig-name descname"><span class="pre">get_constrains</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.get_constrains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.get_constrains" title="Link to this definition"></a></dt>
+<dd><p>Constraints for scipy.minimize.</p>
+<p>Generate constraints readable by <cite>scipy.optimize.minimize</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>constraints</strong> – A list of constraint dictionaries for optimize.minimize.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.get_tod_comp">
+<span class="sig-name descname"><span class="pre">get_tod_comp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.get_tod_comp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.get_tod_comp" title="Link to this definition"></a></dt>
+<dd><p>Component TOD.</p>
+<p>Method that produces Time-Ordered Data (TOD) using the component maps computed at the current iteration.</p>
+<p>This method initializes a zero-filled numpy array <cite>tod_comp</cite> with dimensions based on the number of components,
+the number of sub-components (multiplied by 2), and the product of the number of detectors and samples.
+It then iterates over each component and sub-component to compute the TOD by applying a convolution operator
+(if specified) and a mapping operator to the component maps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tod_comp</strong> – A numpy array containing the computed TOD for each component and sub-component.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.get_tod_comp_superpixel">
+<span class="sig-name descname"><span class="pre">get_tod_comp_superpixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.get_tod_comp_superpixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.get_tod_comp_superpixel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.give_intercal">
+<span class="sig-name descname"><span class="pre">give_intercal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_invn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.give_intercal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.give_intercal" title="Link to this definition"></a></dt>
+<dd><p>Detectors intercalibration.</p>
+<p>Semi-analytical method for gains estimation. (cf CMM paper)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>D</strong> (<em>array_like</em>) – Simlulated data, given by the formula : <span class="math notranslate nohighlight">\(\vec{D} = H.A.\vec{c}\)</span>,
+where H is the pointing matrix, A the mixing matrix and c the component vector.</p></li>
+<li><p><strong>d</strong> (<em>array_like</em>) – Observed data, given by the formula : <span class="math notranslate nohighlight">\(\vec{d} = G.\vec{D} + \vec{n}\)</span>,
+where G is the detectors’ intercalibration matrix and n the noise vector.</p></li>
+<li><p><strong>_invn</strong> (<em>Diagonal Operator</em>) – Inverse noise covariance matrix.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>g</strong> – Intercalibration vector.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="CMM.pipeline.Pipeline.main">
 <span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.main" title="Link to this definition"></a></dt>
-<dd><p>Method to run the pipeline by following :</p>
+<dd><p>Pipeline.</p>
+<p>Method to run the pipeline by following :</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Initialize simulation using <cite>PresetSims</cite> instance reading <cite>params.yml</cite>.</p></li>
@@ -181,26 +301,60 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.save_data">
+<span class="sig-name descname"><span class="pre">save_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.save_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.save_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="CMM.pipeline.Pipeline.update_components">
 <span class="sig-name descname"><span class="pre">update_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seenpix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.update_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.update_components" title="Link to this definition"></a></dt>
-<dd><blockquote>
-<div><p>Method that solves the map-making equation <span class="math notranslate nohighlight">\((H^T . N^{-1} . H) . x = H^T . N^{-1} . d\)</span>, using OpenMP / MPI solver.</p>
+<dd><p>Method that solves the map-making equation <span class="math notranslate nohighlight">\((H^T . N^{-1} . H) . x = H^T . N^{-1} . d\)</span>, using OpenMP / MPI solver.</p>
 <p>This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver.
-The equation is of the form :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>(H^T . N^{-1} . H) .</p>
-</div></blockquote>
-<p>ec{c} = H^T . N^{-1} .
-ec{TOD}`, where H_i is the operator obtained from the preset,</p>
-<blockquote>
-<div><p>U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.</p>
-</div></blockquote>
+The equation is of the form <span class="math notranslate nohighlight">\((H^T . N^{-1} . H) . \vec{c} = H^T . N^{-1} . \vec{TOD}\)</span>, where H_i is the operator obtained from the preset,
+U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>seenpix</strong><span class="classifier">array_like</span></dt><dd><p>Boolean array that define the pixels observed by QUBIC.</p>
+<dd class="field-odd"><p><strong>seenpix</strong> (<em>array_like</em>) – Boolean array that define the pixels observed by QUBIC.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.update_gain">
+<span class="sig-name descname"><span class="pre">update_gain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.update_gain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.update_gain" title="Link to this definition"></a></dt>
+<dd><p>Update detectors gain.</p>
+<p>Method that compute and print gains of each detectors using semi-analytical method decribed in “give_intercal” function,
+using the formula : <span class="math notranslate nohighlight">\(g^i = \frac{TOD_{obs}^i}{TOD_{sim}^i}\)</span>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.update_mixing_matrix">
+<span class="sig-name descname"><span class="pre">update_mixing_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">previous_mixingmatrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icomp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.update_mixing_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.update_mixing_matrix" title="Link to this definition"></a></dt>
+<dd><p>Update Mixing Matrix.</p>
+<p>Method to update the mixing matrix using the current fitted value of the beta parameter and the parametric model associated.
+Only use when hybrid parametric-blind fit is selected !</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>int</em>) – Spectral index.</p></li>
+<li><p><strong>previous_mixingmatrix</strong> (<em>array_like</em>) – Mixing Matrix at the previous iteration <span class="math notranslate nohighlight">\((N_{sub} + N_{integr} . N_{Planck}, N_{comp})\)</span>.</p></li>
+<li><p><strong>icomp</strong> (<em>int</em>) – Component index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>updated_mixingmatrix</strong> – The updated Mixing Matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.pipeline.Pipeline.update_spectral_index">
+<span class="sig-name descname"><span class="pre">update_spectral_index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/pipeline.html#Pipeline.update_spectral_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.pipeline.Pipeline.update_spectral_index" title="Link to this definition"></a></dt>
+<dd><p>Update spectral index.</p>
+<p>Method that perform step 3) of the pipeline for 2 possible designs : Two Bands and Ultra Wide Band</p>
 </dd></dl>
 
 </dd></dl>

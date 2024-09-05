@@ -6,24 +6,30 @@ from lib.Qacquisition import JointAcquisitionComponentsMapMaking
 
 
 class PresetQubic:
-    """
+    """Preset QUBIC.
 
-    Instance to initialize the Components Map-Making. It defines QUBIC operator.
-
-    Self variables :    - dict : dictionnary
-                        - joint_in : class
-                        - joint_out : class
+    Instance to initialize the Components Map-Making. It defines QUBIC variables and methods.
+    
+    Parameters
+    ----------
+    preset_tools : object
+        Class containing tools and simulation parameters.
+    preset_external : object
+    
+    Attributes
+    ----------  
+    dict: dict
+        Dictionary defining QUBIC caracteristics.
+    joint_in: object
+        Class defining the QUBIC intrument to build the intial TOD.
+    joint_out: object
+        Class defining the QUBIC intrument to reconstruct the sky map.
 
     """
 
     def __init__(self, preset_tools, preset_external):
-        """
+        """Initialize.
 
-        Initialize the class with preset tools and external.
-
-        Args:
-            preset_tools: Class containing tools and simulation parameters.
-            preset_external: Class containing external frequencies.
         """
         ### Import preset tools
         self.preset_tools = preset_tools
@@ -39,11 +45,11 @@ class PresetQubic:
 
         ### QUBIC dictionary
         self.preset_tools._print_message("    => Reading QUBIC dictionary")
-        self.dict = self._get_dict()
+        self.dict = self.get_dict()
 
         ### Define model for reconstruction
-        components_fgb_in, _ = self._get_components_fgb(key="in")
-        components_fgb_out, _ = self._get_components_fgb(key="out")
+        components_fgb_in, _ = self.get_components_fgb(key="in")
+        components_fgb_out, _ = self.get_components_fgb(key="out")
 
         if self.preset_tools.params["Foregrounds"]["CO"]["CO_in"]:
             nu_co = self.preset_tools.params["Foregrounds"]["CO"]["nu0_co"]
@@ -85,41 +91,24 @@ class PresetQubic:
                 H=None,
             )
 
-    def _get_ultrawideband_config(self):
-        """
-        Method to define Ultra Wide Band configuration.
+    def get_dict(self):
+        """QUBIC dictionary.
+        
+        Method to modify the qubic dictionary.
 
-        This method calculates the average frequency (average_frequency) and the normalized
-        frequency deviation (2*difference_frequency/average_frequency) for the Ultra Wide Band.
+        Parameters
+        ----------
+        key : str, optional
+            Can be "in" or "out". 
+            It is used to build respectively the instances to generate the TODs or to reconstruct the sky maps, 
+            by default "in".
 
-        Returns:
-            tuple: A tuple containing:
-                - average_frequency (float): The average frequency.
-                - normalized_deviation (float): The normalized frequency deviation.
-        """
-        maximum_frequency = 247.5
-        minimum_frequency = 131.25
-        average_frequency = np.mean(np.array([maximum_frequency, minimum_frequency]))
-        difference_frequency = maximum_frequency - average_frequency
-
-        return average_frequency, 2 * difference_frequency / average_frequency
-
-    def _get_dict(self):
-        """
-        Method to define and modify the QUBIC dictionary.
-
-        This method retrieves the ultrawideband configuration and constructs a dictionary
-        with various parameters required for the QUBIC pipeline. It then reads a default
-        dictionary from a file and updates it with the constructed parameters.
-
-        Returns:
-            qubic.qubicdict.qubicDict: The modified QUBIC dictionary.
-        """
-
-        ### Retrieve ultrawideband configuration
-        average_frequency, difference_frequency_nu_over_nu = (
-            self._get_ultrawideband_config()
-        )
+        Returns
+        -------
+        dict_qubic: dict
+            Modified QUBIC dictionary.
+            
+        """     
 
         ### Construct the arguments dictionary with required parameters
         args = {
@@ -131,7 +120,7 @@ class PresetQubic:
             "period": 1,
             "RA_center": self.preset_tools.params["SKY"]["RA_center"],
             "DEC_center": self.preset_tools.params["SKY"]["DEC_center"],
-            "filter_nu": average_frequency * 1e9,
+            "filter_nu": 150 * 1e9,
             "noiseless": False,
             "comm": self.comm,
             "kind": "IQU",
@@ -167,17 +156,17 @@ class PresetQubic:
 
         return d
 
-    def _get_components_fgb(self, key):
-        """
-        Method to define sky model taken from FGBuster code. Note that we add `COLine` instance to define monochromatic description.
+    def get_components_fgb(self, key):
+        """Components FGbuster
+        
+        Method to build a dictionary containing all the wanted components to generate sky maps.
+        Based on FGBuster.
 
-        Parameters:
-        key (str): The key to identify specific components in the preset parameters.
-
-        Returns:
-        tuple: A tuple containing two lists:
-            - components (list): List of component instances.
-            - components_name (list): List of component names corresponding to the instances.
+        Returns
+        -------
+        dict_comps: dict
+            Dictionary containing the component instances.
+            
         """
 
         components = []

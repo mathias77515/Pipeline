@@ -6,29 +6,42 @@ from qubic import NamasterLib as nam
 
 
 class PresetSky:
-    """
+    r"""Preset Sky.
 
-    Instance to initialize the Components Map-Making. It defines the observed sky varaibles.
-
-    Self variables :    - center : tuple (2)
-                        - coverage : ndarray (Npixels)
-                        - max_coverage : float
-                        - seenpix_qubic : ndarray (Npixels)
-                        - seenpix : ndarray (Npixels)
-                        - mask : ndarray (Npixels)
-                        - namaster : Class
-                        - ell : ndarray (round((2 * nside - lmin) / dl))
-                        - cl2dl : ndarray (round((2 * nside - lmin) / dl))
+    Instance to initialize the Components Map-Making. It defines the observed sky variables and methods.
+    
+    Parameters
+    ----------
+    preset_tools : object
+        Class containing tools and simulation parameters.
+    preset_qubic : object
+        Class containing qubic operator and variables and methods.
+        
+    Attributes
+    ----------
+    center: tuple
+        Defines the center of the QUBIC observation patch in (RA, DEC).
+    coverage: array_like
+        Defines the coverage of the QUBIC scanning strategy.
+    max_coverage: float
+        Defines the maximum of the coverage.
+    seenpix_qubic: array_like
+        Boolean array defining the pixels seen by QUBIC instrument.
+    seenpix: array_like
+        Boolean array defining the pixel with coverage > at a threshold chosen in params.yml.
+    namaster: object
+        NaMaster class instance.
+    ell: array_like
+        Multipole array, defining through NaMaster.
+    cl2dl: array_like
+        Array containing conversion factor to compute :math:`D_{\ell}` from :math:`C_{\ell}`.
 
     """
 
     def __init__(self, preset_tools, preset_qubic):
         """
-        Initialize the class with preset tools and QUBIC.
-
-        Args:
-            preset_tools: Class containing tools and simulation parameters.
-            preset_qubic: CLass containing QUBIC operator and variables.
+        Initialize.
+        
         """
         ### Import preset tools
         self.preset_tools = preset_tools
@@ -84,19 +97,22 @@ class PresetSky:
 
         ### Initialize namaster
         self.preset_tools._print_message("    => Initializing Namaster")
-        self._get_spectra_namaster_informations()
+        self.get_spectra_namaster_informations()
 
     def get_coverage(self):
-        """
+        """Coverage.
+        
         Calculate the coverage mask for the QUBIC patch, according with the number of beta that you want to reconstruct.
 
         This function computes the angular distance between a center point and all
         pixels on a sphere, sorts these distances, and creates a mask that marks
         the closest pixels as covered.
 
-        Returns:
-            numpy.ndarray: A mask array where covered pixels are marked with 1 and
-                        uncovered pixels are marked with 0.
+        Returns
+        -------
+        mask: array_like
+            A mask array where covered pixels are marked with 1 and uncovered pixels are marked with 0.
+            
         """
 
         vec_center = np.array(hp.ang2vec(self.center[0], self.center[1], lonlat=True))
@@ -124,19 +140,16 @@ class PresetSky:
 
         return mask
 
-    def _get_spectra_namaster_informations(self):
-        """
+    def get_spectra_namaster_informations(self):
+        """NaMaster.
+        
         Initializes the Namaster object and computes the ell and cl2dl arrays.
 
         This method sets up the Namaster object using parameters from the preset_tools
         and computes the ell array and cl2dl conversion factor for power spectrum analysis.
 
-        Attributes:
-            namaster (Class): An instance of the Namaster class initialized with the
-                                provided parameters.
-            ell (ndarray): The multipole moments array obtained from the Namaster binning.
-            cl2dl (ndarray): Conversion factor from power spectrum Cl to Dl.
         """
+        
         self.namaster = nam.Namaster(
             self.seenpix,
             lmin=self.preset_tools.params["SPECTRUM"]["lmin"],

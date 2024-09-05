@@ -21,8 +21,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CMM.preset.preset_foregrounds module" href="CMM.preset.preset_foregrounds.html" />
-    <link rel="prev" title="CMM.preset.preset_acquisition module" href="CMM.preset.preset_acquisition.html" /> 
+    <link rel="next" title="CMM.preset.preset_gain module" href="CMM.preset.preset_gain.html" />
+    <link rel="prev" title="CMM.preset.preset_components module" href="CMM.preset.preset_components.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -93,8 +93,50 @@
 <dt class="sig sig-object py" id="CMM.preset.preset_external_data.PresetExternal">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CMM.preset.preset_external_data.</span></span><span class="sig-name descname"><span class="pre">PresetExternal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preset_tools</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/preset/preset_external_data.html#PresetExternal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.preset.preset_external_data.PresetExternal" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Instance to initialize the Components Map-Making. It defines the external data.</p>
-<p>Self variables :    - external_nus : list (Nplanck)</p>
+<p>Preset External Data.</p>
+<p>Instance to initialize the Components Map-Making. It defines the external data variables and methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>preset_tools</strong> (<em>object</em>) – Class containing tools and simulation parameters.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CMM.preset.preset_external_data.PresetExternal.external_nus">
+<span class="sig-name descname"><span class="pre">external_nus</span></span><a class="headerlink" href="#CMM.preset.preset_external_data.PresetExternal.external_nus" title="Link to this definition"></a></dt>
+<dd><p>List containing Planck maps frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CMM.preset.preset_external_data.PresetExternal.get_external_nus" title="CMM.preset.preset_external_data.PresetExternal.get_external_nus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_external_nus</span></code></a>()</p></td>
+<td><p>External frequencies.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="CMM.preset.preset_external_data.PresetExternal.get_external_nus">
+<span class="sig-name descname"><span class="pre">get_external_nus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CMM/preset/preset_external_data.html#PresetExternal.get_external_nus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CMM.preset.preset_external_data.PresetExternal.get_external_nus" title="Link to this definition"></a></dt>
+<dd><p>External frequencies.</p>
+<p>Method to create a Python list of external frequencies by reading the <cite>params.yml</cite> file.</p>
+<p>This method reads the <cite>params.yml</cite> file and checks for the presence of specific frequency
+values under the ‘PLANCK’ section. If a frequency is present, it is added to the external
+frequencies list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>external_nus</strong> – List containing Planck maps frequency.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -103,8 +145,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="CMM.preset.preset_acquisition.html" class="btn btn-neutral float-left" title="CMM.preset.preset_acquisition module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="CMM.preset.preset_foregrounds.html" class="btn btn-neutral float-right" title="CMM.preset.preset_foregrounds module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="CMM.preset.preset_components.html" class="btn btn-neutral float-left" title="CMM.preset.preset_components module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="CMM.preset.preset_gain.html" class="btn btn-neutral float-right" title="CMM.preset.preset_gain module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

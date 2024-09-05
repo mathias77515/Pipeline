@@ -1,6 +1,6 @@
 from .preset_acquisition import *
 from .preset_external_data import *
-from .preset_foregrounds import *
+from .preset_components import *
 from .preset_gain import *
 from .preset_mixingmatrix import *
 from .preset_qubic import *
@@ -9,27 +9,27 @@ from .preset_tools import *
 
 
 class PresetInitialisation:
-    """
-
+    """Preset initialization.
+    
     Instance to initialize the Components Map-Making reading all the preset files.
 
-    Arguments :
-    ===========
-        - comm    : MPI common communicator (define by MPI.COMM_WORLD).
-        - seed    : Int number for CMB realizations.
-        - it      : Int number for noise realizations.
-        - verbose : bool, Display message or not.
-
-    """
+    Arguments
+    ---------
+    comm: MPI communicator
+        MPI common communicator (define by MPI.COMM_WORLD).
+    seed: int
+        Seed for random CMB realization.
+    seed_noise: int 
+        Seed for random noise realization.
+        
+    """    
 
     def __init__(self, comm, seed, seed_noise):
         """
-        Initialize the class with MPI communication and optional verbosity.
+        Initialize the class with MPI communication.
 
-        Args:
-            comm: MPI communicator object.
-            verbose (bool): If True, print detailed initialization messages. Default is True.
         """
+        
         ### MPI common arguments
         self.comm = comm
         self.seed = seed
@@ -45,10 +45,15 @@ class PresetInitialisation:
         self.mixingmatrix = None
 
     def initialize(self):
+        """Initialization.
+        
+        Method that initialize and return all the preset instances that will be used in Component Map-Making Pipeline.
+
+        """        
         self.tools = PresetTools(self.comm)
         self.tools._print_message("========= Initialization =========")
         self.tools._print_message("    => Checking simulation parameters")
-        self.tools._check_for_errors()
+        self.tools.check_for_errors()
         self.tools._print_message("    => No error detected !")
         self.tools._print_message("    => Getting job ID")
         self.job_id = os.environ.get("SLURM_JOB_ID")
@@ -82,8 +87,8 @@ class PresetInitialisation:
         self.tools._print_message("========= QUBIC =========")
         self.qubic = PresetQubic(self.tools, self.external)
 
-        self.tools._print_message("========= Foregrounds =========")
-        self.fg = PresetFG(self.tools, self.qubic, self.seed)
+        self.tools._print_message("========= Components =========")
+        self.comp = PresetComponents(self.tools, self.qubic, self.seed)
 
         self.tools._print_message("========= Sky =========")
         self.sky = PresetSky(self.tools, self.qubic)
@@ -101,7 +106,7 @@ class PresetInitialisation:
             self.external,
             self.qubic,
             self.sky,
-            self.fg,
+            self.comp,
             self.mixingmatrix,
             self.gain,
         )

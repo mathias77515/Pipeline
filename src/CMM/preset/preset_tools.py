@@ -4,20 +4,26 @@ import yaml
 
 
 class PresetTools:
-    """
+    """Preset Tools.
 
     Instance to initialize the Components Map-Making. It contains tool functions used in all the different files and the simulation parameters.
 
-    Self variables :    - params : dictionnary
+    Parameters
+    ----------
+    comm: MPI communicator
+        MPI common communicator define by MPI.COMM_WORLD.
+
+    Attributes
+    ----------
+    params: dict
+        Dictionary containing all the simulations parameters.
 
     """
 
     def __init__(self, comm):
         """
-        Initialize the class with MPI communication.
-
-        Args:
-            comm: MPI communicator object.
+        Initialize.
+        
         """
 
         ### MPI common arguments
@@ -45,15 +51,17 @@ class PresetTools:
             print(message)
 
     def create_folder_if_not_exists(self, folder_name):
-        """
+        """Create folder.
+        
         Creates a folder with the specified name if it does not already exist.
 
-        Args:
-            folder_name (str): The name of the folder to create.
+        Parameters
+        ----------
+        folder_name: str 
+            The name of the folder to create.
 
-        Returns:
-            None
         """
+        
         # Check if the folder exists
         if not os.path.exists(folder_name):
             try:
@@ -65,12 +73,14 @@ class PresetTools:
         else:
             pass
 
-    def _check_for_errors(self):
-        """
+    def check_for_errors(self):
+        """Errors check.
+        
         Checks for various parameter errors in the 'params.yml' file.
 
         Raises:
             TypeError: If any of the parameter checks fail.
+            
         """
 
         # Check if the instrument is either 'DB' or 'UWB'

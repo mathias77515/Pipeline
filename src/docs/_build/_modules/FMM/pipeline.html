@@ -578,14 +578,14 @@
 <div class="viewcode-block" id="PipelineFrequencyMapMaking.get_input_map">
 <a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_input_map">[docs]</a>
     <span class="k">def</span> <span class="nf">get_input_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Input maps.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Input maps.</span>
 
 <span class="sd">        Function to get the input maps from PySM3.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        maps_in: array_like</span>
-<span class="sd">            Input maps :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.</span>
+<span class="sd">            Input maps :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.</span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>        
 
@@ -604,7 +604,7 @@
 <div class="viewcode-block" id="PipelineFrequencyMapMaking.get_tod">
 <a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_tod">[docs]</a>
     <span class="k">def</span> <span class="nf">get_tod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulated TOD.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Simulated TOD.</span>
 <span class="sd">        </span>
 <span class="sd">        Method that compute observed TODs with :math:`\vec{TOD} = H \cdot \vec{s} + \vec{n}`, with H the QUBIC operator, :math:`\vec{s}` the sky signal and :math:`\vec{n}` the instrumental noise`.</span>
 
@@ -616,7 +616,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        TOD: array_like</span>
-<span class="sd">            Simulated TOD :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.</span>
+<span class="sd">            Simulated TOD :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.</span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>        
 
@@ -780,17 +780,17 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PipelineFrequencyMapMaking.get_preconditionner">
-<a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_preconditionner">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_preconditionner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;PCG Preconditionner.</span>
+<div class="viewcode-block" id="PipelineFrequencyMapMaking.get_preconditioner">
+<a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.get_preconditioner">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_preconditioner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;PCG Preconditioner.</span>
 <span class="sd">        </span>
 <span class="sd">        Computed using the formula: To be added. </span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        M: DiagonalOperator</span>
-<span class="sd">            Preconditionner for PCG algorithm.</span>
+<span class="sd">            Preconditioner for PCG algorithm.</span>
 <span class="sd">        &quot;&quot;&quot;</span>        
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;PCG&quot;</span><span class="p">][</span><span class="s2">&quot;preconditioner&quot;</span><span class="p">]:</span>
@@ -802,7 +802,7 @@
                     <span class="mi">3</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-            <span class="n">conditionner</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="n">conditioner</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;QUBIC&quot;</span><span class="p">][</span><span class="s2">&quot;nrec&quot;</span><span class="p">],</span> <span class="mi">12</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;SKY&quot;</span><span class="p">][</span><span class="s2">&quot;nside&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">joint</span><span class="o">.</span><span class="n">qubic</span><span class="o">.</span><span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shapein</span><span class="p">)</span>
@@ -819,13 +819,13 @@
                 <span class="n">imin</span> <span class="o">=</span> <span class="n">irec</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsub</span>
                 <span class="n">imax</span> <span class="o">=</span> <span class="p">(</span><span class="n">irec</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsub</span>
                 <span class="k">for</span> <span class="n">istk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
-                    <span class="n">conditionner</span><span class="p">[</span><span class="n">irec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seenpix</span><span class="p">,</span> <span class="n">istk</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span>
+                    <span class="n">conditioner</span><span class="p">[</span><span class="n">irec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seenpix</span><span class="p">,</span> <span class="n">istk</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">approx_hth</span><span class="p">[</span><span class="n">imin</span><span class="p">:</span><span class="n">imax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seenpix</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                     <span class="p">)</span>
 
-            <span class="n">conditionner</span><span class="p">[</span><span class="n">conditionner</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">conditioner</span><span class="p">[</span><span class="n">conditioner</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
-            <span class="n">M</span> <span class="o">=</span> <span class="n">DiagonalOperator</span><span class="p">(</span><span class="n">conditionner</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seenpix</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">DiagonalOperator</span><span class="p">(</span><span class="n">conditioner</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seenpix</span><span class="p">,</span> <span class="p">:])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">M</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">M</span></div>
@@ -834,7 +834,7 @@
 <div class="viewcode-block" id="PipelineFrequencyMapMaking.pcg">
 <a class="viewcode-back" href="../../FMM.pipeline.html#FMM.pipeline.PipelineFrequencyMapMaking.pcg">[docs]</a>
     <span class="k">def</span> <span class="nf">pcg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">seenpix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Preconditionned Conjugate Gradiant algorithm.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Preconditioned Conjugate Gradiant algorithm.</span>
 <span class="sd">        </span>
 <span class="sd">        Solve the map-making equation iteratively : :math:`(H^T . N^{-1} . H) . x = H^T . N^{-1} . d`.</span>
 
@@ -843,21 +843,18 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        d : array_like</span>
-<span class="sd">            Array containing the TODs generated previously :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.</span>
+<span class="sd">            Array containing the TODs generated previously :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.</span>
 <span class="sd">        x0 : array_like</span>
-<span class="sd">            Starting point of the PCG algorithm :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.</span>
+<span class="sd">            Starting point of the PCG algorithm :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.</span>
 <span class="sd">        seenpix : array_like</span>
-<span class="sd">            Boolean array to define the pixels seen by QUBIC :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.</span>
+<span class="sd">            Boolean array to define the pixels seen by QUBIC :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        solution: array_like</span>
-<span class="sd">            Reconstructed maps :math:`(N_{rec}, 12 N^{2}_{side}, N_{stk})`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>        
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Reconstructed maps :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.</span>
 <span class="sd">        </span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
 
         <span class="c1">### Update components when pixels outside the patch are fixed (assumed to be 0)</span>
         <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_out</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">invN</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_out</span>
@@ -865,7 +862,7 @@
         <span class="n">x_planck</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_nu_in</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">seenpix</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">])</span>
         <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_out</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">invN</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_out_all_pix</span><span class="p">(</span><span class="n">x_planck</span><span class="p">))</span>
         <span class="c1">### Preconditionning</span>
-        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_preconditionner</span><span class="p">()</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_preconditioner</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;PCG&quot;</span><span class="p">][</span><span class="s2">&quot;gif&quot;</span><span class="p">]:</span>
             <span class="n">gif_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_folder</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">job_id</span><span class="si">}</span><span class="s2">/iter/&quot;</span>

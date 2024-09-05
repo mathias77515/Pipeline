@@ -1,7 +1,7 @@
-src
+FMM
 ===
 
 .. toctree::
    :maxdepth: 4
 
-   src
+   FMM

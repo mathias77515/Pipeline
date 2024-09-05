@@ -14,8 +14,8 @@ Submodules
 
    src.CMM.preset.preset_
    src.CMM.preset.preset_acquisition
+   src.CMM.preset.preset_components
    src.CMM.preset.preset_external_data
-   src.CMM.preset.preset_foregrounds
    src.CMM.preset.preset_gain
    src.CMM.preset.preset_mixingmatrix
    src.CMM.preset.preset_qubic

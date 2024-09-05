@@ -74,7 +74,7 @@
   <h1>Source code for CMM.preset</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">.preset_acquisition</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.preset_external_data</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">.preset_foregrounds</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.preset_components</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.preset_gain</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.preset_mixingmatrix</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">.preset_qubic</span> <span class="kn">import</span> <span class="o">*</span>
@@ -85,27 +85,27 @@
 <div class="viewcode-block" id="PresetInitialisation">
 <a class="viewcode-back" href="../../CMM.preset.html#CMM.preset.PresetInitialisation">[docs]</a>
 <span class="k">class</span> <span class="nc">PresetInitialisation</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preset initialization.</span>
+<span class="sd">    </span>
 <span class="sd">    Instance to initialize the Components Map-Making reading all the preset files.</span>
 
-<span class="sd">    Arguments :</span>
-<span class="sd">    ===========</span>
-<span class="sd">        - comm    : MPI common communicator (define by MPI.COMM_WORLD).</span>
-<span class="sd">        - seed    : Int number for CMB realizations.</span>
-<span class="sd">        - it      : Int number for noise realizations.</span>
-<span class="sd">        - verbose : bool, Display message or not.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    Arguments</span>
+<span class="sd">    ---------</span>
+<span class="sd">    comm: MPI communicator</span>
+<span class="sd">        MPI common communicator (define by MPI.COMM_WORLD).</span>
+<span class="sd">    seed: int</span>
+<span class="sd">        Seed for random CMB realization.</span>
+<span class="sd">    seed_noise: int </span>
+<span class="sd">        Seed for random noise realization.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comm</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">seed_noise</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the class with MPI communication and optional verbosity.</span>
+<span class="sd">        Initialize the class with MPI communication.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            comm: MPI communicator object.</span>
-<span class="sd">            verbose (bool): If True, print detailed initialization messages. Default is True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="c1">### MPI common arguments</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comm</span> <span class="o">=</span> <span class="n">comm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
@@ -123,10 +123,15 @@
 <div class="viewcode-block" id="PresetInitialisation.initialize">
 <a class="viewcode-back" href="../../CMM.preset.html#CMM.preset.PresetInitialisation.initialize">[docs]</a>
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialization.</span>
+<span class="sd">        </span>
+<span class="sd">        Method that initialize and return all the preset instances that will be used in Component Map-Making Pipeline.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span> <span class="o">=</span> <span class="n">PresetTools</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comm</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;========= Initialization =========&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;    =&gt; Checking simulation parameters&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_check_for_errors</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">check_for_errors</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;    =&gt; No error detected !&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;    =&gt; Getting job ID&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">job_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SLURM_JOB_ID&quot;</span><span class="p">)</span>
@@ -160,8 +165,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;========= QUBIC =========&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qubic</span> <span class="o">=</span> <span class="n">PresetQubic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">external</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;========= Foregrounds =========&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fg</span> <span class="o">=</span> <span class="n">PresetFG</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;========= Components =========&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp</span> <span class="o">=</span> <span class="n">PresetComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">_print_message</span><span class="p">(</span><span class="s2">&quot;========= Sky =========&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sky</span> <span class="o">=</span> <span class="n">PresetSky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qubic</span><span class="p">)</span>
@@ -179,7 +184,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">external</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">qubic</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sky</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fg</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mixingmatrix</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span>
         <span class="p">)</span>
