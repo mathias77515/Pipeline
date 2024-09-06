@@ -1,7 +1,0 @@
-src.CMM.preset.preset\_components module
-========================================
-
-.. automodule:: src.CMM.preset.preset_components
-   :members:
-   :undoc-members:
-   :show-inheritance:
