@@ -327,41 +327,49 @@ class PipelineFrequencyMapMaking:
                 self.fwhm_rec = np.append(self.fwhm_rec, np.min(self.joint.qubic.allfwhm[irec*self.fsub_out:(irec+1)*self.fsub_out]))
    
         elif self.params['QUBIC']['convolution_in'] and self.params['QUBIC']['convolution_out'] is False:
+            self.fwhm_rec = np.array([])
+            scalar_acquisition_operators = self._get_scalar_acquisition_operator()
+            
+            if self.params['Foregrounds']['Dust']:
+                f_dust = c.ModifiedBlackBody(nu0=353, beta_d=1.54)
+                weight_factor = f_dust.eval(self.joint.qubic.allnus)
+                fun = lambda nu: np.abs(fraction - f_dust.eval(nu))
+            else:
+                f_cmb = c.CMB()
+                weight_factor = f_cmb.eval(self.joint.qubic.allnus)
+                fun = lambda nu: np.abs(fraction - f_cmb.eval(nu))
+                
             ### Compute expected resolutions and frequencies when not adding convolutions during reconstruction
             ### See FMM annexe B to understand the computations
-            self.fwhm_rec = np.array([])
-
-            scalar_acquisition_operators = self._get_scalar_acquisition_operator()
-            f_dust = c.ModifiedBlackBody(nu0=353, beta_d=1.54)
             
             for irec in range(self.params['QUBIC']['nrec']):
                 numerator_fwhm , denominator_fwhm = 0, 0
                 numerator_nus, denominator_nus = 0, 0
                 for jsub in range(irec*self.fsub_out, (irec+1)*self.fsub_out):
                     # Compute the expected reconstructed resolution for sub-acquisition
-                    numerator_fwhm += scalar_acquisition_operators[jsub] * f_dust.eval(self.joint.qubic.allnus[jsub]) * self.fwhm_in[jsub]
-                    denominator_fwhm += scalar_acquisition_operators[jsub] * f_dust.eval(self.joint.qubic.allnus[jsub])
+                    numerator_fwhm += scalar_acquisition_operators[jsub] * weight_factor[jsub] * self.fwhm_in[jsub]
+                    denominator_fwhm += scalar_acquisition_operators[jsub] * weight_factor[jsub]
 
                     # Compute the expected reconstructed frequencies for sub_acquisition
-                    numerator_nus += scalar_acquisition_operators[jsub] * f_dust.eval(self.joint.qubic.allnus[jsub])
+                    numerator_nus += scalar_acquisition_operators[jsub] * weight_factor[jsub]
                     denominator_nus += scalar_acquisition_operators[jsub]
 
                 # Compute the expected resolution
                 self.fwhm_rec = np.append(self.fwhm_rec, np.sum(numerator_fwhm) / np.sum(denominator_fwhm))
-
+                
                 # Compute the expected frequency
                 fraction = np.sum(numerator_nus) / np.sum(denominator_nus)
-                fun = lambda nu: np.abs(fraction - f_dust.eval(nu))
                 x0 = self.nus_Q[irec]
                 corrected_nu = scipy.optimize.minimize(fun, x0)
                 self.nus_Q[irec] = corrected_nu['x']
-
-            # Old way : to be remove after debugging
+                
+            # ! Old way : to be remove after debugging
             # self.fwhm_rec = np.array([])
-            # self.nus_Q = self._get_averaged_nus()
+            print(self.nus_Q)
+            print(self._get_averaged_nus())
             # for irec in range(self.params['QUBIC']['nrec']):
             #     self.fwhm_rec = np.append(self.fwhm_rec, np.mean(self.joint.qubic.allfwhm[irec*self.fsub_out:(irec+1)*self.fsub_out]))
-            
+            rgjoike
         else:
             self.fwhm_rec = np.array([])
             for irec in range(self.params['QUBIC']['nrec']):

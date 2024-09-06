@@ -1,5 +1,5 @@
 path_out: '/pbs/home/t/tlaclave/sps/FMM_data/test/'
-datafilename: 'MC'
+datafilename: 'CMB_noiseless_wo_convolutions_nsub_in=20_out=20'
 
 CMB:
     cmb: True
@@ -9,7 +9,7 @@ CMB:
 
 Foregrounds:
 
-    Dust: True                              # Thermal Dust emission
+    Dust: False                              # Thermal Dust emission
     Synchrotron: False                      # Synchrotron emission
 
 QUBIC:
@@ -20,7 +20,7 @@ QUBIC:
     npointings: 1000                        # Number of time samples
     nsub_in: 20                             # Number of sub-acquisitions
     nsub_out: 20
-    nrec: 4                                 # Number of reconstructed frequency maps
+    nrec: 2                                 # Number of reconstructed frequency maps
     convolution_in: True                   # Angular resolution in the input TOD
     convolution_out: False                  # Angular resolution in the reconstruction
     bandpass_correction: True               # Correction to keep the edges of the integration band constant
@@ -46,21 +46,21 @@ PLANCK:
 
     ### This section define which external data are we using
 
-    external_data: True                         
+    external_data: False                         
     weight_planck: 0                            # Weight of Planck data within the QUBIC patch
-    level_noise_planck: 1                       # Noise level for Planck data
+    level_noise_planck: 0                       # Noise level for Planck data
     bandwidth_planck: 0.2                       # Multiplicative factor to define the bandwidth of Planck's data
     nsub_planck: 100                            # Number of sub acquisitions for Planck's data
 
 Pipeline:
     mapmaking: True                              # Run MapMaking Pipeline
-    spectrum: True                              # Compute Power Spectra of the frequency maps
+    spectrum: False                              # Compute Power Spectra of the frequency maps
 
 PCG:
 
     ### This section control PCG parameters
 
-    n_iter_pcg: 20                                   # Number of PCG iterations
+    n_iter_pcg: 300                                   # Number of PCG iterations
     tol_pcg: 1.0e-12                                # Tolerance for PCG
     preconditioner: True
 
