@@ -2,6 +2,8 @@
 
 Repository that contain End-2-End pipeline to perform QUBIC frequency map-making, power spectrum estimation and cosmological analysis. 
 
+https://mathias77515.github.io/Pipeline/docs/_build/html/index.html
+
 # Description
 
 First step is compute frequency observations based on 3 way to do it :
