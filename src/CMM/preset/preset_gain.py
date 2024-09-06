@@ -32,7 +32,7 @@ class PresetGain:
 
     def get_input_gain(self):
         """Input gains.
-        
+
         Generates and processes input gain values for the instrument based on preset parameters.
 
         This method sets the `gain_in`, `all_gain_in`, `gain_iter`, `all_gain`, and `all_gain_iter`

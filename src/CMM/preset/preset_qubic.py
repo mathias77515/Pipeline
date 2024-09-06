@@ -9,15 +9,15 @@ class PresetQubic:
     """Preset QUBIC.
 
     Instance to initialize the Components Map-Making. It defines QUBIC variables and methods.
-    
+
     Parameters
     ----------
     preset_tools : object
         Class containing tools and simulation parameters.
     preset_external : object
-    
+
     Attributes
-    ----------  
+    ----------
     dict: dict
         Dictionary defining QUBIC caracteristics.
     joint_in: object
@@ -28,9 +28,7 @@ class PresetQubic:
     """
 
     def __init__(self, preset_tools, preset_external):
-        """Initialize.
-
-        """
+        """Initialize."""
         ### Import preset tools
         self.preset_tools = preset_tools
 
@@ -93,22 +91,22 @@ class PresetQubic:
 
     def get_dict(self):
         """QUBIC dictionary.
-        
+
         Method to modify the qubic dictionary.
 
         Parameters
         ----------
         key : str, optional
-            Can be "in" or "out". 
-            It is used to build respectively the instances to generate the TODs or to reconstruct the sky maps, 
+            Can be "in" or "out".
+            It is used to build respectively the instances to generate the TODs or to reconstruct the sky maps,
             by default "in".
 
         Returns
         -------
         dict_qubic: dict
             Modified QUBIC dictionary.
-            
-        """     
+
+        """
 
         ### Construct the arguments dictionary with required parameters
         args = {
@@ -158,7 +156,7 @@ class PresetQubic:
 
     def get_components_fgb(self, key):
         """Components FGbuster
-        
+
         Method to build a dictionary containing all the wanted components to generate sky maps.
         Based on FGBuster.
 
@@ -166,7 +164,7 @@ class PresetQubic:
         -------
         dict_comps: dict
             Dictionary containing the component instances.
-            
+
         """
 
         components = []

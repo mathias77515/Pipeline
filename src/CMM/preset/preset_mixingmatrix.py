@@ -7,9 +7,9 @@ from lib.Qmixing_matrix import MixingMatrix
 
 class PresetMixingMatrix:
     """Preset Mixing Matrix.
-    
+
     Instance to initialize the Components Map-Making. It defines Mixing Matrix variables and methodes.
-    
+
     Parameters
     ----------
     preset_tools : object
@@ -20,7 +20,7 @@ class PresetMixingMatrix:
         Class containing component variables and methods.
 
     Attributes
-    ----------  
+    ----------
     nus_eff_in: array_like
         Input effective frequencies.
     nus_eff_out: array_like
@@ -35,7 +35,7 @@ class PresetMixingMatrix:
     def __init__(self, preset_tools, preset_qubic, preset_comp):
         """
         Initialize.
-        
+
         """
         ### Import preset Foregrounds, QUBIC & tools
         self.preset_tools = preset_tools
@@ -59,7 +59,7 @@ class PresetMixingMatrix:
 
     def extra_sed(self, nus, correlation_length):
         """Spectral Energy Distribution.
-        
+
         Calculates the extra SED (Spectral Energy Distribution) based on the given parameters.
 
         Parameters
@@ -73,8 +73,8 @@ class PresetMixingMatrix:
         -------
         extra: array_like
             Array containing the extra SED values.
-            
-        """  
+
+        """
 
         np.random.seed(1)
         extra = np.ones(len(nus))
@@ -157,7 +157,7 @@ class PresetMixingMatrix:
 
     def spectral_index_modifiedblackbody(self, nside):
         """ModifiedBlackBody spectral indices.
-        
+
         Method to define input spectral indices if the d1 model is used for thermal Dust description.
 
         Parameters
@@ -169,15 +169,15 @@ class PresetMixingMatrix:
         -------
         mbb_index: array_like
             Array containing the spectral indices for the thermal Dust model.
-        
-        """        
+
+        """
 
         sky = pysm3.Sky(nside=nside, preset_strings=["d1"])
         return np.array(sky.components[0].mbb_index)
 
     def spectral_index_powerlaw(self, nside):
         """PowerLaw spectral indices.
-        
+
         Define input spectral indices if the s1 model is used for Synchrotron description.
 
         Parameters
@@ -189,9 +189,9 @@ class PresetMixingMatrix:
         -------
         pl_index: array_like
             Array containing the spectral indices for the Synchrotron model.
-            
+
         """
-        
+
         sky = pysm3.Sky(nside=nside, preset_strings=["s1"])
         return np.array(sky.components[0].pl_index)
 
@@ -212,7 +212,7 @@ class PresetMixingMatrix:
         -------
         Adeco: array_like
             Decorrelated mixing matrix.
-            
+
         """
 
         if key == "in":
@@ -244,7 +244,7 @@ class PresetMixingMatrix:
 
     def get_mixingmatrix(self, nus, beta, key="in"):
         """Mixing Matrix.
-        
+
         Method to get the mixing matrix from FGBuster according to compoenents model.
 
         Parameters
@@ -295,12 +295,12 @@ class PresetMixingMatrix:
                 beta_iter = np.append(
                     beta_iter,
                     np.random.normal(
-                        self.preset_comp.params_foregrounds["Synchrotron"]["beta_s_init"][
-                            0
-                        ],
-                        self.preset_comp.params_foregrounds["Synchrotron"]["beta_s_init"][
-                            1
-                        ],
+                        self.preset_comp.params_foregrounds["Synchrotron"][
+                            "beta_s_init"
+                        ][0],
+                        self.preset_comp.params_foregrounds["Synchrotron"][
+                            "beta_s_init"
+                        ][1],
                         1,
                     ),
                 )
@@ -322,7 +322,8 @@ class PresetMixingMatrix:
                 (
                     len(self.preset_comp.components_out) - 1,
                     12
-                    * self.preset_comp.params_foregrounds["Dust"]["nside_beta_out"] ** 2,
+                    * self.preset_comp.params_foregrounds["Dust"]["nside_beta_out"]
+                    ** 2,
                 )
             )
             for iname, name in enumerate(self.preset_comp.components_name_out):
@@ -331,7 +332,9 @@ class PresetMixingMatrix:
                 elif name == "Dust":
                     beta_iter[iname - 1] = (
                         self.spectral_index_modifiedblackbody(
-                            self.preset_comp.params_foregrounds["Dust"]["nside_beta_out"]
+                            self.preset_comp.params_foregrounds["Dust"][
+                                "nside_beta_out"
+                            ]
                         )
                         * 0
                         + 1.54
@@ -339,7 +342,9 @@ class PresetMixingMatrix:
                 elif name == "Synchrotron":
                     beta_iter[iname - 1] = (
                         self.spectral_index_powerlaw(
-                            self.preset_comp.params_foregrounds["Dust"]["nside_beta_out"]
+                            self.preset_comp.params_foregrounds["Dust"][
+                                "nside_beta_out"
+                            ]
                         )
                         * 0
                         - 3
@@ -355,15 +360,15 @@ class PresetMixingMatrix:
 
     def get_beta_input(self):
         """Spectral index.
-        
+
         Define the input spectral indices based on the model type.
 
         If the model is 'd0' or 'd6', the input spectral index is fixed (1.54).
         Otherwise, the model assumes varying spectral indices across the sky by calling the previous method.
         In this case, the shape of beta is (Nbeta, Ncomp).
-        
+
         Attributes
-        ----------  
+        ----------
         nus_eff_in: array_like
             Input effective frequencies.
         nus_eff_out: array_like
@@ -372,7 +377,7 @@ class PresetMixingMatrix:
             Input mixing matrix.
         beta_in: array_like
             Input spectral indices.
-        
+
         Raises
         ------
         TypeError
@@ -394,15 +399,19 @@ class PresetMixingMatrix:
                 )
             else:
                 self.beta_in = np.array(
-                    [float(i._REF_BETA) for i in self.preset_comp.components_model_in[1:]]
+                    [
+                        float(i._REF_BETA)
+                        for i in self.preset_comp.components_model_in[1:]
+                    ]
                 )
 
-            self.Amm_in = self.get_mixingmatrix(
-                self.nus_eff_in, self.beta_in, key="in"
-            )
+            self.Amm_in = self.get_mixingmatrix(self.nus_eff_in, self.beta_in, key="in")
 
             if self.preset_comp.params_foregrounds["Dust"]["Dust_in"]:
-                if self.preset_comp.params_foregrounds["Dust"]["model_d"] in ["d0", "d6"]:
+                if self.preset_comp.params_foregrounds["Dust"]["model_d"] in [
+                    "d0",
+                    "d6",
+                ]:
                     Adeco = self.get_decorrelated_mixing_matrix(
                         lcorr=self.preset_comp.params_foregrounds["Dust"]["l_corr"],
                         seed=1,
@@ -425,7 +434,9 @@ class PresetMixingMatrix:
                         (
                             len(self.preset_comp.components_in) - 1,
                             12
-                            * self.preset_comp.params_foregrounds["Dust"]["nside_beta_in"]
+                            * self.preset_comp.params_foregrounds["Dust"][
+                                "nside_beta_in"
+                            ]
                             ** 2,
                         )
                     )
@@ -459,9 +470,9 @@ class PresetMixingMatrix:
 
     def get_index_seenpix_beta(self):
         """Spatially varying spectral index.
-        
+
         Method to initialize index seenpix beta variable.
-        
+
         """
 
         if self.preset_comp.params_foregrounds["fit_spectral_index"]:

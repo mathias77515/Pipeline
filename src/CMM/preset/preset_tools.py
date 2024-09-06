@@ -23,7 +23,7 @@ class PresetTools:
     def __init__(self, comm):
         """
         Initialize.
-        
+
         """
 
         ### MPI common arguments
@@ -52,16 +52,16 @@ class PresetTools:
 
     def create_folder_if_not_exists(self, folder_name):
         """Create folder.
-        
+
         Creates a folder with the specified name if it does not already exist.
 
         Parameters
         ----------
-        folder_name: str 
+        folder_name: str
             The name of the folder to create.
 
         """
-        
+
         # Check if the folder exists
         if not os.path.exists(folder_name):
             try:
@@ -75,12 +75,12 @@ class PresetTools:
 
     def check_for_errors(self):
         """Errors check.
-        
+
         Checks for various parameter errors in the 'params.yml' file.
 
         Raises:
             TypeError: If any of the parameter checks fail.
-            
+
         """
 
         # Check if the instrument is either 'DB' or 'UWB'

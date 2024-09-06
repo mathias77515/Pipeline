@@ -17,8 +17,6 @@ from simtools.noise_timeline import *
 # from acquisition.frequency_acquisition import get_preconditioner
 
 
-
-
 # from solver.cg import mypcg
 
 

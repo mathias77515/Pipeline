@@ -15,12 +15,23 @@ import warnings
 warnings.filterwarnings("ignore")
 import pyoperators
 import pysm3.units as u
-from pyoperators import (AdditionOperator, BlockColumnOperator,
-                         BlockDiagonalOperator, BlockRowOperator,
-                         CompositionOperator, DenseBlockDiagonalOperator,
-                         DenseOperator, DiagonalOperator, IdentityOperator,
-                         MPIDistributionIdentityOperator, Operator,
-                         PackOperator, ReshapeOperator, rule_manager)
+from pyoperators import (
+    AdditionOperator,
+    BlockColumnOperator,
+    BlockDiagonalOperator,
+    BlockRowOperator,
+    CompositionOperator,
+    DenseBlockDiagonalOperator,
+    DenseOperator,
+    DiagonalOperator,
+    IdentityOperator,
+    MPIDistributionIdentityOperator,
+    Operator,
+    PackOperator,
+    ReshapeOperator,
+    rule_manager,
+)
+
 # PyOperators stuff
 from pysimulators import *
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
@@ -28,6 +39,7 @@ from pysm3 import utils
 from qubic.data import PATH
 
 import lib.Qinstrument as instr
+
 # FG-Buster packages
 from lib.Qmixing_matrix import MixingMatrix
 

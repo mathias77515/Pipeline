@@ -30,7 +30,7 @@ class PresetAcquisition:
         Class containing detector gain variables and methods.
 
     Attributes
-    ----------  
+    ----------
     seed_noise: int
         Seed for random noise realization.
     params_foregrounds: dict
@@ -39,29 +39,29 @@ class PresetAcquisition:
         Tolerance for PCG algorithm.
     ites_to_converge: int
         Max iteration number for PCG algorithm.
-    invN: BlockDiagonalOperator 
-        Inverse noise covariance matrix with input shape :math:`(N_{det}*N_{samples} + N_{pix}*N_{planck}*N_{stokes})` and output shape :math:`(N_{det}*N_{samples} + N_{pix}*N_{planck}*N_{stokes})`. 
+    invN: BlockDiagonalOperator
+        Inverse noise covariance matrix with input shape :math:`(N_{det}*N_{samples} + N_{pix}*N_{planck}*N_{stokes})` and output shape :math:`(N_{det}*N_{samples} + N_{pix}*N_{planck}*N_{stokes})`.
     M: DiagonalOperator
         Preconditioner for PCG algorithm.
     fwhm_rec: array_like
         Resolution of the reconstructed maps.
-    H: BlockColumnOperator 
+    H: BlockColumnOperator
         Pointing matrix.
-    TOD_qubic: array_like 
+    TOD_qubic: array_like
         QUBIC simulated TOD.
-    TOD_external: array_like 
+    TOD_external: array_like
         Planck simulated TOD.
-    TOD_obs: array_like 
+    TOD_obs: array_like
         Simulated observed TOD.
-    beta_iter: array_like 
+    beta_iter: array_like
         Spectral indices, if d1 :math:`(12 \times Nside_{\beta}^2, N_{comp}-1)`, if not :math:`(N_{comp}-1)`.
-    allbeta: array_like 
+    allbeta: array_like
         Spectral indeices, if d1 :math:`(iter, 12 \times Nside_{\beta}^2, N_{comp}-1)`, if not :math:`(iter, N_{comp}-1)`.
-    Amm_iter: array_like 
+    Amm_iter: array_like
         Mixing matrix.
 
     """
-    
+
     # Notes
     # -----
     # invN :
@@ -141,15 +141,15 @@ class PresetAcquisition:
         r"""Approx HTH.
 
         Calculates the approximation of :math:`H^T.H`.
-        
+
         Returns
         -------
         approx_hth: array_like
             The approximation of :math:`H^T.H` with shape :math:`(N_{sub}^{in}, N_{pixel}, 3)`.
         approx_hth_ext: array_like
             The approximation of :math:`H^T.H` for Planck.
-        
-        """        
+
+        """
 
         # Approximation of H.T H
         approx_hth = np.empty(
@@ -182,7 +182,7 @@ class PresetAcquisition:
 
     def get_preconditioner(self, A_qubic, A_ext, precond=True, thr=0):
         """Preconditioner for PCG algorithm.
-        
+
         Calculates and returns the preconditioner matrix for the optimization process.
 
         Parameters
@@ -200,8 +200,8 @@ class PresetAcquisition:
         -------
         M: DiagonalOperator
             Preconditioner for PCG algorithm.
-            
-        """        
+
+        """
 
         if precond:
 
@@ -249,7 +249,7 @@ class PresetAcquisition:
 
     def get_convolution(self):
         """Convolutions.
-        
+
         Method to define all angular resolutions of the instrument at each frequency.
 
         This method sets the Full Width at Half Maximum (FWHM) for Time-Ordered Data (TOD) and map-making processes.
@@ -303,19 +303,14 @@ class PresetAcquisition:
 
         # Print the FWHM values
         self.preset_tools._print_message(f"FWHM for TOD making : {fwhm_tod}")
-        self.preset_tools._print_message(
-            f"FWHM for reconstruction : {fwhm_mapmaking}"
-        )
-        self.preset_tools._print_message(
-            f"Reconstructed FWHM : {fwhm_rec}"
-        )
-        
+        self.preset_tools._print_message(f"FWHM for reconstruction : {fwhm_mapmaking}")
+        self.preset_tools._print_message(f"Reconstructed FWHM : {fwhm_rec}")
+
         return fwhm_tod, fwhm_mapmaking, fwhm_rec
-        
 
     def get_noise(self):
         """Noise.
-        
+
         Method to define QUBIC noise, can generate Dual band or Wide Band noise by following:
 
         - Dual Band: n = [Ndet + Npho_150, Ndet + Npho_220]
@@ -328,8 +323,8 @@ class PresetAcquisition:
         -------
         noise: array_like
             The total noise array, flattened.
-            
-        """        
+
+        """
 
         if self.preset_qubic.params_qubic["instrument"] == "UWB":
             noise = QubicWideBandNoise(
@@ -363,12 +358,12 @@ class PresetAcquisition:
 
     def get_tod(self):
         r"""TOD.
-        
+
         Generate fake observational data from QUBIC and external experiments.
 
         This method simulates observational data, including astrophysical foregrounds contamination using `self.beta` and systematics using `self.g`.
         The data generation follows the formula: :math:`\vec{d} = H.A.\vec{c} + \vec{n}`.
-        
+
         Attributes
         ----------
         H: Operator
@@ -381,8 +376,8 @@ class PresetAcquisition:
             The combined observational data from QUBIC and external experiments.
         nsampling_x_ndetectors: int
             The number of samples in `self.TOD_qubic`.
-        
-        """        
+
+        """
 
         ### Build joint acquisition operator
         self.H = self.preset_qubic.joint_in.get_operator(
@@ -458,7 +453,7 @@ class PresetAcquisition:
 
     def get_x0(self):
         """PCG starting point.
-        
+
         Define starting point of the convergence.
 
         The argument 'set_comp_to_0' multiplies the pixel values by a given factor. You can decide
@@ -471,8 +466,8 @@ class PresetAcquisition:
         ------
         TypeError
             If an unrecognized component name is encountered.
-            
-        """        
+
+        """
 
         ### Create seed
         if self.preset_tools.rank == 0:
@@ -510,7 +505,9 @@ class PresetAcquisition:
                     self.preset_comp.components_iter[
                         i, mypix, istk
                     ] *= self.preset_tools.params["INITIAL"][f"qubic_patch_{key}_cmb"]
-                    self.preset_comp.components_iter[i, mypix, istk] += np.random.normal(
+                    self.preset_comp.components_iter[
+                        i, mypix, istk
+                    ] += np.random.normal(
                         0,
                         self.preset_tools.params["INITIAL"]["sig_map_noise"],
                         self.preset_comp.components_iter[i, mypix, istk].shape,
@@ -527,7 +524,9 @@ class PresetAcquisition:
                     self.preset_comp.components_iter[
                         i, mypix, istk
                     ] *= self.preset_tools.params["INITIAL"][f"qubic_patch_{key}_dust"]
-                    self.preset_comp.components_iter[i, mypix, istk] += np.random.normal(
+                    self.preset_comp.components_iter[
+                        i, mypix, istk
+                    ] += np.random.normal(
                         0,
                         self.preset_tools.params["INITIAL"]["sig_map_noise"],
                         self.preset_comp.components_iter[i, mypix, istk].shape,
@@ -545,7 +544,9 @@ class PresetAcquisition:
                     self.preset_comp.components_iter[
                         i, mypix, istk
                     ] *= self.preset_tools.params["INITIAL"][f"qubic_patch_{key}_sync"]
-                    self.preset_comp.components_iter[i, mypix, istk] += np.random.normal(
+                    self.preset_comp.components_iter[
+                        i, mypix, istk
+                    ] += np.random.normal(
                         0,
                         self.preset_tools.params["INITIAL"]["sig_map_noise"],
                         self.preset_comp.components_iter[i, mypix, istk].shape,
@@ -554,9 +555,9 @@ class PresetAcquisition:
                 self.preset_comp.components_iter[i] = C2(
                     C1(self.preset_comp.components_iter[i])
                 )
-                self.preset_comp.components_iter[i, mypix, :] *= self.preset_tools.params[
-                    "INITIAL"
-                ]["qubic_patch_co"]
+                self.preset_comp.components_iter[
+                    i, mypix, :
+                ] *= self.preset_tools.params["INITIAL"]["qubic_patch_co"]
                 self.preset_comp.components_iter[i, mypix, :] += np.random.normal(
                     0,
                     self.preset_tools.params["INITIAL"]["sig_map_noise"],

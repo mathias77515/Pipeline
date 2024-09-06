@@ -4,8 +4,7 @@ import time
 import healpy as hp
 import numpy as np
 from pyoperators.core import IdentityOperator, asoperator
-from pyoperators.iterative.core import (AbnormalStopIteration,
-                                        IterativeAlgorithm)
+from pyoperators.iterative.core import AbnormalStopIteration, IterativeAlgorithm
 from pyoperators.iterative.stopconditions import MaxIterationStopCondition
 from pyoperators.memory import empty, zeros
 from pyoperators.utils.mpi import MPI

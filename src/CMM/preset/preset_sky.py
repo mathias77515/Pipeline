@@ -9,14 +9,14 @@ class PresetSky:
     r"""Preset Sky.
 
     Instance to initialize the Components Map-Making. It defines the observed sky variables and methods.
-    
+
     Parameters
     ----------
     preset_tools : object
         Class containing tools and simulation parameters.
     preset_qubic : object
         Class containing qubic operator and variables and methods.
-        
+
     Attributes
     ----------
     center: tuple
@@ -41,7 +41,7 @@ class PresetSky:
     def __init__(self, preset_tools, preset_qubic):
         """
         Initialize.
-        
+
         """
         ### Import preset tools
         self.preset_tools = preset_tools
@@ -101,7 +101,7 @@ class PresetSky:
 
     def get_coverage(self):
         """Coverage.
-        
+
         Calculate the coverage mask for the QUBIC patch, according with the number of beta that you want to reconstruct.
 
         This function computes the angular distance between a center point and all
@@ -112,7 +112,7 @@ class PresetSky:
         -------
         mask: array_like
             A mask array where covered pixels are marked with 1 and uncovered pixels are marked with 0.
-            
+
         """
 
         vec_center = np.array(hp.ang2vec(self.center[0], self.center[1], lonlat=True))
@@ -142,14 +142,14 @@ class PresetSky:
 
     def get_spectra_namaster_informations(self):
         """NaMaster.
-        
+
         Initializes the Namaster object and computes the ell and cl2dl arrays.
 
         This method sets up the Namaster object using parameters from the preset_tools
         and computes the ell array and cl2dl conversion factor for power spectrum analysis.
 
         """
-        
+
         self.namaster = nam.Namaster(
             self.seenpix,
             lmin=self.preset_tools.params["SPECTRUM"]["lmin"],

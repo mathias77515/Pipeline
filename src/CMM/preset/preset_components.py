@@ -23,9 +23,9 @@ class PresetComponents:
         Class containing tools and simulation parameters.
     preset_qubic : object
         Class containing qubic operator and variables and methods.
-    
+
     Attributes
-    ---------- 
+    ----------
     params_cmb: dict
         Dictionary containing the parameters associated with CMB.
     params_foregrounds: dict
@@ -34,7 +34,7 @@ class PresetComponents:
         Seed for random CMB noise generation.
     skyconfig: dict
         Dictionary containing the wanted sky configuration for PySM.
-    components_model: list 
+    components_model: list
         List containing the FGBuster instance relative to the wanted components.
     components_name: list
         List containing the name of the components.
@@ -96,7 +96,7 @@ class PresetComponents:
 
     def get_sky_config(self, key):
         """Sky configuration.
-        
+
         Method to define the sky model used by PySM3 to generate a fake sky.
 
         Parameters
@@ -109,12 +109,12 @@ class PresetComponents:
         -------
         skyconfig: dict
             Dictionary containing the sky model configuration.
-            
+
         Example
         -------
         sky = {'cmb': 42, 'Dust': 'd0'}
-        
-        """        
+
+        """
 
         sky = {}
         if self.params_cmb["cmb"]:
@@ -135,7 +135,7 @@ class PresetComponents:
 
     def give_cl_cmb(self, r=0, Alens=1.0):
         r""":math:`C_{\ell}^{BB}` CMB.
-        
+
         Generates the CMB BB power spectrum with optional lensing and tensor contributions.
 
         Parameters
@@ -147,10 +147,10 @@ class PresetComponents:
 
         Returns
         -------
-        power_spectrum: array_like 
+        power_spectrum: array_like
             CMB power spectrum according to r and Alens.
-            
-        """        
+
+        """
 
         # Read the lensed scalar power spectrum from the FITS file
         power_spectrum = hp.read_cl(PATH + "Cls_Planck2018_lensed_scalar.fits")[
@@ -174,7 +174,7 @@ class PresetComponents:
 
     def polarized_I(self, m, nside, polarization_fraction=0):
         """Polarized intensity map.
-        
+
         Calculates the polarized intensity map.
 
         Parameters
@@ -190,8 +190,8 @@ class PresetComponents:
         -------
         p_map: array_like
             Array containing the polarized intensity map with cosine and sine components.
-            
-        """        
+
+        """
 
         # Read and downgrade the polarization angle map to the desired nside resolution
         polangle = hp.ud_grade(
@@ -217,9 +217,9 @@ class PresetComponents:
 
     def get_components(self, skyconfig):
         """Components maps.
-        
+
         Read configuration dictionary which contains every compoenent and their associated model.
-        The CMB is randomly generated from a specific seed. 
+        The CMB is randomly generated from a specific seed.
         Astrophysical foregrounds come from PySM 3.
 
         Parameters
@@ -240,8 +240,8 @@ class PresetComponents:
         ------
         TypeError
             Raises if the chosen model does not exist.
-            
-        """        
+
+        """
 
         ### Initialization
         components = np.zeros(

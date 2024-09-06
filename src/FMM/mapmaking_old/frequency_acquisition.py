@@ -16,6 +16,7 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 import pysm3
+
 # QUBIC stuff
 import qubic
 from qubic.data import PATH
@@ -41,6 +42,7 @@ import fgb.mixing_matrix as mm
 import mapmaking.instrument as instr
 import pysm3.units as u
 from pyoperators import *
+
 # PyOperators stuff
 from pysimulators import *
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator

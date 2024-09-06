@@ -23,7 +23,6 @@ from lib.Qspectra_component import CMB, Foreground
 #### QUBIC packages
 
 
-
 comm = MPI.COMM_WORLD
 
 

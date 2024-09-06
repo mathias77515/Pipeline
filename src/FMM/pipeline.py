@@ -43,23 +43,22 @@ __all__ = ["PipelineFrequencyMapMaking", "PipelineEnd2End"]
 class PipelineFrequencyMapMaking:
     """
     Instance to reconstruct frequency maps using QUBIC abilities.
-    
+
     Parameters
         ----------
-        comm : 
+        comm :
             MPI communicator
         file : str
             used to create the forlder for data saving
-        params : dict   
+        params : dict
             dictionary containing all the simulation parameters
-            
-    """
 
+    """
 
     def __init__(self, comm, file, params):
         """
         Initialise PipelineFrequencyMapMaking
-        
+
         """
 
         self.mapmaking_time_0 = time.time()
@@ -102,7 +101,7 @@ class PipelineFrequencyMapMaking:
         self.dict_in, self.dict_mono_in = self.get_dict(key="in")
         self.dict_out, self.dict_mono_out = self.get_dict(key="out")
         self.skyconfig = self.get_sky_config()
-        
+
         ### Initial maps
         self.m_nu_in = self.get_input_map()
 
@@ -200,7 +199,7 @@ class PipelineFrequencyMapMaking:
 
     def get_components_fgb(self):
         """Components FGbuster
-        
+
         Method to build a dictionary containing all the wanted components to generate sky maps.
         Based on FGBuster.
 
@@ -208,7 +207,7 @@ class PipelineFrequencyMapMaking:
         -------
         dict_comps: dict
             Dictionary containing the component instances.
-            
+
         """
 
         dict_comps = []
@@ -226,14 +225,14 @@ class PipelineFrequencyMapMaking:
 
     def get_random_value(self):
         """Random value
-        
+
         Method to build a random seed.
 
         Returns
         -------
         seed: int
             Random seed.
-            
+
         """
 
         np.random.seed(None)
@@ -247,7 +246,7 @@ class PipelineFrequencyMapMaking:
 
     def get_H(self):
         """Acquisition operator
-        
+
         Method to compute QUBIC acquisition operators.
 
         """
@@ -268,15 +267,15 @@ class PipelineFrequencyMapMaking:
 
     def get_averaged_nus(self):
         """Average frequency
-        
+
         Method to average QUBIC frequencies according to the number of reconstructed frequency maps.
 
         Returns
         -------
         nus_ave: array_like
             array containing the averaged QUBIC frequencies.
-            
-        """        
+
+        """
 
         nus_ave = []
         for i in range(self.params["QUBIC"]["nrec"]):
@@ -288,24 +287,24 @@ class PipelineFrequencyMapMaking:
 
     def get_sky_config(self):
         """Sky configuration.
-        
+
         Method that read 'params.yml' file and create dictionary containing sky emission model.
 
         Returns
         -------
         dict_sky: dict
             Sky config dictionary.
-            
+
         Notes
         -----
-        Note that the key denote the emission and the value denote the sky model using PySM convention. 
+        Note that the key denote the emission and the value denote the sky model using PySM convention.
         For CMB, seed denote the realization.
-            
+
         Example
         -------
         d = {'cmb':seed, 'dust':'d0', 'synchrotron':'s0'}
-        
-        """        
+
+        """
 
         dict_sky = {}
 
@@ -334,22 +333,22 @@ class PipelineFrequencyMapMaking:
 
     def get_dict(self, key="in"):
         """QUBIC dictionary.
-        
+
         Method to modify the qubic dictionary.
 
         Parameters
         ----------
         key : str, optional
-            Can be "in" or "out". 
-            It is used to build respectively the instances to generate the TODs or to reconstruct the sky maps, 
+            Can be "in" or "out".
+            It is used to build respectively the instances to generate the TODs or to reconstruct the sky maps,
             by default "in".
 
         Returns
         -------
         dict_qubic: dict
             Modified QUBIC dictionary.
-            
-        """        
+
+        """
 
         args = {
             "npointings": self.params["QUBIC"]["npointings"],
@@ -405,8 +404,8 @@ class PipelineFrequencyMapMaking:
             Output resolutions. If we don't apply convolutions during reconstruction, array of zeros.
         fwhm_rec: array_like
             Reconstructed resolutions. Egal the output resolutions if we apply convolutions during reconstructions, evaluate through analytic formula otherwise.
-        
-        """        
+
+        """
 
         ### Define FWHMs
 
@@ -475,20 +474,20 @@ class PipelineFrequencyMapMaking:
             print(f"FWHM for TOD generation : {fwhm_in}")
             print(f"FWHM for reconstruction : {fwhm_out}")
             print(f"Final FWHM : {fwhm_rec}")
-            
+
         return fwhm_in, fwhm_out, fwhm_rec
 
     def get_input_map(self):
         r"""Input maps.
 
         Function to get the input maps from PySM3.
-        
+
         Returns
         -------
         maps_in: array_like
             Input maps :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
-            
-        """        
+
+        """
 
         m_nu_in = np.zeros(
             (self.params["QUBIC"]["nrec"], 12 * self.params["SKY"]["nside"] ** 2, 3)
@@ -503,7 +502,7 @@ class PipelineFrequencyMapMaking:
 
     def get_tod(self, noise=False):
         r"""Simulated TOD.
-        
+
         Method that compute observed TODs with :math:`\vec{TOD} = H \cdot \vec{s} + \vec{n}`, with H the QUBIC operator, :math:`\vec{s}` the sky signal and :math:`\vec{n}` the instrumental noise`.
 
         Parameters
@@ -515,8 +514,8 @@ class PipelineFrequencyMapMaking:
         -------
         TOD: array_like
             Simulated TOD :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
-            
-        """        
+
+        """
 
         if noise:
             factor = 0
@@ -679,14 +678,14 @@ class PipelineFrequencyMapMaking:
 
     def get_preconditioner(self):
         """PCG Preconditioner.
-        
-        Computed using the formula: To be added. 
+
+        Computed using the formula: To be added.
 
         Returns
         -------
         M: DiagonalOperator
             Preconditioner for PCG algorithm.
-        """        
+        """
 
         if self.params["PCG"]["preconditioner"]:
 
@@ -727,7 +726,7 @@ class PipelineFrequencyMapMaking:
 
     def pcg(self, d, x0, seenpix):
         r"""Preconditioned Conjugate Gradiant algorithm.
-        
+
         Solve the map-making equation iteratively : :math:`(H^T . N^{-1} . H) . x = H^T . N^{-1} . d`.
 
         The PCG used for the minimization is intrinsequely parallelized (e.g see PyOperators).
@@ -745,8 +744,8 @@ class PipelineFrequencyMapMaking:
         -------
         solution: array_like
             Reconstructed maps :math:`(N_{rec}, 12 \times N^{2}_{side}, N_{stk})`.
-        
-        """        
+
+        """
 
         ### Update components when pixels outside the patch are fixed (assumed to be 0)
         A = self.H_out.T * self.invN * self.H_out
@@ -806,8 +805,8 @@ class PipelineFrequencyMapMaking:
             pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def run(self):
-        """Run the FMM Pipeline. 
-        
+        """Run the FMM Pipeline.
+
         Method to run the whole pipeline from TOD generation from sky reconstruction by reading `params.yml` file.
 
         """
@@ -830,9 +829,7 @@ class PipelineFrequencyMapMaking:
         x0[:, self.seenpix, :] = 0
 
         ### Solve map-making equation
-        self.s_hat = self.pcg(
-            self.TOD, x0=x0[:, self.seenpix, :], seenpix=self.seenpix
-        )
+        self.s_hat = self.pcg(self.TOD, x0=x0[:, self.seenpix, :], seenpix=self.seenpix)
 
         ### Wait for all processes
         self._barrier()
@@ -908,7 +905,7 @@ class PipelineFrequencyMapMaking:
 
 class PipelineEnd2End:
     """FMM Pipeline.
-    
+
     Wrapper for End-2-End pipeline. It added class one after the others by running method.run().
 
     """

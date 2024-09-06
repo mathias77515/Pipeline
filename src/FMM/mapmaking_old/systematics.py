@@ -24,12 +24,17 @@ import fgb.component_model as c
 import fgb.mixing_matrix as mm
 import mapmaking.instrument as instr
 import pysm3.units as u
-from mapmaking.frequency_acquisition import (QubicAcquisition,
-                                             QubicPolyAcquisition, arcmin2rad,
-                                             compute_fwhm_to_convolve,
-                                             create_array, get_preconditioner,
-                                             give_cl_cmb)
+from mapmaking.frequency_acquisition import (
+    QubicAcquisition,
+    QubicPolyAcquisition,
+    arcmin2rad,
+    compute_fwhm_to_convolve,
+    create_array,
+    get_preconditioner,
+    give_cl_cmb,
+)
 from pyoperators import *
+
 # PyOperators stuff
 from pysimulators import *
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator

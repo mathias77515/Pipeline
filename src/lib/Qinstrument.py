@@ -6,28 +6,37 @@ import copy
 import healpy as hp
 import numexpr as ne
 import numpy as np
-from pyoperators import (Cartesian2SphericalOperator,
-                         DenseBlockDiagonalOperator, DiagonalOperator,
-                         HomothetyOperator, IdentityOperator,
-                         IntegrationTrapezeOperator, ReshapeOperator,
-                         Rotation2dOperator, Rotation3dOperator,
-                         Spherical2CartesianOperator)
-from pyoperators.utils import (operation_assignment, pool_threading, product,
-                               split)
+from pyoperators import (
+    Cartesian2SphericalOperator,
+    DenseBlockDiagonalOperator,
+    DiagonalOperator,
+    HomothetyOperator,
+    IdentityOperator,
+    IntegrationTrapezeOperator,
+    ReshapeOperator,
+    Rotation2dOperator,
+    Rotation3dOperator,
+    Spherical2CartesianOperator,
+)
+from pyoperators.utils import operation_assignment, pool_threading, product, split
 from pyoperators.utils.ufuncs import abs2
-from pysimulators import (ConvolutionTruncatedExponentialOperator, Instrument,
-                          Layout, ProjectionOperator)
+from pysimulators import (
+    ConvolutionTruncatedExponentialOperator,
+    Instrument,
+    Layout,
+    ProjectionOperator,
+)
 from pysimulators.geometry import surface_simple_polygon
-from pysimulators.interfaces.healpy import (Cartesian2HealpixOperator,
-                                            HealpixConvolutionGaussianOperator)
-from pysimulators.sparse import (FSRMatrix, FSRRotation2dMatrix,
-                                 FSRRotation3dMatrix)
+from pysimulators.interfaces.healpy import (
+    Cartesian2HealpixOperator,
+    HealpixConvolutionGaussianOperator,
+)
+from pysimulators.sparse import FSRMatrix, FSRRotation2dMatrix, FSRRotation3dMatrix
 from qubic import _flib as flib
 from qubic.beams import BeamFitted, BeamGaussian, MultiFreqBeam
 from qubic.calibration import QubicCalibration
 from qubic.polyacquisition import compute_freq
-from qubic.ripples import (BeamGaussianRippled,
-                           ConvolutionRippledGaussianOperator)
+from qubic.ripples import BeamGaussianRippled, ConvolutionRippledGaussianOperator
 from qubic.utils import _compress_mask
 from scipy.constants import c, h, k, sigma
 from scipy.integrate import quad

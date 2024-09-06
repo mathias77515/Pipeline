@@ -12,16 +12,24 @@ from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from scipy.optimize import fmin_l_bfgs_b, minimize
 
 import lib.Qmixing_matrix as mm
+
 ### Local packages
 from lib.Qacquisition import *
 from lib.Qcg import pcg
 from lib.Qfoldertools import *
 from lib.Qmap_plotter import *
+
 # from simtools.mpi_tools import *
 from lib.Qnoise import *
 
-from .costfunc.chi2 import (Chi2Blind, Chi2DualBand, Chi2Parametric,
-                            Chi2Parametric_alt, Chi2UltraWideBand)
+from .costfunc.chi2 import (
+    Chi2Blind,
+    Chi2DualBand,
+    Chi2Parametric,
+    Chi2Parametric_alt,
+    Chi2UltraWideBand,
+)
+
 # from simtools.analysis import *
 from .preset import *
 
@@ -29,7 +37,7 @@ from .preset import *
 class Pipeline:
     """
     Instance to reconstruct component maps using QUBIC abilities.
-    
+
     Parameters
     ----------
     comm : MPI communicator
@@ -38,13 +46,13 @@ class Pipeline:
         Seed for random CMB realization.
     seed_noise : int, optional
         Seed for random noise realization, by default None.
-            
+
     """
 
     def __init__(self, comm, seed, seed_noise=None):
         """
         Initialize Pipeline instance.
-        
+
         """
 
         ### Creating noise seed
@@ -82,7 +90,7 @@ class Pipeline:
 
     def fisher(self, ell, Nl):
         """Fisher Method.
-        
+
         Fisher to compute an estimation of sigma(r) for a given noise power spectrum.
 
         Parameters
@@ -96,8 +104,8 @@ class Pipeline:
         -------
         sigma: float
             Estimated value of sigma(r).
-            
-        """           
+
+        """
 
         Dl = np.interp(
             ell, np.arange(1, 4001, 1), self.preset.comp.give_cl_cmb(r=1, Alens=0)[2]
@@ -113,10 +121,10 @@ class Pipeline:
 
     def fisher_compute_sigma_r(self):
         """Fisher estimation.
-        
+
         Computes and prints the value of sigma(r) using the Fisher matrix.
-        
-        """        
+
+        """
 
         # Apply Gaussian beam convolution
         C = HealpixConvolutionGaussianOperator(
@@ -146,9 +154,9 @@ class Pipeline:
         # Print the value of sigma(r)
         self.preset.tools._print_message(f"sigma(r) = {sigma_r:.6f}")
 
-    def call_pcg(self, max_iterations, seenpix):    
+    def call_pcg(self, max_iterations, seenpix):
         """Precontioned Conjugate Gradiant algorithm.
-        
+
         Method to call the PCG from PyOperators package.
 
         Parameters
@@ -157,8 +165,8 @@ class Pipeline:
             Maximum number of iterations for the PCG algorithm.
         seenpix : array_like
             Boolean array that define the pixels observed by QUBIC.
-            
-        """        
+
+        """
 
         if self._steps == 0:
             self.plots._display_allcomponents(seenpix, ki=-1)
@@ -238,8 +246,8 @@ class Pipeline:
         r"""
         Method that solves the map-making equation :math:`(H^T . N^{-1} . H) . x = H^T . N^{-1} . d`, using OpenMP / MPI solver.
 
-        This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver. 
-        The equation is of the form :math:`(H^T . N^{-1} . H) . \vec{c} = H^T . N^{-1} . \vec{TOD}`, where H_i is the operator obtained from the preset, 
+        This method updates the components of the map by solving the map-making equation using an OpenMP / MPI solver.
+        The equation is of the form :math:`(H^T . N^{-1} . H) . \vec{c} = H^T . N^{-1} . \vec{TOD}`, where H_i is the operator obtained from the preset,
         U is a reshaped operator, and x_planck and xI are intermediate variables used in the calculations.
 
 
@@ -247,8 +255,8 @@ class Pipeline:
         ----------
         seenpix : array_like
             Boolean array that define the pixels observed by QUBIC.
-            
-        """        
+
+        """
 
         H_i = self.preset.qubic.joint_out.get_operator(
             A=self.preset.acquisition.Amm_iter,
@@ -309,7 +317,7 @@ class Pipeline:
 
     def get_tod_comp(self):
         """Component TOD.
-        
+
         Method that produces Time-Ordered Data (TOD) using the component maps computed at the current iteration.
 
         This method initializes a zero-filled numpy array `tod_comp` with dimensions based on the number of components,
@@ -321,7 +329,7 @@ class Pipeline:
         -------
         tod_comp: array_like
             A numpy array containing the computed TOD for each component and sub-component.
-            
+
         """
 
         tod_comp = np.zeros(
@@ -352,12 +360,12 @@ class Pipeline:
 
     def callback(self, x):
         """Callback for scipy.minimize.
-        
+
         Method to make callback function readable by `scipy.optimize.minimize`.
 
         This method is intended to be used as a callback function during the optimization
         process. It is called by the optimizer at each iteration.
-        
+
         The method performs the following actions:
         1. Synchronizes all processes using a barrier to ensure that all processes reach this point before proceeding.
         2. If the current process is the root process (rank 0), it performs the following:
@@ -368,8 +376,8 @@ class Pipeline:
         ----------
         x : array_like
             The current parameter values at the current iteration of the optimization.
-            
-        """        
+
+        """
 
         self.preset.tools.comm.Barrier()
         if self.preset.tools.rank == 0:
@@ -378,18 +386,18 @@ class Pipeline:
                     f"Iter = {self.nfev:4d}   x = {[np.round(x[i], 5) for i in range(len(x))]}   qubic log(L) = {np.log(np.round(self.chi2.Lqubic, 5))}  planck log(L) = {np.log(np.round(self.chi2.Lplanck, 5))}"
                 )
             self.nfev += 1
-            
+
     def get_constrains(self):
         """Constraints for scipy.minimize.
-        
+
         Generate constraints readable by `scipy.optimize.minimize`.
 
         Returns
         -------
         constraints: list
             A list of constraint dictionaries for optimize.minimize.
-            
-        """        
+
+        """
 
         constraints = []
         n = (self.preset.comp.params_foregrounds["bin_mixing_matrix"] - 1) * (
@@ -399,7 +407,9 @@ class Pipeline:
         ### Dust only : constraint ==> SED is increasing
         if (
             self.preset.comp.params_foregrounds["Dust"]["Dust_out"]
-            and not self.preset.comp.params_foregrounds["Synchrotron"]["Synchrotron_out"]
+            and not self.preset.comp.params_foregrounds["Synchrotron"][
+                "Synchrotron_out"
+            ]
         ):
             for i in range(n):
                 constraints.append(
@@ -419,7 +429,9 @@ class Pipeline:
         ### No component : constraint ==> None
         elif (
             not self.preset.comp.params_foregrounds["Dust"]["Dust_out"]
-            and not self.preset.comp.params_foregrounds["Synchrotron"]["Synchrotron_out"]
+            and not self.preset.comp.params_foregrounds["Synchrotron"][
+                "Synchrotron_out"
+            ]
         ):
             return None
 
@@ -473,7 +485,9 @@ class Pipeline:
                     C = HealpixConvolutionGaussianOperator(
                         fwhm=0, lmax=3 * self.preset.sky.params_sky["nside"]
                     )
-                maps_conv[icomp] = C(self.preset.comp.components_iter[icomp, :, :]).copy()
+                maps_conv[icomp] = C(
+                    self.preset.comp.components_iter[icomp, :, :]
+                ).copy()
                 for ii, i in enumerate(index):
                     maps_conv_i = maps_conv.copy()
                     _i = _index_nside == i
@@ -486,7 +500,7 @@ class Pipeline:
 
     def update_mixing_matrix(self, beta, previous_mixingmatrix, icomp):
         """Update Mixing Matrix.
-        
+
         Method to update the mixing matrix using the current fitted value of the beta parameter and the parametric model associated.
         Only use when hybrid parametric-blind fit is selected !
 
@@ -503,8 +517,8 @@ class Pipeline:
         -------
         updated_mixingmatrix: array_like
             The updated Mixing Matrix.
-            
-        """        
+
+        """
 
         ### Build mixing matrix according to the choosen model and the beta parameter
         mixingmatrix = mm.MixingMatrix(*self.preset.comp.components_out)
@@ -521,9 +535,9 @@ class Pipeline:
 
         return updated_mixingmatrix
 
-    def update_spectral_index(self):   
+    def update_spectral_index(self):
         """Update spectral index.
-        
+
         Method that perform step 3) of the pipeline for 2 possible designs : Two Bands and Ultra Wide Band
 
         """
@@ -921,7 +935,9 @@ class Pipeline:
                         ]["type"]
                         == "parametric"
                     ):
-                        print("I am fitting ", self.preset.comp.components_name_out[i], i)
+                        print(
+                            "I am fitting ", self.preset.comp.components_name_out[i], i
+                        )
 
                         # if self._steps==0:
                         #    self.preset.acquisition.beta_iter = self.preset.acquisition.beta_iter
@@ -954,7 +970,9 @@ class Pipeline:
                         )
 
                     else:
-                        print("I am fitting ", self.preset.comp.components_name_out[i], i)
+                        print(
+                            "I am fitting ", self.preset.comp.components_name_out[i], i
+                        )
 
                         fun = partial(
                             self.chi2._qu_alt,
@@ -969,7 +987,9 @@ class Pipeline:
                         for ii in range(
                             self.preset.comp.params_foregrounds["bin_mixing_matrix"]
                         ):
-                            for j in range(1, len(self.preset.comp.components_name_out)):
+                            for j in range(
+                                1, len(self.preset.comp.components_name_out)
+                            ):
                                 x0 += [
                                     np.mean(
                                         self.preset.acquisition.Amm_iter[
@@ -1027,7 +1047,7 @@ class Pipeline:
 
     def give_intercal(self, D, d, _invn):
         r"""Detectors intercalibration.
-        
+
         Semi-analytical method for gains estimation. (cf CMM paper)
 
         Parameters
@@ -1046,7 +1066,7 @@ class Pipeline:
         -------
         g: array_like
             Intercalibration vector.
-        
+
         """
 
         _r = ReshapeOperator(
@@ -1065,7 +1085,7 @@ class Pipeline:
     def update_gain(self):
         r"""Update detectors gain.
 
-        Method that compute and print gains of each detectors using semi-analytical method decribed in "give_intercal" function, 
+        Method that compute and print gains of each detectors using semi-analytical method decribed in "give_intercal" function,
         using the formula : :math:`g^i = \frac{TOD_{obs}^i}{TOD_{sim}^i}`.
 
         """
@@ -1149,7 +1169,7 @@ class Pipeline:
         step : int
             Step number.
             
-        """        
+        """
 
         if self.preset.tools.rank == 0:
             if self.preset.tools.params["save_iter"] != 0:
@@ -1213,10 +1233,13 @@ class Pipeline:
         # if self.preset.comp.params_foregrounds['Dust']['nside_beta_out'] == 0:
         if self.preset.qubic.params_qubic["convolution_out"]:
             residual = (
-                self.preset.comp.components_iter - self.preset.comp.components_convolved_out
+                self.preset.comp.components_iter
+                - self.preset.comp.components_convolved_out
             )
         else:
-            residual = self.preset.comp.components_iter - self.preset.comp.components_out
+            residual = (
+                self.preset.comp.components_iter - self.preset.comp.components_out
+            )
         # else:
         #     if self.preset.qubic.params_qubic['convolution_out']:
         #         residual = self.preset.comp.components_iter.T - self.preset.comp.components_convolved_out
@@ -1301,10 +1324,10 @@ class Pipeline:
             self._info = False
 
         self._steps += 1
-        
-    def main(self):        
+
+    def main(self):
         """Pipeline.
-        
+
         Method to run the pipeline by following :
 
             1) Initialize simulation using `PresetSims` instance reading `params.yml`.
@@ -1316,7 +1339,7 @@ class Pipeline:
             4) Fit gains knowing components and sepctral index.
 
             5) Repeat 2), 3) and 4) until convergence.
-            
+
         """
 
         self._info = True

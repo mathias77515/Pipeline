@@ -10,7 +10,7 @@ from .preset_tools import *
 
 class PresetInitialisation:
     """Preset initialization.
-    
+
     Instance to initialize the Components Map-Making reading all the preset files.
 
     Arguments
@@ -19,17 +19,17 @@ class PresetInitialisation:
         MPI common communicator (define by MPI.COMM_WORLD).
     seed: int
         Seed for random CMB realization.
-    seed_noise: int 
+    seed_noise: int
         Seed for random noise realization.
-        
-    """    
+
+    """
 
     def __init__(self, comm, seed, seed_noise):
         """
         Initialize the class with MPI communication.
 
         """
-        
+
         ### MPI common arguments
         self.comm = comm
         self.seed = seed
@@ -46,10 +46,10 @@ class PresetInitialisation:
 
     def initialize(self):
         """Initialization.
-        
+
         Method that initialize and return all the preset instances that will be used in Component Map-Making Pipeline.
 
-        """        
+        """
         self.tools = PresetTools(self.comm)
         self.tools._print_message("========= Initialization =========")
         self.tools._print_message("    => Checking simulation parameters")
