@@ -49,7 +49,7 @@ QUBIC:
     ### This section control the parameters related to QUBIC
 
     instrument: 'DB'                       # Instrumental design (DB or UWB)
-    npointings: 4000                       # Number of time samples
+    npointings: 2000                       # Number of time samples
     nsub_in: 8                             # Number of sub-acquisitions
     nsub_out: 8                            # Number of sub-acquisitions for the reconstruction
     convolution_in: False                  # Angular resolution in the input TOD
@@ -85,7 +85,7 @@ PLANCK:
     level_noise_planck: 1                         # Noise level for Planck data
     nintegr_planck: 1                             # Number of integration step for Planck data
     thr_planck: 0.2                               # Threashold to remove planck weight within QUBIC patch
-    weight_planck: 0                              # Weight of Planck data within the QUBIC patch
+    weight_planck: 1                              # Weight of Planck data within the QUBIC patch
     fwhm_weight_planck: 0                         # FWHM for apodized QUBIC patch
     30GHz: False
     44GHz: False
@@ -108,7 +108,7 @@ PCG:
     #fix_pixels_outside_patch: True         # Fixing pixels outside QUBIC patch
     fixI: False                             # Fix the intensity during the map-making
     reso_plot: 12
-    fwhm_plot: 0.005
+    fwhm_plot: 0
     do_gif: True
 
 INITIAL:
