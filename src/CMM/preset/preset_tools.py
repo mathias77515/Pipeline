@@ -34,7 +34,7 @@ class PresetTools:
         ### Open parameters file
         self._print_message("========= Initialization =========")
         self._print_message("    => Reading parameters file")
-        with open("src/CMM/params.yml", "r") as stream:
+        with open("CMM/params.yml", "r") as stream:
             self.params = yaml.safe_load(stream)
 
     def _print_message(self, message):

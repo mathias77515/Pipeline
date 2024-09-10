@@ -5,7 +5,7 @@ import numpy as np
 import qubic
 
 sys.path.append(os.getcwd())
-CMB_FILE = "src/data/"
+CMB_FILE = "data/"
 import healpy as hp
 import matplotlib.pyplot as plt
 

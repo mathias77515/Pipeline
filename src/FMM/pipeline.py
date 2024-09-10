@@ -69,7 +69,7 @@ class PipelineFrequencyMapMaking:
         self.fsub = int(self.params["QUBIC"]["nsub_out"] / self.params["QUBIC"]["nrec"])
 
         self.file = file
-        self.plot_folder = "src/FMM/" + self.params["path_out"] + "png/"
+        self.plot_folder = "FMM/" + self.params["path_out"] + "png/"
 
         self.externaldata = PipelineExternalData(file, self.params)
         self.externaldata.run(fwhm=self.params["QUBIC"]["convolution_in"], noise=True)
@@ -82,10 +82,10 @@ class PipelineFrequencyMapMaking:
         )
 
         if comm.Get_rank() == 0:
-            if not os.path.isdir("src/FMM/" + self.params["path_out"] + "maps/"):
-                os.makedirs("src/FMM/" + self.params["path_out"] + "maps/")
-            if not os.path.isdir("src/FMM/" + self.params["path_out"] + "png/"):
-                os.makedirs("src/FMM/" + self.params["path_out"] + "png/")
+            if not os.path.isdir("FMM/" + self.params["path_out"] + "maps/"):
+                os.makedirs("FMM/" + self.params["path_out"] + "maps/")
+            if not os.path.isdir("FMM/" + self.params["path_out"] + "png/"):
+                os.makedirs("FMM/" + self.params["path_out"] + "png/")
 
         self.job_id = os.environ.get("SLURM_JOB_ID")
         self.center = qubic.equ2gal(
@@ -98,12 +98,9 @@ class PipelineFrequencyMapMaking:
         self.rank = self.comm.Get_rank()
 
         ### Sky
-        self.dict_in, self.dict_mono_in = self.get_dict(key="in")
-        self.dict_out, self.dict_mono_out = self.get_dict(key="out")
+        self.dict_in = self.get_dict(key="in")
+        self.dict_out = self.get_dict(key="out")
         self.skyconfig = self.get_sky_config()
-
-        ### Initial maps
-        self.m_nu_in = self.get_input_map()
 
         ### Joint acquisition for TOD making
         self.joint_tod = JointAcquisitionFrequencyMapMaking(
@@ -156,6 +153,9 @@ class PipelineFrequencyMapMaking:
             corrected_bandpass=self.params["QUBIC"]["bandpass_correction"],
         )
 
+        ### Initial maps
+        self.m_nu_in = self.get_input_map()
+        
         ### Define reconstructed and TOD operator
         self.get_H()
 
@@ -492,7 +492,7 @@ class PipelineFrequencyMapMaking:
         m_nu_in = np.zeros(
             (self.params["QUBIC"]["nrec"], 12 * self.params["SKY"]["nside"] ** 2, 3)
         )
-
+        
         for i in range(self.params["QUBIC"]["nrec"]):
             m_nu_in[i] = np.mean(
                 self.external_timeline.m_nu[i * self.fsub : (i + 1) * self.fsub], axis=0
@@ -662,7 +662,7 @@ class PipelineFrequencyMapMaking:
         if self.comm is None:
             pass
         else:
-            self.comm._Barrier()
+            self.comm.Barrier()
 
     def _print_message(self, message):
         """
@@ -767,9 +767,9 @@ class PipelineFrequencyMapMaking:
             comm=self.comm,
             x0=x0,
             M=M,
-            tol=self.params["PCG"]["tolpcg"],
+            tol=self.params["PCG"]["tol_pcg"],
             disp=True,
-            maxiter=self.params["PCG"]["n_iterpcg"],
+            maxiter=self.params["PCG"]["n_iter_pcg"],
             gif_folder=gif_folder,
             job_id=self.job_id,
             seenpix=self.seenpix,
@@ -912,16 +912,16 @@ class PipelineEnd2End:
 
     def __init__(self, comm):
 
-        with open("src/FMM/params.yml", "r") as stream:
+        with open("FMM/params.yml", "r") as stream:
             self.params = yaml.safe_load(stream)
 
         self.comm = comm
         self.job_id = os.environ.get("SLURM_JOB_ID")
 
-        self.folder = "src/FMM/" + self.params["path_out"] + "maps/"
+        self.folder = "FMM/" + self.params["path_out"] + "maps/"
         self.file = self.folder + self.params["datafilename"] + f"_{self.job_id}.pkl"
         self.file_spectrum = (
-            "src/FMM/"
+            "FMM/"
             + self.params["path_out"]
             + "spectrum/"
             + "spectrum_"
@@ -947,7 +947,7 @@ class PipelineEnd2End:
         if self.params["Pipeline"]["spectrum"]:
             if self.comm.Get_rank() == 0:
                 create_folder_if_not_exists(
-                    self.comm, "src/FMM/" + self.params["path_out"] + "spectrum/"
+                    self.comm, "FMM/" + self.params["path_out"] + "spectrum/"
                 )
 
                 if self.mapmaking is not None:

@@ -37,7 +37,7 @@ class CMBModel:
 
 
         """
-        power_spectrum = hp.read_cl("src/data/Cls_Planck2018_lensed_scalar.fits")[
+        power_spectrum = hp.read_cl("data/Cls_Planck2018_lensed_scalar.fits")[
             :, :4000
         ]
         if self.params["CMB"]["Alens"] != 1.0:
@@ -46,7 +46,7 @@ class CMBModel:
             power_spectrum += (
                 self.params["CMB"]["r"]
                 * hp.read_cl(
-                    "src/data/Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits"
+                    "data/Cls_Planck2018_unlensed_scalar_and_tensor_r1.fits"
                 )[:, :4000]
             )
         return power_spectrum

@@ -7,7 +7,7 @@ import pysm3.units as u
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 from pysm3 import utils
 
-PATH = os.getcwd() + "/src/data/"
+PATH = os.getcwd() + "/data/"
 
 
 class PresetComponents:
@@ -195,12 +195,12 @@ class PresetComponents:
 
         # Read and downgrade the polarization angle map to the desired nside resolution
         polangle = hp.ud_grade(
-            hp.read_map(os.getcwd() + "/src/data/" + "psimap_dust90_512.fits"), nside
+            hp.read_map(os.getcwd() + "/data/" + "psimap_dust90_512.fits"), nside
         )
 
         # Read and downgrade the depolarization map to the desired nside resolution
         depolmap = hp.ud_grade(
-            hp.read_map(os.getcwd() + "/src/data/" + "gmap_dust90_512.fits"), nside
+            hp.read_map(os.getcwd() + "/data/" + "gmap_dust90_512.fits"), nside
         )
 
         # Calculate the cosine of twice the polarization angle

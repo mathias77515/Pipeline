@@ -200,7 +200,7 @@ class PCGAlgorithm(IterativeAlgorithm):
                     self.gif + f"iter_{self.niterations+self.iter_init}.png",
                     self.center,
                     reso=self.reso,
-                    figsize=(12, 11),
+                    figsize=(12, 2.7*mymap.shape[0]),
                     min=min,
                     max=max,
                     fwhm=self.fwhm,
