@@ -76,11 +76,11 @@ class Chi2DualBand:
     def _fill_A(self, x):
 
         fsub = int(
-            self.nsub * 2 / self.preset.fg.params_foregrounds["bin_mixing_matrix"]
+            self.nsub * 2 / self.preset.comp.params_foregrounds["bin_mixing_matrix"]
         )
         A = np.ones((self.nsub * 2, self.nc))
         k = 0
-        for i in range(self.preset.fg.params_foregrounds["bin_mixing_matrix"]):
+        for i in range(self.preset.comp.params_foregrounds["bin_mixing_matrix"]):
             for j in range(1, self.nc):
                 A[i * fsub : (i + 1) * fsub, j] = np.array([x[k]] * fsub)
                 k += 1
@@ -89,7 +89,7 @@ class Chi2DualBand:
     def _get_mixingmatrix(self, nus, x):
 
         ### Compute mixing matrix
-        mixingmatrix = mm.MixingMatrix(*self.preset.fg.components_model_out)
+        mixingmatrix = mm.MixingMatrix(*self.preset.comp.components_model_out)
         return mixingmatrix.eval(nus, *x)
 
     def __call__(self, x):
@@ -121,7 +121,7 @@ class Chi2DualBand:
                 )
 
                 ### Compute Planck part of the chi^2
-                mycomp = self.preset.fg.components_iter.copy()
+                mycomp = self.preset.comp.components_iter.copy()
                 # seenpix_comp = np.tile(self.preset.sky.seenpix_qubic, (mycomp.shape[0], 3, 1)).reshape(mycomp.shape)
                 mycomp[:, ~self.preset.sky.seenpix_qubic, :] = 0
                 ysim_pl = H_planck(mycomp)
@@ -189,9 +189,9 @@ class Chi2DualBand:
                 )
 
                 ### Compute Planck part of the chi^2
-                # mycomp = self.preset.fg.components_iter.copy()
+                # mycomp = self.preset.comp.components_iter.copy()
                 # seenpix_comp = np.tile(self.preset.sky.seenpix_qubic, (mycomp.shape[0], 3, 1)).reshape(mycomp.shape)
-                ysim_pl = H_planck(self.preset.fg.components_iter.copy())
+                ysim_pl = H_planck(self.preset.comp.components_iter.copy())
 
                 ### Compute residuals in time domain
                 _residuals = np.r_[ysim, ysim_pl] - self.dobs
@@ -252,10 +252,10 @@ class Chi2UltraWideBand:
 
     def _fill_A(self, x):
 
-        fsub = int(self.nf / self.preset.fg.params_foregrounds["bin_mixing_matrix"])
+        fsub = int(self.nf / self.preset.comp.params_foregrounds["bin_mixing_matrix"])
         A = np.ones((self.nf, self.nc))
         k = 0
-        for i in range(self.preset.fg.params_foregrounds["bin_mixing_matrix"]):
+        for i in range(self.preset.comp.params_foregrounds["bin_mixing_matrix"]):
             for j in range(1, self.nc):
                 A[i * fsub : (i + 1) * fsub, j] = np.array([x[k]] * fsub)
                 k += 1
@@ -264,7 +264,7 @@ class Chi2UltraWideBand:
     def _get_mixingmatrix(self, nus, x):
 
         ### Compute mixing matrix
-        mixingmatrix = mm.MixingMatrix(*self.preset.fg.components_model_out)
+        mixingmatrix = mm.MixingMatrix(*self.preset.comp.components_model_out)
         return mixingmatrix.eval(nus, *x)
 
     def __call__(self, x):
@@ -296,7 +296,7 @@ class Chi2UltraWideBand:
                 )
 
                 ### Compute Planck part of the chi^2
-                mycomp = self.preset.fg.components_iter.copy()
+                mycomp = self.preset.comp.components_iter.copy()
                 seenpix_comp = np.tile(
                     self.preset.sky.seenpix_qubic, (mycomp.shape[0], 3, 1)
                 ).reshape(mycomp.shape)
@@ -352,9 +352,9 @@ class Chi2UltraWideBand:
                 )
 
                 ### Compute Planck part of the chi^2
-                # mycomp = self.preset.fg.components_iter.copy()
+                # mycomp = self.preset.comp.components_iter.copy()
                 # seenpix_comp = np.tile(self.preset.sky.seenpix_qubic, (mycomp.shape[0], 3, 1)).reshape(mycomp.shape)
-                ysim_pl = H_planck(self.preset.fg.components_iter.copy())
+                ysim_pl = H_planck(self.preset.comp.components_iter.copy())
 
                 ### Compute residuals in time domain
                 _residuals = np.r_[ysim, ysim_pl] - self.dobs
@@ -406,7 +406,7 @@ class Chi2Parametric:
 
             index_num = hp.ud_grade(
                 self.preset.sky.seenpix_qubic,
-                self.preset.fg.params_foregrounds["Dust"]["nside_beta_out"],
+                self.preset.comp.params_foregrounds["Dust"]["nside_beta_out"],
             )  #
             index = np.where(index_num == True)[0]
             self._index = index
@@ -414,7 +414,7 @@ class Chi2Parametric:
             self.constant = False
 
     def _get_mixingmatrix(self, nus, x):
-        mixingmatrix = mm.MixingMatrix(*self.preset.fg.components_model_out)
+        mixingmatrix = mm.MixingMatrix(*self.preset.comp.components_model_out)
 
         # if self.constant:
         return mixingmatrix.eval(nus, *x)
@@ -469,9 +469,9 @@ class Chi2Parametric:
             self.betamap,
             gain=self.preset.gain.gain_iter,
             fwhm=self.preset.acquisition.fwhm_mapmaking,
-            nu_co=self.preset.fg.nu_co,
+            nu_co=self.preset.comp.nu_co,
         ).operands[1]
-        tod_pl_s = H_planck(self.preset.fg.components_iter)
+        tod_pl_s = H_planck(self.preset.comp.components_iter)
 
         _r_pl = self.preset.acquisition.TOD_external - tod_pl_s
 
@@ -495,9 +495,9 @@ class Chi2Parametric_alt:
         self.icomp = icomp
         self.nsub = self.preset.qubic.joint_out.qubic.Nsub
         self.fsub = int(
-            self.nsub * 2 / self.preset.fg.params_foregrounds["bin_mixing_matrix"]
+            self.nsub * 2 / self.preset.comp.params_foregrounds["bin_mixing_matrix"]
         )
-        self.nc = len(self.preset.fg.components_out)
+        self.nc = len(self.preset.comp.components_out)
 
         self.constant = True
 
@@ -522,14 +522,14 @@ class Chi2Parametric_alt:
         #     self.dfg220 = self.d220[:, 1, :].copy()
         #     self.npixnf, self.nc, self.nsnd = self.d150.shape
 
-        #     index_num = hp.ud_grade(self.preset.sky.seenpix_qubic, self.preset.fg.params_foregrounds['Dust']['nside_fit'])    #
+        #     index_num = hp.ud_grade(self.preset.sky.seenpix_qubic, self.preset.comp.params_foregrounds['Dust']['nside_fit'])    #
         #     index = np.where(index_num == True)[0]
         #     self._index = index
         #     self.seenpix_wrap = seenpix_wrap
         #     self.constant = False
 
     def _get_mixingmatrix(self, x):
-        mixingmatrix = mm.MixingMatrix(self.preset.fg.components_out[self.icomp])
+        mixingmatrix = mm.MixingMatrix(self.preset.comp.components_out[self.icomp])
         if self.constant:
             return mixingmatrix.eval(self.preset.qubic.joint_out.qubic.allnus, *x)
         else:
@@ -539,7 +539,7 @@ class Chi2Parametric_alt:
         A_comp = self._get_mixingmatrix(x)
         A_blind = self.A_blind
         print("test", A_comp.shape, A_blind.shape)
-        for ii in range(self.preset.fg.params_foregrounds["bin_mixing_matrix"]):
+        for ii in range(self.preset.comp.params_foregrounds["bin_mixing_matrix"]):
             A_blind[ii * self.fsub : (ii + 1) * self.fsub, self.icomp] = A_comp[
                 ii * self.fsub : (ii + 1) * self.fsub
             ]
@@ -601,8 +601,8 @@ class Chi2Parametric_alt:
         # H_planck = self.preset.qubic.joint_out.get_operator(self.betamap,
         #                                             gain=self.preset.gain.gain_iter,
         #                                             fwhm=self.preset.acquisition.fwhm_mapmaking,
-        #                                             nu_co=self.preset.fg.nu_co).operands[1]
-        # tod_pl_s = H_planck(self.preset.fg.components_iter)
+        #                                             nu_co=self.preset.comp.nu_co).operands[1]
+        # tod_pl_s = H_planck(self.preset.comp.components_iter)
 
         # _r_pl = self.preset.acquisition.TOD_external - tod_pl_s
         # LLH = _dot(_r.T, self.preset.acquisition.invN.operands[0](_r), self.preset.comm) + _r_pl.T @ self.preset.acquisition.invN.operands[1](_r_pl)
@@ -615,7 +615,7 @@ class Chi2Blind:
     def __init__(self, preset):
 
         self.preset = preset
-        self.nc = len(self.preset.fg.components_out)
+        self.nc = len(self.preset.comp.components_out)
         self.nf = self.preset.qubic.joint_out.qubic.nsub
         self.nsnd = (
             self.preset.qubic.joint_out.qubic.ndets
@@ -633,11 +633,11 @@ class Chi2Blind:
     def _fill_A(self, x):
 
         fsub = int(
-            self.nsub * 2 / self.preset.fg.params_foregrounds["bin_mixing_matrix"]
+            self.nsub * 2 / self.preset.comp.params_foregrounds["bin_mixing_matrix"]
         )
         A = np.ones((self.nsub * 2, self.nc - 1))
         k = 0
-        for i in range(self.preset.fg.params_foregrounds["bin_mixing_matrix"]):
+        for i in range(self.preset.comp.params_foregrounds["bin_mixing_matrix"]):
             for j in range(self.nc - 1):
                 A[i * fsub : (i + 1) * fsub, j] = np.array([x[k]] * fsub)
                 k += 1
@@ -646,11 +646,11 @@ class Chi2Blind:
     def _reshape_A_transpose(self, x):
 
         fsub = int(
-            self.nsub * 2 / self.preset.fg.params_foregrounds["bin_mixing_matrix"]
+            self.nsub * 2 / self.preset.comp.params_foregrounds["bin_mixing_matrix"]
         )
         x_reshape = np.ones(self.nsub * 2)
 
-        for i in range(self.preset.fg.params_foregrounds["bin_mixing_matrix"]):
+        for i in range(self.preset.comp.params_foregrounds["bin_mixing_matrix"]):
             x_reshape[i * fsub : (i + 1) * fsub] = np.array([x[i]] * fsub)
         return x_reshape
 

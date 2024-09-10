@@ -7,7 +7,7 @@ import numpy as np
 import pysm3
 import qubic
 
-path_to_data = os.getcwd() + "/src/data/"
+path_to_data = os.getcwd() + "/data/"
 
 import pickle
 import warnings

@@ -31,7 +31,7 @@ from .costfunc.chi2 import (
 )
 
 # from simtools.analysis import *
-from .preset import *
+from .preset.preset import *
 
 
 class Pipeline:
@@ -128,7 +128,7 @@ class Pipeline:
 
         # Apply Gaussian beam convolution
         C = HealpixConvolutionGaussianOperator(
-            fwhm=self.preset.acquisition.fwhm_reconstructed
+            fwhm=self.preset.acquisition.fwhm_rec
         )
         map_to_namaster = C(
             self.preset.comp.components_iter[0] - self.preset.comp.components_out[0]
@@ -140,7 +140,7 @@ class Pipeline:
         # Compute power spectra using NaMaster
         leff, cls, _ = self.preset.sky.namaster.get_spectra(
             map_to_namaster.T,
-            beam_correction=np.rad2deg(self.preset.acquisition.fwhm_reconstructed),
+            beam_correction=np.rad2deg(self.preset.acquisition.fwhm_rec),
             pixwin_correction=False,
             verbose=False,
         )
@@ -175,14 +175,14 @@ class Pipeline:
         initial_maps = self.preset.comp.components_iter[:, seenpix, :].copy()
 
         ### Update the precondtionner M
-        self.preset.acquisition.M = self.preset.acquisition._get_preconditioner(
+        self.preset.acquisition.M = self.preset.acquisition.get_preconditioner(
             A_qubic=self.preset.acquisition.Amm_iter[
                 : self.preset.qubic.params_qubic["nsub_out"]
             ],
             A_ext=self.preset.mixingmatrix.Amm_in[
                 self.preset.qubic.params_qubic["nsub_out"] :
             ],
-            precond=self.preset.qubic.params_qubic["preconditionner"],
+            precond=self.preset.qubic.params_qubic["preconditioner"],
         )
 
         ### Run PCG
@@ -194,7 +194,7 @@ class Pipeline:
             maxiter = max_iterations
 
         if self.preset.tools.params["PCG"]["do_gif"]:
-            gif_folder = f"src/CMM/jobs/{self.preset.job_id}/iter/"
+            gif_folder = f"CMM/jobs/{self.preset.job_id}/iter/"
         else:
             gif_folder = None
 
@@ -226,7 +226,7 @@ class Pipeline:
         if self.preset.tools.rank == 0:
             if self.preset.tools.params["PCG"]["do_gif"]:
                 do_gif(
-                    f"src/CMM/jobs/{self.preset.job_id}/iter/",
+                    f"CMM/jobs/{self.preset.job_id}/iter/",
                     "iter_",
                     output="animation.gif",
                 )
@@ -1179,7 +1179,7 @@ class Pipeline:
 
                         if step != 0:
                             os.remove(
-                                "src/CMM/"
+                                "CMM/"
                                 + self.preset.tools.params["foldername"]
                                 + "/maps/"
                                 + self.preset.tools.params["filename"]
@@ -1187,7 +1187,7 @@ class Pipeline:
                             )
 
                     with open(
-                        "src/CMM/"
+                        "CMM/"
                         + self.preset.tools.params["foldername"]
                         + "/maps/"
                         + self.preset.tools.params["filename"]
@@ -1214,9 +1214,9 @@ class Pipeline:
                                 "seenpix": self.preset.sky.seenpix,
                                 "fwhm_in": self.preset.acquisition.fwhm_tod,
                                 "fwhm_out": self.preset.acquisition.fwhm_mapmaking,
-                                "fwhm_rec": self.preset.acquisition.fwhm_reconstructed,
+                                "fwhm_rec": self.preset.acquisition.fwhm_rec,
                                 #'fwhm':self.preset.acquisition.fwhm_tod,
-                                #'acquisition.fwhm_reconstructed':self.preset.acquisition.fwhm_mapmaking
+                                #'acquisition.fwhm_rec':self.preset.acquisition.fwhm_mapmaking
                             },
                             handle,
                             protocol=pickle.HIGHEST_PROTOCOL,

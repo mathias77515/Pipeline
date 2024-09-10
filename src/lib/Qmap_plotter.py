@@ -423,11 +423,11 @@ class PlotsCMM:
             plt.ylim(eps_min, eps_max)
             plt.yscale("log")
 
-            plt.savefig(f"src/CMM/jobs/{self.job_id}/A_iter/A_iter{ki+1}.png")
+            plt.savefig(f"CMM/jobs/{self.job_id}/A_iter/A_iter{ki+1}.png")
 
             if self.preset.tools.rank == 0:
                 if ki > 0 and gif is False:
-                    os.remove(f"src/CMM/jobs/{self.job_id}/A_iter/A_iter{ki}.png")
+                    os.remove(f"CMM/jobs/{self.job_id}/A_iter/A_iter{ki}.png")
 
             plt.close()
 
@@ -475,10 +475,10 @@ class PlotsCMM:
                 for i in range(beta.shape[1]):
                     plt.plot(alliter, abs(truth[i] - beta[:, i]), "-k", alpha=0.3)
             plt.yscale("log")
-            plt.savefig(f"src/CMM/jobs/{self.job_id}/beta_iter{ki+1}.png")
+            plt.savefig(f"CMM/jobs/{self.job_id}/beta_iter{ki+1}.png")
 
             if ki > 0:
-                os.remove(f"src/CMM/jobs/{self.job_id}/beta_iter{ki}.png")
+                os.remove(f"CMM/jobs/{self.job_id}/beta_iter{ki}.png")
             plt.close()
 
     def _display_allresiduals(self, map_i, seenpix, figsize=(14, 10), ki=0):
@@ -499,11 +499,11 @@ class PlotsCMM:
             plt.figure(figsize=figsize)
             k = 0
             r = self.preset.A(map_i) - self.preset.b
-            map_res = np.ones(self.preset.fg.components_iter.shape) * hp.UNSEEN
+            map_res = np.ones(self.preset.comp.components_iter.shape) * hp.UNSEEN
             map_res[:, seenpix, :] = r
 
             for istk in range(3):
-                for icomp in range(len(self.preset.fg.components_name_out)):
+                for icomp in range(len(self.preset.comp.components_name_out)):
 
                     _reso = 15
                     nsig = 3
@@ -513,16 +513,16 @@ class PlotsCMM:
                         rot=self.preset.sky.center,
                         reso=_reso,
                         notext=True,
-                        title=f"{self.preset.fg.components_name_out[icomp]} - {stk[istk]} - r = A x - b",
+                        title=f"{self.preset.comp.components_name_out[icomp]} - {stk[istk]} - r = A x - b",
                         cmap="jet",
-                        sub=(3, len(self.preset.fg.components_out), k + 1),
+                        sub=(3, len(self.preset.comp.components_out), k + 1),
                         min=-nsig * np.std(r[icomp, :, istk]),
                         max=nsig * np.std(r[icomp, :, istk]),
                     )
                     k += 1
 
             plt.tight_layout()
-            plt.savefig(f"src/CMM/jobs/{self.job_id}/allcomps/allres_iter{ki+1}.png")
+            plt.savefig(f"CMM/jobs/{self.job_id}/allcomps/allres_iter{ki+1}.png")
 
             # if self.preset.tools.rank == 0:
             #    if ki > 0:
@@ -545,7 +545,7 @@ class PlotsCMM:
         a Gaussian operator and displayed using Healpix's gnomview function.
         """
         C = HealpixConvolutionGaussianOperator(
-            fwhm=self.preset.acquisition.fwhm_reconstructed,
+            fwhm=self.preset.acquisition.fwhm_rec,
             lmax=3 * self.params["SKY"]["nside"],
         )
         stk = ["I", "Q", "U"]
@@ -553,26 +553,26 @@ class PlotsCMM:
             plt.figure(figsize=figsize)
             k = 0
             for istk in range(3):
-                for icomp in range(len(self.preset.fg.components_name_out)):
+                for icomp in range(len(self.preset.comp.components_name_out)):
 
-                    # if self.preset.fg.params_foregrounds['Dust']['nside_beta_out'] == 0:
+                    # if self.preset.comp.params_foregrounds['Dust']['nside_beta_out'] == 0:
 
-                    map_in = C(self.preset.fg.components_out[icomp, :, istk]).copy()
-                    map_out = self.preset.fg.components_iter[icomp, :, istk].copy()
+                    map_in = C(self.preset.comp.components_out[icomp, :, istk]).copy()
+                    map_out = self.preset.comp.components_iter[icomp, :, istk].copy()
 
-                    sig = np.std(self.preset.fg.components_out[icomp, seenpix, istk])
+                    sig = np.std(self.preset.comp.components_out[icomp, seenpix, istk])
                     map_in[~seenpix] = hp.UNSEEN
                     map_out[~seenpix] = hp.UNSEEN
 
                     # else:
                     #     if self.preset.qubic.params_qubic['convolution_in']:
-                    #         map_in = self.preset.fg.components_convolved_out[icomp, :, istk].copy()
-                    #         map_out = self.preset.fg.components_iter[istk, :, icomp].copy()
-                    #         sig = np.std(self.preset.fg.components_convolved_out[icomp, seenpix, istk])
+                    #         map_in = self.preset.comp.components_convolved_out[icomp, :, istk].copy()
+                    #         map_out = self.preset.comp.components_iter[istk, :, icomp].copy()
+                    #         sig = np.std(self.preset.comp.components_convolved_out[icomp, seenpix, istk])
                     #     else:
-                    #         map_in = self.preset.fg.components_out[istk, :, icomp].copy()
-                    #         map_out = self.preset.fg.components_iter[istk, :, icomp].copy()
-                    #         sig = np.std(self.preset.fg.components_out[istk, seenpix, icomp])
+                    #         map_in = self.preset.comp.components_out[istk, :, icomp].copy()
+                    #         map_out = self.preset.comp.components_iter[istk, :, icomp].copy()
+                    #         sig = np.std(self.preset.comp.components_out[istk, seenpix, icomp])
                     #     map_in[~seenpix] = hp.UNSEEN
                     #     map_out[~seenpix] = hp.UNSEEN
 
@@ -583,9 +583,9 @@ class PlotsCMM:
                         rot=self.preset.sky.center,
                         reso=reso,
                         notext=True,
-                        title=f"{self.preset.fg.components_name_out[icomp]} - {stk[istk]} - Output",
+                        title=f"{self.preset.comp.components_name_out[icomp]} - {stk[istk]} - Output",
                         cmap="jet",
-                        sub=(3, len(self.preset.fg.components_out) * 2, k + 1),
+                        sub=(3, len(self.preset.comp.components_out) * 2, k + 1),
                         min=-nsig * sig,
                         max=nsig * sig,
                     )
@@ -595,21 +595,21 @@ class PlotsCMM:
                         rot=self.preset.sky.center,
                         reso=reso,
                         notext=True,
-                        title=f"{self.preset.fg.components_name_out[icomp]} - {stk[istk]} - Residual",
+                        title=f"{self.preset.comp.components_name_out[icomp]} - {stk[istk]} - Residual",
                         cmap="jet",
-                        sub=(3, len(self.preset.fg.components_out) * 2, k + 1),
+                        sub=(3, len(self.preset.comp.components_out) * 2, k + 1),
                         min=-nsig * np.std(r[seenpix]),
                         max=nsig * np.std(r[seenpix]),
                     )
                     k += 1
 
             plt.tight_layout()
-            plt.savefig(f"src/CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki+1}.png")
+            plt.savefig(f"CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki+1}.png")
 
             if self.preset.tools.rank == 0:
                 if ki > 0 and gif is False:
                     os.remove(
-                        f"src/CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki}.png"
+                        f"CMM/jobs/{self.job_id}/allcomps/allcomps_iter{ki}.png"
                     )
             plt.close()
 
@@ -635,25 +635,25 @@ class PlotsCMM:
 
                 k = 0
 
-                for icomp in range(len(self.preset.fg.components_name_out)):
+                for icomp in range(len(self.preset.comp.components_name_out)):
 
-                    # if self.preset.fg.params_foregrounds['Dust']['nside_beta_out'] == 0:
+                    # if self.preset.comp.params_foregrounds['Dust']['nside_beta_out'] == 0:
                     if self.preset.qubic.params_qubic["convolution_in"]:
-                        map_in = self.preset.fg.components_convolved_out[
+                        map_in = self.preset.comp.components_convolved_out[
                             icomp, :, istk
                         ].copy()
-                        map_out = self.preset.fg.components_iter[icomp, :, istk].copy()
+                        map_out = self.preset.comp.components_iter[icomp, :, istk].copy()
                     else:
-                        map_in = self.preset.fg.components_out[icomp, :, istk].copy()
-                        map_out = self.preset.fg.components_iter[icomp, :, istk].copy()
+                        map_in = self.preset.comp.components_out[icomp, :, istk].copy()
+                        map_out = self.preset.comp.components_iter[icomp, :, istk].copy()
 
                     # else:
                     #     if self.preset.qubic.params_qubic['convolution_in']:
-                    #         map_in = self.preset.fg.components_convolved_out[icomp, :, istk].copy()
-                    #         map_out = self.preset.fg.components_iter[istk, :, icomp].copy()
+                    #         map_in = self.preset.comp.components_convolved_out[icomp, :, istk].copy()
+                    #         map_out = self.preset.comp.components_iter[istk, :, icomp].copy()
                     #     else:
-                    #         map_in = self.preset.fg.components_out[istk, :, icomp].copy()
-                    #         map_out = self.preset.fg.components_iter[istk, :, icomp].copy()
+                    #         map_in = self.preset.comp.components_out[istk, :, icomp].copy()
+                    #         map_out = self.preset.comp.components_iter[istk, :, icomp].copy()
 
                     sig = np.std(map_in[seenpix])
                     map_in[~seenpix] = hp.UNSEEN
@@ -674,7 +674,7 @@ class PlotsCMM:
                             notext=True,
                             title="",
                             cmap="jet",
-                            sub=(len(self.preset.fg.components_out), 3, k + 1),
+                            sub=(len(self.preset.comp.components_out), 3, k + 1),
                             min=-nsig * sig,
                             max=nsig * sig,
                         )
@@ -685,7 +685,7 @@ class PlotsCMM:
                             notext=True,
                             title="",
                             cmap="jet",
-                            sub=(len(self.preset.fg.components_out), 3, k + 2),
+                            sub=(len(self.preset.comp.components_out), 3, k + 2),
                             min=-nsig * sig,
                             max=nsig * sig,
                         )
@@ -696,7 +696,7 @@ class PlotsCMM:
                             notext=True,
                             title=f"{np.std(r[seenpix]):.3e}",
                             cmap="jet",
-                            sub=(len(self.preset.fg.components_out), 3, k + 3),
+                            sub=(len(self.preset.comp.components_out), 3, k + 3),
                             min=-nsig * sig,
                             max=nsig * sig,
                         )
@@ -706,7 +706,7 @@ class PlotsCMM:
                             notext=True,
                             title="",
                             cmap="jet",
-                            sub=(len(self.preset.fg.components_out), 3, k + 1),
+                            sub=(len(self.preset.comp.components_out), 3, k + 1),
                             min=-nsig * sig,
                             max=nsig * sig,
                         )
@@ -715,7 +715,7 @@ class PlotsCMM:
                             notext=True,
                             title="",
                             cmap="jet",
-                            sub=(len(self.preset.fg.components_out), 3, k + 2),
+                            sub=(len(self.preset.comp.components_out), 3, k + 2),
                             min=-nsig * sig,
                             max=nsig * sig,
                         )
@@ -724,18 +724,18 @@ class PlotsCMM:
                             notext=True,
                             title=f"{np.std(r[seenpix]):.3e}",
                             cmap="jet",
-                            sub=(len(self.preset.fg.components_out), 3, k + 3),
+                            sub=(len(self.preset.comp.components_out), 3, k + 3),
                             min=-nsig * sig,
                             max=nsig * sig,
                         )
                     k += 3
 
                 plt.tight_layout()
-                plt.savefig(f"src/CMM/jobs/{self.job_id}/{s}/maps_iter{ki+1}.png")
+                plt.savefig(f"CMM/jobs/{self.job_id}/{s}/maps_iter{ki+1}.png")
 
                 if self.preset.tools.rank == 0:
                     if ki > 0:
-                        os.remove(f"src/CMM/jobs/{self.job_id}/{s}/maps_iter{ki}.png")
+                        os.remove(f"CMM/jobs/{self.job_id}/{s}/maps_iter{ki}.png")
 
                 plt.close()
             self.preset.acquisition.rms_plot = np.concatenate(
@@ -784,11 +784,11 @@ class PlotsCMM:
             plt.xlim(-0.1, 0.1)
             plt.ylim(0, 100)
             plt.axvline(0, ls="--", color="black")
-            plt.savefig(f"src/CMM/jobs/{self.job_id}/gain_iter{ki+1}.png")
+            plt.savefig(f"CMM/jobs/{self.job_id}/gain_iter{ki+1}.png")
 
             if self.preset.tools.rank == 0:
                 if ki > 0:
-                    os.remove(f"src/CMM/jobs/{self.job_id}/gain_iter{ki}.png")
+                    os.remove(f"CMM/jobs/{self.job_id}/gain_iter{ki}.png")
 
             plt.close()
 
@@ -803,10 +803,10 @@ class PlotsCMM:
             plt.yscale("log")
 
             plt.tight_layout()
-            plt.savefig(f"src/CMM/jobs/{self.job_id}/rms_iter{ki+1}.png")
+            plt.savefig(f"CMM/jobs/{self.job_id}/rms_iter{ki+1}.png")
 
             if self.preset.tools.rank == 0:
                 if ki > 0:
-                    os.remove(f"src/CMM/jobs/{self.job_id}/rms_iter{ki}.png")
+                    os.remove(f"CMM/jobs/{self.job_id}/rms_iter{ki}.png")
 
             plt.close()
