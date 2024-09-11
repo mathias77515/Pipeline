@@ -5,15 +5,11 @@ from CMM.pipeline import Pipeline
 
 ### Common MPI arguments
 comm = MPI.COMM_WORLD
-stop
 
-simu = 'CMM'
+simu = 'FMM'
 
 if __name__ == "__main__":
 
-    
-
-    
     if simu == 'FMM':
         
         try:
