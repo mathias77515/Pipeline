@@ -1,0 +1,7 @@
+CMM.preset.preset module
+========================
+
+.. automodule:: CMM.preset.preset
+   :members:
+   :undoc-members:
+   :show-inheritance:
