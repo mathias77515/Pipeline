@@ -6,7 +6,6 @@ import time
 import numpy as np
 import qubic
 import yaml
-from scipy.optimize import minimize
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
 ### Local packages
@@ -156,7 +155,7 @@ class PipelineFrequencyMapMaking:
 
         ### Initial maps
         self.m_nu_in = self.get_input_map()
-
+        
         ### Define reconstructed and TOD operator
         self.get_H()
 
@@ -392,25 +391,6 @@ class PipelineFrequencyMapMaking:
 
         return dict_qubic
 
-    def _get_scalar_acquisition_operator(self):
-        """
-        Function that will compute "scalar acquisition operatord" by applying the acquisition operators to a vector full of ones.
-        These scalar operators will be used to compute the resolutions in the case where we do not add convolutions during reconstruction.
-        """
-        ### Import the acquisition operators
-        acquisition_operators = self.joint.qubic.H
-
-        ### Create the vector full of ones which will be used to compute the scalar operators
-        vector_ones = np.ones(acquisition_operators[0].shapein)
-
-        ### Apply each sub_operator on the vector
-        scalar_acquisition_operators = np.empty(len(self.joint.qubic.allnus))
-        for freq in range(len(self.joint.qubic.allnus)):
-            scalar_acquisition_operators[freq] = np.mean(
-                acquisition_operators[freq](vector_ones)
-            )
-        return scalar_acquisition_operators
-
     def get_convolution(self):
         """QUBIC resolutions.
 
@@ -428,12 +408,13 @@ class PipelineFrequencyMapMaking:
         """
 
         ### Define FWHMs
+
         fwhm_in = None
         fwhm_out = None
 
         ### FWHMs during map-making
         if self.params["QUBIC"]["convolution_in"]:
-            fwhm_in = self.joint_tod.qubic.allfwhm.copy()
+            fwhm_in = self.joint.qubic.allfwhm.copy()
         if self.params["QUBIC"]["convolution_out"]:
             fwhm_out = np.array([])
             for irec in range(self.params["QUBIC"]["nrec"]):
@@ -441,12 +422,12 @@ class PipelineFrequencyMapMaking:
                     fwhm_out,
                     np.sqrt(
                         self.joint.qubic.allfwhm[
-                            irec * self.fsub_out : (irec + 1) * self.fsub_out
+                            irec * self.fsub : (irec + 1) * self.fsub
                         ]
                         ** 2
                         - np.min(
                             self.joint.qubic.allfwhm[
-                                irec * self.fsub_out : (irec + 1) * self.fsub_out
+                                irec * self.fsub : (irec + 1) * self.fsub
                             ]
                         )
                         ** 2
@@ -464,7 +445,7 @@ class PipelineFrequencyMapMaking:
                     fwhm_rec,
                     np.min(
                         self.joint.qubic.allfwhm[
-                            irec * self.fsub_out : (irec + 1) * self.fsub_out
+                            irec * self.fsub : (irec + 1) * self.fsub
                         ]
                     ),
                 )
@@ -474,50 +455,20 @@ class PipelineFrequencyMapMaking:
             and self.params["QUBIC"]["convolution_out"] is False
         ):
             fwhm_rec = np.array([])
-            scalar_acquisition_operators = self._get_scalar_acquisition_operator()
-
-            if self.params["Foregrounds"]["Dust"]:
-                f_dust = c.ModifiedBlackBody(nu0=353, beta_d=1.54)
-                weight_factor = f_dust.eval(self.joint.qubic.allnus)
-                fun = lambda nu: np.abs(fraction - f_dust.eval(nu))
-            else:
-                f_cmb = c.CMB()
-                weight_factor = f_cmb.eval(self.joint.qubic.allnus)
-                fun = lambda nu: np.abs(fraction - f_cmb.eval(nu))
-
-            ### Compute expected resolutions and frequencies when not adding convolutions during reconstruction
-            ### See FMM annexe B to understand the computations
-
             for irec in range(self.params["QUBIC"]["nrec"]):
-                numerator_fwhm, denominator_fwhm = 0, 0
-                numerator_nus, denominator_nus = 0, 0
-                for jsub in range(irec * self.fsub_out, (irec + 1) * self.fsub_out):
-                    # Compute the expected reconstructed resolution for sub-acquisition
-                    numerator_fwhm += (
-                        scalar_acquisition_operators[jsub]
-                        * weight_factor[jsub]
-                        * self.fwhm_in[jsub]
-                    )
-                    denominator_fwhm += (
-                        scalar_acquisition_operators[jsub] * weight_factor[jsub]
-                    )
-
-                    # Compute the expected reconstructed frequencies for sub_acquisition
-                    numerator_nus += (
-                        scalar_acquisition_operators[jsub] * weight_factor[jsub]
-                    )
-                    denominator_nus += scalar_acquisition_operators[jsub]
-
-                # Compute the expected resolution
                 fwhm_rec = np.append(
-                    fwhm_rec, np.sum(numerator_fwhm) / np.sum(denominator_fwhm)
+                    fwhm_rec,
+                    np.mean(
+                        self.joint.qubic.allfwhm[
+                            irec * self.fsub : (irec + 1) * self.fsub
+                        ]
+                    ),
                 )
 
-                # Compute the expected frequency
-                fraction = np.sum(numerator_nus) / np.sum(denominator_nus)
-                x0 = self.nus_Q[irec]
-                corrected_nu = minimize(fun, x0)
-                self.nus_Q[irec] = corrected_nu["x"]
+        else:
+            fwhm_rec = np.array([])
+            for irec in range(self.params["QUBIC"]["nrec"]):
+                fwhm_rec = np.append(fwhm_rec, 0)
 
         if self.rank == 0:
             print(f"FWHM for TOD generation : {fwhm_in}")
@@ -541,7 +492,7 @@ class PipelineFrequencyMapMaking:
         m_nu_in = np.zeros(
             (self.params["QUBIC"]["nrec"], 12 * self.params["SKY"]["nside"] ** 2, 3)
         )
-
+        
         for i in range(self.params["QUBIC"]["nrec"]):
             m_nu_in[i] = np.mean(
                 self.external_timeline.m_nu[i * self.fsub : (i + 1) * self.fsub], axis=0
