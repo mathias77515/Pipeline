@@ -869,16 +869,15 @@ class PipelineFrequencyMapMaking:
         ### Wait for all processes
         self._barrier()
 
-        if self.params["QUBIC"]["convolution_in"]:
-            for i in range(self.params["QUBIC"]["nrec"]):
-                C = HealpixConvolutionGaussianOperator(fwhm=self.fwhm_rec[i])
-                self.m_nu_in[i] = C(self.m_nu_in[i])
-
-        x0 = self.m_nu_in.copy()
-        x0[:, self.seenpix, :] = 0
+        ### Build starting point for PCG
+        starting_maps = self.m_nu_in.copy()
+        if self.params['QUBIC']['convolution_in']:
+            for i in range(self.params['QUBIC']['nrec']):
+                C_rec = HealpixConvolutionGaussianOperator(fwhm=self.fwhm_rec[i])
+                starting_maps[i] = C_rec(self.m_nu_in[i])
 
         ### Solve map-making equation
-        self.s_hat = self.pcg(self.TOD, x0=x0[:, self.seenpix, :], seenpix=self.seenpix)
+        self.s_hat = self.pcg(self.TOD, x0=starting_maps, seenpix=self.seenpix)
 
         ### Wait for all processes
         self._barrier()
