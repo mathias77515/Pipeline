@@ -3,6 +3,7 @@ from pyoperators import DiagonalOperator
 
 from lib.Qacquisition import *
 from lib.Qnoise import *
+import fgb.component_model as c
 
 
 class PresetAcquisition:
@@ -247,6 +248,27 @@ class PresetAcquisition:
         else:
             return None
 
+    def _get_scalar_acquisition_operator(self):
+        """
+        Function that will compute "scalar acquisition operatord" by applying the acquisition operators to a vector full of ones.
+        These scalar operators will be used to compute the resolutions in the case where we do not add convolutions during reconstruction.
+        """
+        ### Import the acquisition operators
+        acquisition_operators = self.preset_qubic.joint_out.qubic.H
+
+        ### Create the vector full of ones which will be used to compute the scalar operators
+        vector_ones = np.ones(acquisition_operators[0].shapein)
+
+        ### Apply each sub_operator on the vector
+        scalar_acquisition_operators = np.empty(
+            len(self.preset_qubic.joint_out.qubic.allnus)
+        )
+        for freq in range(len(self.preset_qubic.joint_out.qubic.allnus)):
+            scalar_acquisition_operators[freq] = np.mean(
+                acquisition_operators[freq](vector_ones)
+            )
+        return scalar_acquisition_operators
+
     def get_convolution(self):
         """Convolutions.
 
@@ -279,7 +301,7 @@ class PresetAcquisition:
 
         # Check if convolution_out is True
         if self.preset_qubic.params_qubic["convolution_out"]:
-            swhm_mapmaking = np.sqrt(
+            fwhm_mapmaking = np.sqrt(
                 self.preset_qubic.joint_in.qubic.allfwhm**2
                 - np.min(self.preset_qubic.joint_in.qubic.allfwhm) ** 2
             )
@@ -299,7 +321,53 @@ class PresetAcquisition:
             not self.preset_qubic.params_qubic["convolution_in"]
             and not self.preset_qubic.params_qubic["convolution_out"]
         ):
-            fwhm_rec = 0
+            scalar_acquisition_operators = self._get_scalar_acquisition_operator()
+            self.fwhm_reconstructed = np.zeros(len(self.preset_fg.components_model_out))
+            for comp in range(len(self.preset_fg.components_model_out)):
+                if self.preset_fg.components_name_out[comp] == "CMB":
+                    self.fwhm_reconstructed[comp] = np.sum(
+                        scalar_acquisition_operators * self.fwhm_tod
+                    ) / (np.sum(scalar_acquisition_operators))
+                if self.preset_fg.components_name_out[comp] == "Dust":
+                    f_dust = c.ModifiedBlackBody(
+                        nu0=self.preset_fg.params_foregrounds["Dust"]["nu0_d"],
+                        beta_d=self.preset_fg.params_foregrounds["Dust"]["beta_d_init"][
+                            0
+                        ],
+                    )
+                    self.fwhm_reconstructed[comp] = np.sum(
+                        scalar_acquisition_operators
+                        * f_dust.eval(self.preset_qubic.joint_out.qubic.allnus)
+                        * self.fwhm_tod
+                    ) / (
+                        np.sum(
+                            scalar_acquisition_operators
+                            * f_dust.eval(self.preset_qubic.joint_out.qubic.allnus)
+                        )
+                    )
+                if self.preset_fg.components_name_out[comp] == "Synchrotron":
+                    f_sync = c.PowerLaw(
+                        nu0=self.preset_fg.params_foregrounds["Synchrotron"]["nu0_s"],
+                        beta_pl=self.preset_fg.params_foregrounds["Synchrotron"][
+                            "beta_s_init"
+                        ][0],
+                    )
+                    self.fwhm_reconstructed[comp] = np.sum(
+                        scalar_acquisition_operators
+                        * f_sync.eval(self.preset_qubic.joint_out.qubic.allnus)
+                        * self.fwhm_tod
+                    ) / (
+                        np.sum(
+                            scalar_acquisition_operators
+                            * f_sync.eval(self.preset_qubic.joint_out.qubic.allnus)
+                        )
+                    )
+
+        elif (
+            not self.preset_qubic.params_qubic["convolution_in"]
+            and not self.preset_qubic.params_qubic["convolution_out"]
+        ):
+            self.fwhm_reconstructed = np.zeros(len(self.preset_fg.components_model_out))
 
         # Print the FWHM values
         self.preset_tools._print_message(f"FWHM for TOD making : {fwhm_tod}")
