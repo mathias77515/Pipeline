@@ -180,6 +180,8 @@ class PCGAlgorithm(IterativeAlgorithm):
         self.A(self.d, self.q)
         alpha = self.delta / self.dot(self.d, self.q)
         self.x += alpha * self.d
+        print(self.x.shape)
+        print(self.input[:, self.seenpix, :].shape)
         _r = self.x - self.input[:, self.seenpix, :]
         self.rms = np.std(_r, axis=1)
         if self.gif is not None:

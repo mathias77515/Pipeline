@@ -11,7 +11,7 @@ simu = 'FMM'
 if __name__ == "__main__":
 
     if simu == 'FMM':
-        
+
         try:
             file = str(sys.argv[1])
         except IndexError:
