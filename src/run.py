@@ -1,15 +1,17 @@
-#import sys
-#from pyoperators import *
-#from FMM.pipeline import PipelineEnd2End
-#from CMM.pipeline import Pipeline
-import running_scripts
+import sys
+from pyoperators import *
+from FMM.pipeline import PipelineEnd2End
+from CMM.pipeline import Pipeline
+
+### Common MPI arguments
+comm = MPI.COMM_WORLD
 stop
+
 simu = 'CMM'
 
 if __name__ == "__main__":
 
-    ### Common MPI arguments
-    comm = MPI.COMM_WORLD
+    
 
     
     if simu == 'FMM':
