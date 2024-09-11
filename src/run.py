@@ -1,9 +1,9 @@
-import sys
-from pyoperators import *
-from FMM.pipeline import PipelineEnd2End
-from CMM.pipeline import Pipeline
-
-
+#import sys
+#from pyoperators import *
+#from FMM.pipeline import PipelineEnd2End
+#from CMM.pipeline import Pipeline
+import running_scripts
+stop
 simu = 'CMM'
 
 if __name__ == "__main__":

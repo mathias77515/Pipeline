@@ -1,7 +1,12 @@
-import sys
-from pyoperators import *
-
+#import sys
+#from pyoperators import *
+#import FMM
+import running_scripts
+stop
 from ..FMM.pipeline import PipelineEnd2End
+
+stop
+
 #from .FMM.pipeline import PipelineEnd2End
 
 
