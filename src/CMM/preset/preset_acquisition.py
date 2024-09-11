@@ -3,7 +3,7 @@ from pyoperators import DiagonalOperator
 
 from lib.Qacquisition import *
 from lib.Qnoise import *
-import fgb.component_model as c
+import lib.Qcomponent_model as c
 
 
 class PresetAcquisition:
