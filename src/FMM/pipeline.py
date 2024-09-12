@@ -147,7 +147,7 @@ class PipelineFrequencyMapMaking:
 
         self.external_timeline = ExternalData2Timeline(
             self.skyconfig,
-            self.joint.qubic.allnus,
+            self.joint_tod.qubic.allnus,
             self.params["QUBIC"]["nrec"],
             nside=self.params["SKY"]["nside"],
             corrected_bandpass=self.params["QUBIC"]["bandpass_correction"],
