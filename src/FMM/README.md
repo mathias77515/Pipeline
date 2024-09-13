@@ -4,11 +4,7 @@ Repository that contain End-2-End pipeline to perform QUBIC frequency map-making
 
 # Description
 
-First step is compute frequency observations based on 3 way to do it :
-
-* Usual map-making by deconvolving multiple peaks (large memory requirement)
-* Fake frequency map-making using PySM python package using instrumental noise description
-* Spectrum-based map-making assuming perfect or gaussian foregrounds (idealistic model)
+We reconstruct frequency maps based on a forward modeling of the QUBIC instrument. Maps are estimated using a PCG, then the auto and cross power spectra are estimated to perform finally cosmological analysis.
 
 # Run 
 

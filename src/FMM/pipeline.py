@@ -6,7 +6,6 @@ import time
 import numpy as np
 import qubic
 import yaml
-from scipy.optimize import minimize
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
 
 ### Local packages
@@ -401,6 +400,7 @@ class PipelineFrequencyMapMaking:
         seed = self.comm.bcast(seed, root=0)
         return seed
 
+
     def _get_scalar_acquisition_operator(self):
         """
         Function that will compute "scalar acquisition operatord" by applying the acquisition operators to a vector full of ones.
@@ -419,7 +419,7 @@ class PipelineFrequencyMapMaking:
                 acquisition_operators[freq](vector_ones)
             )
         return scalar_acquisition_operators
-    
+
     def get_convolution(self):
         """QUBIC resolutions.
 
@@ -440,10 +440,10 @@ class PipelineFrequencyMapMaking:
         fwhm_in = np.zeros(self.params["QUBIC"]["nsub_in"])
         fwhm_out = np.zeros(self.params["QUBIC"]["nsub_out"])
         fwhm_rec = np.zeros(self.params["QUBIC"]["nrec"])
-        
+
         ### FWHMs during map-making
         if self.params["QUBIC"]["convolution_in"]:
-            fwhm_in = self.joint_tod.qubic.allfwhm.copy()
+            fwhm_in = self.joint.qubic.allfwhm.copy()
         if self.params["QUBIC"]["convolution_out"]:
             fwhm_out = np.array([])
             for irec in range(self.params["QUBIC"]["nrec"]):
@@ -451,12 +451,12 @@ class PipelineFrequencyMapMaking:
                     fwhm_out,
                     np.sqrt(
                         self.joint.qubic.allfwhm[
-                            irec * self.fsub_out : (irec + 1) * self.fsub_out
+                            irec * self.fsub : (irec + 1) * self.fsub
                         ]
                         ** 2
                         - np.min(
                             self.joint.qubic.allfwhm[
-                                irec * self.fsub_out : (irec + 1) * self.fsub_out
+                                irec * self.fsub : (irec + 1) * self.fsub
                             ]
                         )
                         ** 2
@@ -474,7 +474,7 @@ class PipelineFrequencyMapMaking:
                     fwhm_rec,
                     np.min(
                         self.joint.qubic.allfwhm[
-                            irec * self.fsub_out : (irec + 1) * self.fsub_out
+                            irec * self.fsub : (irec + 1) * self.fsub
                         ]
                     ),
                 )
@@ -520,14 +520,18 @@ class PipelineFrequencyMapMaking:
 
                 # Compute the expected resolution
                 fwhm_rec = np.append(
-                    fwhm_rec, np.sum(numerator_fwhm) / np.sum(denominator_fwhm)
+                    fwhm_rec,
+                    np.mean(
+                        self.joint.qubic.allfwhm[
+                            irec * self.fsub : (irec + 1) * self.fsub
+                        ]
+                    ),
                 )
 
-                # Compute the expected frequency
-                fraction = np.sum(numerator_nus) / np.sum(denominator_nus)
-                x0 = self.nus_Q[irec]
-                corrected_nu = minimize(fun, x0)
-                self.nus_Q[irec] = corrected_nu["x"]
+        else:
+            fwhm_rec = np.array([])
+            for irec in range(self.params["QUBIC"]["nrec"]):
+                fwhm_rec = np.append(fwhm_rec, 0)
 
         if self.rank == 0:
             print(f"FWHM for TOD generation : {fwhm_in}")
