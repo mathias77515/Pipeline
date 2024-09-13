@@ -1,9 +1,3 @@
-import Qmixing_matrix
-
-print(Qmixing_matrix)
-sto
-
-
 import sys
 
 from pipeline import *
