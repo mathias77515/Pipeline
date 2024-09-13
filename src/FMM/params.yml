@@ -17,9 +17,9 @@ QUBIC:
     ### This section control the parameters related to QUBIC
 
     instrument: 'DB'                        # Instrumental design (DB or UWB)
-    npointings: 100                        # Number of time samples
-    nsub_in: 10                             # Number of sub-acquisitions
-    nsub_out: 10
+    npointings: 1000                        # Number of time samples
+    nsub_in: 8                             # Number of sub-acquisitions
+    nsub_out: 4
     nrec: 2                                # Number of reconstructed frequency maps
     convolution_in: True                   # Angular resolution in the input TOD
     convolution_out: False                  # Angular resolution in the reconstruction
@@ -37,7 +37,7 @@ SKY:
 
     ### This section control the reconstructed sky
 
-    nside: 256                              # Nside of components
+    nside: 32                              # Nside of components
     coverage_cut: 0.2                      # Define a cut where the coverage is too low
     RA_center: 0                   
     DEC_center: -57
@@ -62,7 +62,7 @@ PCG:
 
     n_iter_pcg: 100                                   # Number of PCG iterations
     tol_pcg: 1.0e-12                                # Tolerance for PCG
-    preconditioner: False
+    preconditioner: True
     gif: True
     resolution_plot: 12
     fwhm_plot: 0.005
