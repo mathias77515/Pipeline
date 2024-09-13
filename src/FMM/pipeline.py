@@ -4,6 +4,7 @@ import pickle
 import time
 
 import numpy as np
+from scipy.optimize import minimize
 import qubic
 import yaml
 from pysimulators.interfaces.healpy import HealpixConvolutionGaussianOperator
@@ -440,10 +441,10 @@ class PipelineFrequencyMapMaking:
         fwhm_in = np.zeros(self.params["QUBIC"]["nsub_in"])
         fwhm_out = np.zeros(self.params["QUBIC"]["nsub_out"])
         fwhm_rec = np.zeros(self.params["QUBIC"]["nrec"])
-
+        
         ### FWHMs during map-making
         if self.params["QUBIC"]["convolution_in"]:
-            fwhm_in = self.joint.qubic.allfwhm.copy()
+            fwhm_in = self.joint_tod.qubic.allfwhm.copy()
         if self.params["QUBIC"]["convolution_out"]:
             fwhm_out = np.array([])
             for irec in range(self.params["QUBIC"]["nrec"]):
@@ -451,12 +452,12 @@ class PipelineFrequencyMapMaking:
                     fwhm_out,
                     np.sqrt(
                         self.joint.qubic.allfwhm[
-                            irec * self.fsub : (irec + 1) * self.fsub
+                            irec * self.fsub_out : (irec + 1) * self.fsub_out
                         ]
                         ** 2
                         - np.min(
                             self.joint.qubic.allfwhm[
-                                irec * self.fsub : (irec + 1) * self.fsub
+                                irec * self.fsub_out : (irec + 1) * self.fsub_out
                             ]
                         )
                         ** 2
@@ -474,7 +475,7 @@ class PipelineFrequencyMapMaking:
                     fwhm_rec,
                     np.min(
                         self.joint.qubic.allfwhm[
-                            irec * self.fsub : (irec + 1) * self.fsub
+                            irec * self.fsub_out : (irec + 1) * self.fsub_out
                         ]
                     ),
                 )
@@ -520,18 +521,14 @@ class PipelineFrequencyMapMaking:
 
                 # Compute the expected resolution
                 fwhm_rec = np.append(
-                    fwhm_rec,
-                    np.mean(
-                        self.joint.qubic.allfwhm[
-                            irec * self.fsub : (irec + 1) * self.fsub
-                        ]
-                    ),
+                    fwhm_rec, np.sum(numerator_fwhm) / np.sum(denominator_fwhm)
                 )
 
-        else:
-            fwhm_rec = np.array([])
-            for irec in range(self.params["QUBIC"]["nrec"]):
-                fwhm_rec = np.append(fwhm_rec, 0)
+                # Compute the expected frequency
+                fraction = np.sum(numerator_nus) / np.sum(denominator_nus)
+                x0 = self.nus_Q[irec]
+                corrected_nu = minimize(fun, x0)
+                self.nus_Q[irec] = corrected_nu["x"]
 
         if self.rank == 0:
             print(f"FWHM for TOD generation : {fwhm_in}")
